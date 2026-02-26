@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Logs - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        /* ===== DIAL SEARCH AUTOCOMPLETE ===== */
+        .dial-search-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .dial-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-dim, rgba(0, 255, 65, 0.3));
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .dial-suggestions.visible {
+            display: block;
+        }
+
+        .dial-suggestion {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dial-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .dial-suggestion:hover,
+        .dial-suggestion.active {
+            background: rgba(0, 255, 65, 0.08);
+        }
+
+        .dial-suggestion .sug-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
+        .dial-suggestion .sug-number {
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .dial-suggestion .sug-only-number {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .dial-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted, #666);
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+
+        .log-table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .log-table th,
+        .log-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .log-table th {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+            background: var(--bg-panel);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .log-table td {
+            color: var(--text-primary);
+        }
+
+        .log-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .log-table tbody tr:nth-child(even) {
+            background: rgba(0, 255, 65, 0.015);
+        }
+
+        .log-table tbody tr:hover {
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+
+        .type-icon {
+            margin-right: 6px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+
+        @media (max-width: 768px) {
+            .header-row {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .header-row .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .log-table-wrap {
+                max-height: 60vh;
+            }
+
+            .log-table {
+                min-width: 500px;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 8px 8px;
+                font-size: 0.78rem;
+            }
+
+            .filter-bar {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .filter-btn {
+                font-size: 0.7rem;
+                padding: 6px 10px;
+            }
+
+            .call-banner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .call-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .call-actions button {
+                flex: 1;
+                text-align: center;
+            }
+
+            .dial-row {
+                flex-direction: column;
+            }
+
+            .dial-row input {
+                width: 100%;
+            }
+
+            .btn-call {
+                width: 100%;
+            }
+
+            .pagination {
+                gap: 8px;
+            }
+
+            .page-info {
+                font-size: 0.75rem;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+
+            .call-panel {
+                padding: 14px;
+            }
+
+            .call-banner {
+                padding: 12px 14px;
+            }
+
+            .call-banner-info .call-number {
+                font-size: 0.95rem;
+            }
+
+            .call-actions button {
+                padding: 8px 10px;
+                font-size: 0.72rem;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 6px 6px;
+                font-size: 0.72rem;
+            }
+
+            .log-table th {
+                font-size: 0.65rem;
+            }
+
+            .stats-bar {
+                font-size: 0.75rem;
+            }
+
+            .pagination button {
+                padding: 8px 12px;
+                font-size: 0.72rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
+        <div class="header-row">
+            <h1>Call Logs <span class="count-badge" id="log-count" style="display:none">0</span></h1>
+            <button class="btn btn-primary" onclick="exportLogs()">EXPORT CSV</button>
+        </div>
+
+        <!-- Live Call Status Banner -->
+        <div id="call-banner" class="call-banner">
+            <div class="call-banner-icon" id="call-icon">&#x1F4F2;</div>
+            <div class="call-banner-info">
+                <div class="call-label" id="call-label">INCOMING CALL</div>
+                <div class="call-number" id="call-number">Unknown</div>
+            </div>
+            <div class="call-actions" id="call-actions"></div>
+        </div>
+
+        <!-- Dial Pad -->
+        <div class="call-panel">
+            <h3>&#x1F4DE; Dial Call</h3>
+            <div class="dial-row">
+                <div class="dial-search-wrap">
+                    <input type="text" id="dial-input" placeholder="Search by name or number..." autocomplete="off" />
+                    <div class="dial-suggestions" id="dial-suggestions"></div>
+                </div>
+                <button class="btn-call" onclick="dialNumber()">&#x1F4DE; CALL</button>
+            </div>
+            <div class="dial-hint" id="dial-hint"></div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar" id="filter-bar" style="display:none">
+            <button class="filter-btn active" onclick="filterType('ALL')">ALL</button>
+            <button class="filter-btn" onclick="filterType('INCOMING')">&darr; INCOMING</button>
+            <button class="filter-btn" onclick="filterType('OUTGOING')">&uarr; OUTGOING</button>
+            <button class="filter-btn" onclick="filterType('MISSED')">&times; MISSED</button>
+        </div>
+
+        <div class="stats-bar" id="stats"></div>
+        <div id="logs-container">Reading call logs...</div>
+
+        <!-- Pagination controls -->
+        <div id="pagination" class="pagination" style="display:none">
+            <button class="btn btn-secondary" id="prev-btn" onclick="prevPage()" disabled>&larr; PREV</button>
+            <span class="page-info" id="page-info">Page 1</span>
+            <button class="btn btn-secondary" id="next-btn" onclick="nextPage()">NEXT &rarr;</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        let allLogs = [];
+        let activeFilter = 'ALL';
+        let hasMore = true;
+        let isLoading = false;
+        let currentPage = 1;
+        const PAGE_SIZE = 50;
+
+        // ========== CALL MANAGEMENT ==========
+        let callState = 'IDLE';
+        let callerNumber = null;
+        let callerName = null;
+        let speakerOn = false;
+        let callWs = null;
+
+        function connectCallWebSocket() {
+            var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            callWs = new WebSocket(protocol + '//' + location.host + '/');
+
+            callWs.onopen = function () {
+                callWs.send(JSON.stringify({ type: 'identify', role: 'browser' }));
+            };
+
+            callWs.onmessage = function (event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data.type === 'call_state' && data.deviceId === deviceId) {
+                        callState = data.state || 'IDLE';
+                        callerNumber = data.number || null;
+                        callerName = data.contactName || null;
+                        updateCallBanner();
+                    }
+                } catch (e) { /* ignore */ }
+            };
+
+            callWs.onclose = function () {
+                // Reconnect after 3 seconds
+                setTimeout(connectCallWebSocket, 3000);
+            };
+
+            callWs.onerror = function () {
+                callWs.close();
+            };
+        }
+
+        function updateCallBanner() {
+            var banner = document.getElementById('call-banner');
+            var icon = document.getElementById('call-icon');
+            var label = document.getElementById('call-label');
+            var number = document.getElementById('call-number');
+            var actions = document.getElementById('call-actions');
+
+            banner.className = 'call-banner'; // reset
+
+            if (callState === 'RINGING') {
+                banner.classList.add('ringing');
+                icon.innerHTML = '&#x1F4F2;';
+                label.textContent = 'INCOMING CALL';
+                number.textContent = callerName ? callerName + ' (' + callerNumber + ')' : (callerNumber || 'Unknown Number');
+                actions.innerHTML =
+                    '<button class="btn-answer" onclick="answerCall()">&#x2714; ANSWER</button>' +
+                    '<button class="btn-reject" onclick="rejectCall()">&#x2716; REJECT</button>';
+            } else if (callState === 'OFFHOOK') {
+                banner.classList.add('active');
+                icon.innerHTML = '&#x1F4DE;';
+                label.textContent = 'CALL ACTIVE';
+                number.textContent = callerName ? callerName + ' (' + callerNumber + ')' : (callerNumber || 'In Progress');
+                actions.innerHTML =
+                    '<button class="btn-speaker ' + (speakerOn ? 'on' : '') + '" onclick="toggleSpeaker()">&#x1F50A; SPEAKER</button>' +
+                    '<button class="btn-end" onclick="endCall()">&#x2716; END CALL</button>';
+            } else {
+                // IDLE - hide banner
+                speakerOn = false;
+                callerName = null;
+                actions.innerHTML = '';
+            }
+        }
+
+        // ========== DIAL SEARCH & AUTOCOMPLETE ==========
+        let selectedDialNumber = null; // The resolved phone number to actually dial
+        let activeSuggestionIndex = -1;
+
+        // Build a unique contact list from call logs for autocomplete
+        function getUniqueContacts() {
+            var seen = {};
+            var contacts = [];
+            allLogs.forEach(function (log) {
+                var key = log.number;
+                if (!key || seen[key]) return;
+                seen[key] = true;
+                contacts.push({ name: log.name || '', number: log.number });
+            });
+            return contacts;
+        }
+
+        function updateDialSuggestions() {
+            var input = document.getElementById('dial-input');
+            var dropdown = document.getElementById('dial-suggestions');
+            var hint = document.getElementById('dial-hint');
+            var query = input.value.trim().toLowerCase();
+
+            activeSuggestionIndex = -1;
+
+            if (!query || query.length < 1) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                // If cleared, reset selected number
+                if (!input.value.trim()) {
+                    selectedDialNumber = null;
+                    hint.textContent = '';
+                }
+                return;
+            }
+
+            // Check if query looks like a phone number (digits, +, *, #)
+            var isPhoneNum = /^[\d+*#\s\-()]+$/.test(query);
+
+            var contacts = getUniqueContacts();
+            var matches = contacts.filter(function (c) {
+                var nameMatch = c.name && c.name.toLowerCase().includes(query);
+                var numMatch = c.number && c.number.includes(query);
+                return nameMatch || numMatch;
+            }).slice(0, 8); // Limit to 8 suggestions
+
+            if (matches.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                // If it looks like a phone number, use it directly
+                if (isPhoneNum) {
+                    selectedDialNumber = input.value.trim();
+                    hint.innerHTML = 'Will dial: <strong>' + selectedDialNumber + '</strong>';
+                } else {
+                    selectedDialNumber = null;
+                    hint.textContent = 'No matching contact found';
+                }
+                return;
+            }
+
+            var html = '';
+            matches.forEach(function (c, i) {
+                if (c.name) {
+                    html += '<div class="dial-suggestion" data-number="' + c.number + '" data-name="' + c.name + '" data-index="' + i + '">' +
+                        '<span class="sug-name">' + highlightMatch(c.name, query) + '</span>' +
+                        '<span class="sug-number">' + highlightMatch(c.number, query) + '</span>' +
+                        '</div>';
+                } else {
+                    html += '<div class="dial-suggestion" data-number="' + c.number + '" data-name="" data-index="' + i + '">' +
+                        '<span class="sug-only-number">' + highlightMatch(c.number, query) + '</span>' +
+                        '</div>';
+                }
+            });
+
+            dropdown.innerHTML = html;
+            dropdown.classList.add('visible');
+
+            // Attach click handlers
+            dropdown.querySelectorAll('.dial-suggestion').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    selectSuggestion(el.dataset.number, el.dataset.name);
+                });
+            });
+        }
+
+        function highlightMatch(text, query) {
+            if (!text) return '';
+            var idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return text;
+            return text.substring(0, idx) + '<strong style="color:var(--accent)">' + text.substring(idx, idx + query.length) + '</strong>' + text.substring(idx + query.length);
+        }
+
+        function selectSuggestion(number, name) {
+            var input = document.getElementById('dial-input');
+            var dropdown = document.getElementById('dial-suggestions');
+            var hint = document.getElementById('dial-hint');
+
+            selectedDialNumber = number;
+            input.value = name ? name + ' (' + number + ')' : number;
+            dropdown.classList.remove('visible');
+            dropdown.innerHTML = '';
+            hint.innerHTML = 'Will dial: <strong>' + number + '</strong>' + (name ? ' (' + name + ')' : '');
+        }
+
+        async function dialNumber() {
+            var input = document.getElementById('dial-input');
+            var rawValue = input.value.trim();
+
+            if (!rawValue) {
+                api.showToast('Enter a phone number or search by name', 'error');
+                return;
+            }
+
+            // Determine what number to actually dial
+            var numberToDial = selectedDialNumber;
+
+            if (!numberToDial) {
+                // Check if the raw input is a valid phone number
+                if (/^[\d+*#\s\-()]+$/.test(rawValue)) {
+                    numberToDial = rawValue;
+                } else {
+                    // Try to find an exact name match in logs
+                    var match = getUniqueContacts().find(function (c) {
+                        return c.name && c.name.toLowerCase() === rawValue.toLowerCase();
+                    });
+                    if (match) {
+                        numberToDial = match.number;
+                    } else {
+                        api.showToast('"' + rawValue + '" is not a valid phone number. Select a contact from suggestions.', 'error');
+                        return;
+                    }
+                }
+            }
+
+            try {
+                await api.sendCommand(deviceId, 'call_dial', { number: numberToDial });
+                api.showToast('Dialing ' + numberToDial + '...', 'success');
+                input.value = '';
+                selectedDialNumber = null;
+                document.getElementById('dial-hint').textContent = '';
+            } catch (e) {
+                api.showToast('Dial failed: ' + e.message, 'error');
+            }
+        }
+
+        async function answerCall() {
+            try {
+                await api.sendCommand(deviceId, 'call_answer');
+                api.showToast('Answering call...', 'success');
+            } catch (e) {
+                api.showToast('Answer failed: ' + e.message, 'error');
+            }
+        }
+
+        async function rejectCall() {
+            try {
+                await api.sendCommand(deviceId, 'call_end');
+                api.showToast('Call rejected', 'success');
+            } catch (e) {
+                api.showToast('Reject failed: ' + e.message, 'error');
+            }
+        }
+
+        async function endCall() {
+            try {
+                await api.sendCommand(deviceId, 'call_end');
+                api.showToast('Call ended', 'success');
+            } catch (e) {
+                api.showToast('End call failed: ' + e.message, 'error');
+            }
+        }
+
+        async function toggleSpeaker() {
+            speakerOn = !speakerOn;
+            try {
+                await api.sendCommand(deviceId, 'call_speaker', { on: speakerOn });
+                updateCallBanner();
+                api.showToast('Speaker ' + (speakerOn ? 'ON' : 'OFF'), 'success');
+            } catch (e) {
+                speakerOn = !speakerOn; // revert
+                api.showToast('Speaker toggle failed: ' + e.message, 'error');
+            }
+        }
+
+        // ========== DIAL INPUT EVENT LISTENERS ==========
+        var dialInput = document.getElementById('dial-input');
+
+        dialInput.addEventListener('input', function () {
+            selectedDialNumber = null; // Reset on manual typing
+            updateDialSuggestions();
+        });
+
+        dialInput.addEventListener('keydown', function (e) {
+            var dropdown = document.getElementById('dial-suggestions');
+            var items = dropdown.querySelectorAll('.dial-suggestion');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
+                updateActiveSuggestion(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+                updateActiveSuggestion(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+                    var el = items[activeSuggestionIndex];
+                    selectSuggestion(el.dataset.number, el.dataset.name);
+                } else {
+                    dialNumber();
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('visible');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dial-search-wrap')) {
+                document.getElementById('dial-suggestions').classList.remove('visible');
+            }
+        });
+
+        function updateActiveSuggestion(items) {
+            items.forEach(function (el, i) {
+                el.classList.toggle('active', i === activeSuggestionIndex);
+            });
+            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) {
+                items[activeSuggestionIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Start WebSocket for live call state
+        connectCallWebSocket();
+
+        // ========== CALL LOGS (pagination) ==========
+
+        // Fetch logs from device with XHR + 10s timeout
+        function fetchLogs(limit) {
+            return new Promise(function (resolve, reject) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/command/' + deviceId);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.timeout = 10000;
+
+                xhr.onload = function () {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    if (xhr.status !== 200) { reject('Server error (' + xhr.status + ')'); return; }
+                    try {
+                        var result = JSON.parse(xhr.responseText);
+                        var logs = [];
+                        if (result.success && result.data) {
+                            if (Array.isArray(result.data)) logs = result.data;
+                            else if (Array.isArray(result.data.data)) logs = result.data.data;
+                        } else if (result.success === false) {
+                            reject(result.error || 'Device not connected'); return;
+                        }
+                        // Auto-cache to server (fire & forget)
+                        if (logs.length > 0) {
+                            fetch('/api/device/' + deviceId + '/call-logs/cache', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ logs: logs }),
+                            }).catch(function () { });
+                        }
+                        resolve(logs);
+                    } catch (e) { reject('Invalid response'); }
+                };
+                xhr.ontimeout = function () { reject('Timed out (10s). Device may be offline.'); };
+                xhr.onerror = function () { reject('Network error.'); };
+                xhr.send(JSON.stringify({ action: 'call_logs', payload: { limit: limit } }));
+            });
+        }
+
+        // Fallback: load from server cache/DB when device is offline
+        function fetchCachedLogs() {
+            return fetch('/api/device/' + deviceId + '/call-logs')
+                .then(function (r) { return r.json(); })
+                .then(function (json) {
+                    if (json.success && json.logs && json.logs.length > 0) {
+                        return { logs: json.logs, source: json.source };
+                    }
+                    return null;
+                })
+                .catch(function () { return null; });
+        }
+
+        function loadPage(page) {
+            if (isLoading) return;
+            isLoading = true;
+
+            var container = document.getElementById('logs-container');
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--primary)">Loading page ' + page + '...</div>';
+
+            var neededCount = page * PAGE_SIZE;
+
+            if (neededCount > allLogs.length && hasMore) {
+                fetchLogs(neededCount).then(function (logs) {
+                    if (logs.length < neededCount) hasMore = false;
+                    allLogs = logs;
+                    currentPage = page;
+
+                    document.getElementById('log-count').style.display = 'inline-block';
+                    document.getElementById('log-count').textContent = allLogs.length + (hasMore ? '+' : '');
+                    document.getElementById('filter-bar').style.display = 'flex';
+
+                    renderTable();
+                    updatePagination();
+                    isLoading = false;
+                }).catch(function (err) {
+                    // Try loading cached logs when device is offline
+                    fetchCachedLogs().then(function (cached) {
+                        if (cached && cached.logs.length > 0) {
+                            allLogs = cached.logs;
+                            hasMore = false;
+                            currentPage = 1;
+
+                            document.getElementById('log-count').style.display = 'inline-block';
+                            document.getElementById('log-count').textContent = allLogs.length;
+                            document.getElementById('filter-bar').style.display = 'flex';
+
+                            var sourceLabel = cached.source === 'database' ? 'database' : 'cache';
+                            document.getElementById('stats').innerHTML =
+                                '<span style="color:var(--accent)">&#x1F4BE; Showing cached logs (from ' + sourceLabel + '). Device is offline.</span>';
+
+                            renderTable();
+                            updatePagination();
+                        } else {
+                            showError(err);
+                        }
+                        isLoading = false;
+                    });
+                });
+            } else {
+                currentPage = page;
+                renderTable();
+                updatePagination();
+                isLoading = false;
+            }
+        }
+
+        function updatePagination() {
+            var pagination = document.getElementById('pagination');
+            var prevBtn = document.getElementById('prev-btn');
+            var nextBtn = document.getElementById('next-btn');
+            var pageInfo = document.getElementById('page-info');
+
+            pagination.style.display = 'flex';
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = !hasMore && currentPage >= Math.ceil(allLogs.length / PAGE_SIZE);
+
+            var from = (currentPage - 1) * PAGE_SIZE + 1;
+            var showing = Math.min(currentPage * PAGE_SIZE, allLogs.length);
+            pageInfo.innerHTML = 'Page ' + currentPage + ' <span style="opacity:0.5;font-size:0.8em">(' + from + '-' + showing + ')</span>';
+        }
+
+        function prevPage() {
+            if (currentPage > 1) loadPage(currentPage - 1);
+        }
+
+        function nextPage() {
+            loadPage(currentPage + 1);
+        }
+
+        function showError(msg) {
+            document.getElementById('logs-container').innerHTML =
+                '<div class="empty-state"><h2>&#x26A0; ' + msg + '</h2>' +
+                '<button class="btn btn-primary" style="margin-top:16px" onclick="loadPage(1)">RETRY</button></div>';
+        }
+
+        function renderTable() {
+            var container = document.getElementById('logs-container');
+            var filtered = activeFilter === 'ALL' ? allLogs : allLogs.filter(function (l) { return l.type.includes(activeFilter); });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No Call Logs Found</h2></div>';
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('stats').innerHTML = '';
+                return;
+            }
+
+            var startIndex = (currentPage - 1) * PAGE_SIZE;
+            var pageLogs = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+
+            var html = '<div class="log-table-wrap"><table class="log-table">' +
+                '<thead><tr><th>Name / Number</th><th>Type</th><th>Date</th><th>Duration (s)</th></tr></thead><tbody>';
+
+            pageLogs.forEach(function (log) {
+                var icon = log.type.includes('INCOMING') ? '&#x2B07;' : log.type.includes('OUTGOING') ? '&#x2B06;' : log.type.includes('MISSED') ? '&#x274C;' : '&#x260E;';
+                var cls = '';
+                if (log.type.includes('INCOMING')) cls = 'type-incoming';
+                else if (log.type.includes('OUTGOING')) cls = 'type-outgoing';
+                else if (log.type.includes('MISSED')) cls = 'type-missed';
+
+                var nameDisplay = log.name ? '<strong>' + log.name + '</strong><br><span style="opacity:0.6;font-size:0.78rem">' + log.number + '</span>' : log.number;
+
+                html += '<tr><td>' + nameDisplay + '</td>' +
+                    '<td class="' + cls + '"><span class="type-icon">' + icon + '</span>' + log.type + '</td>' +
+                    '<td>' + log.date + '</td><td>' + log.duration + '</td></tr>';
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+
+            document.getElementById('stats').innerHTML = 'Showing <strong>' + pageLogs.length + '</strong> of <strong>' + filtered.length + (hasMore ? '+' : '') + '</strong> call logs';
+        }
+
+        function filterType(type) {
+            activeFilter = type;
+            currentPage = 1;
+            document.querySelectorAll('.filter-btn').forEach(function (btn) {
+                btn.classList.toggle('active', btn.textContent.includes(type === 'ALL' ? 'ALL' : type));
+            });
+            renderTable();
+            updatePagination();
+        }
+
+        async function exportLogs() {
+            try {
+                const response = await api.sendCommand(deviceId, 'call_logs_export', { format: 'csv' });
+                const data = response.data || response;
+                const exportPath = data.path || (data.data && data.data.path);
+                if (exportPath) {
+                    api.downloadFile(deviceId, exportPath);
+                    api.showToast('Exporting call logs...', 'success');
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                api.showToast(error.message, 'error');
+            }
+        }
+
+        loadPage(1);
+    </script>
+
+
+    <!-- Disclaimer -->
+    <div class="container">
+        <div class="disclaimer">
+            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this application on a device without the owner's explicit
+                consent is illegal and unethical. The developers assume no liability for misuse. By using this
+                application, you agree that you are solely responsible for how it is used.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p class="footer-created">Created by</p>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
+        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    </footer>
+</body>
+
+</html>

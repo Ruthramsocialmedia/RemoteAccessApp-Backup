@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Speak - Remote Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #0a0e17;
+            color: #d0d0d0;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-layout {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .top-bar h1 {
+            font-size: 1.1rem;
+            color: #00ff41;
+            margin: 0;
+        }
+
+        .back-btn {
+            color: #666;
+            text-decoration: none;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+
+        .back-btn:hover {
+            color: #00ff41;
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 255, 65, 0.12);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card label {
+            display: block;
+            font-size: 11px;
+            color: #00ff41;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        /* ===== WALKIE-TALKIE SECTION ===== */
+        .walkie-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .walkie-status {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            min-height: 20px;
+            transition: color 0.3s;
+        }
+
+        .walkie-status.active {
+            color: #ff3c78;
+        }
+
+        .walkie-status.connecting {
+            color: #ffaa00;
+        }
+
+        .talk-btn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 60, 120, 0.08);
+            border: 3px solid rgba(255, 60, 120, 0.25);
+            color: #ff3c78;
+            font-size: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            position: relative;
+        }
+
+        .talk-btn:hover {
+            background: rgba(255, 60, 120, 0.15);
+            border-color: rgba(255, 60, 120, 0.5);
+            transform: scale(1.05);
+        }
+
+        .talk-btn:active,
+        .talk-btn.active {
+            background: rgba(255, 60, 120, 0.3);
+            border-color: #ff3c78;
+            transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(255, 60, 120, 0.3);
+            animation: talkPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes talkPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 60, 120, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 60, 120, 0.4);
+            }
+        }
+
+        .talk-label {
+            font-size: 11px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ===== VISUALIZER ===== */
+        .visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 40px;
+            margin: 16px 0;
+        }
+
+        .vis-bar {
+            width: 4px;
+            border-radius: 2px;
+            background: #ff3c78;
+            transition: height 0.05s ease;
+        }
+
+        .walkie-timer {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #ff3c78;
+            min-height: 18px;
+            margin-top: 8px;
+        }
+
+        /* ===== TEXT-TO-SPEECH SECTION ===== */
+        .text-area {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            border-radius: 8px;
+            padding: 12px;
+            color: #d0d0d0;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+
+        .text-area::placeholder {
+            color: #444;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 10px;
+            color: #444;
+            margin-top: 6px;
+        }
+
+        /* ===== CONTROLS ===== */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .slider-val {
+            color: #00ff41;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #00ff41;
+            height: 4px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .speak-btn {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid rgba(0, 200, 255, 0.25);
+            border-radius: 10px;
+            background: rgba(0, 200, 255, 0.06);
+            color: #00c8ff;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .speak-btn:hover {
+            background: rgba(0, 200, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .speak-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speak-btn.speaking {
+            animation: speakPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes speakPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(0, 200, 255, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(0, 200, 255, 0.3);
+            }
+        }
+
+        /* ===== QUICK PHRASES ===== */
+        .phrases-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .phrase-chip {
+            padding: 6px 12px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            cursor: pointer;
+            color: #888;
+            transition: all 0.2s;
+        }
+
+        .phrase-chip:hover {
+            border-color: rgba(0, 255, 65, 0.3);
+            color: #00ff41;
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        /* ===== HISTORY ===== */
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .history-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 80%;
+        }
+
+        .history-time {
+            font-size: 10px;
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .empty-history {
+            font-size: 11px;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            background: rgba(0, 255, 65, 0.15);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            color: #00ff41;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: rgba(255, 60, 60, 0.15);
+            border-color: rgba(255, 60, 60, 0.3);
+            color: #ff4444;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .app-layout {
+                padding: 14px;
+            }
+
+            .talk-btn {
+                width: 100px;
+                height: 100px;
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <div class="top-bar">
+            <h1>&#x1F50A; REMOTE SPEAK</h1>
+            <a href="index.html" class="back-btn">&#x2190; Dashboard</a>
+        </div>
+
+        <!-- Walkie-Talkie Live Mic -->
+        <div class="card walkie-card">
+            <label>&#x1F399; Live Talk (Walkie-Talkie)</label>
+            <div class="walkie-status" id="walkie-status">Press and hold to talk</div>
+            <button class="talk-btn" id="talk-btn">&#x1F3A4;</button>
+            <div class="talk-label">HOLD TO TALK</div>
+            <div class="visualizer" id="visualizer"></div>
+            <div class="walkie-timer" id="walkie-timer"></div>
+        </div>
+
+        <!-- Text-to-Speech -->
+        <div class="card">
+            <label>&#x1F4AC; Text to Speech</label>
+            <textarea class="text-area" id="speak-text" placeholder="Type something to speak on the device..."
+                maxlength="1000"></textarea>
+            <div class="char-count"><span id="char-count">0</span> / 1000</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="card">
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Volume</span>
+                    <span class="slider-val" id="vol-val">100%</span>
+                </div>
+                <input type="range" id="volume" min="0" max="100" value="100"
+                    oninput="document.getElementById('vol-val').textContent = this.value + '%'">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Speed</span>
+                    <span class="slider-val" id="spd-val">1.0x</span>
+                </div>
+                <input type="range" id="speed" min="25" max="300" value="100"
+                    oninput="document.getElementById('spd-val').textContent = (this.value / 100).toFixed(1) + 'x'">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Pitch</span>
+                    <span class="slider-val" id="pit-val">1.0</span>
+                </div>
+                <input type="range" id="pitch" min="25" max="200" value="100"
+                    oninput="document.getElementById('pit-val').textContent = (this.value / 100).toFixed(1)">
+            </div>
+        </div>
+
+        <!-- Speak Button -->
+        <button class="speak-btn" id="speak-btn" onclick="speak()">
+            <span>&#x1F50A;</span> SPEAK ON DEVICE
+        </button>
+
+        <!-- Quick Phrases -->
+        <div class="card">
+            <label>Quick Phrases</label>
+            <div class="phrases-grid">
+                <div class="phrase-chip" onclick="quickSpeak('Hello, can you hear me?')">Hello!</div>
+                <div class="phrase-chip" onclick="quickSpeak('Where are you right now?')">Where are you?</div>
+                <div class="phrase-chip" onclick="quickSpeak('Please call me back')">Call me back</div>
+                <div class="phrase-chip" onclick="quickSpeak('I am on my way')">On my way</div>
+                <div class="phrase-chip" onclick="quickSpeak('Dinner is ready')">Dinner ready</div>
+                <div class="phrase-chip" onclick="quickSpeak('Come home now')">Come home</div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="card">
+            <label>History</label>
+            <div class="history-list" id="history-list">
+                <div class="empty-history">No messages yet</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        // ========== TEXT-TO-SPEECH ==========
+
+        let history = [];
+
+        document.getElementById('speak-text').addEventListener('input', function () {
+            document.getElementById('char-count').textContent = this.value.length;
+        });
+
+        async function speak() {
+            const text = document.getElementById('speak-text').value.trim();
+            if (!text) { showToast('Type something first', true); return; }
+
+            const btn = document.getElementById('speak-btn');
+            btn.disabled = true;
+            btn.classList.add('speaking');
+            btn.innerHTML = '<span>&#x1F50A;</span> SPEAKING...';
+
+            try {
+                await api.sendCommand(deviceId, 'speak', {
+                    text,
+                    volume: parseInt(document.getElementById('volume').value) / 100,
+                    speed: parseInt(document.getElementById('speed').value) / 100,
+                    pitch: parseInt(document.getElementById('pitch').value) / 100
+                });
+                showToast('Speaking on device \u{1F50A}');
+                addHistory(text);
+            } catch (error) {
+                showToast('Error: ' + error.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('speaking');
+                btn.innerHTML = '<span>&#x1F50A;</span> SPEAK ON DEVICE';
+            }
+        }
+
+        function quickSpeak(text) {
+            document.getElementById('speak-text').value = text;
+            document.getElementById('char-count').textContent = text.length;
+            speak();
+        }
+
+        function addHistory(text) {
+            history.unshift({ text, time: new Date().toLocaleTimeString() });
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.map(h => `
+                <div class="history-item" onclick="replayText('${h.text.replace(/'/g, "\\'")}')">
+                    <span class="history-text">${h.text}</span>
+                    <span class="history-time">${h.time}</span>
+                </div>
+            `).join('');
+        }
+
+        function replayText(text) {
+            document.getElementById('speak-text').value = text;
+            document.getElementById('char-count').textContent = text.length;
+        }
+
+        document.getElementById('speak-text').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); speak(); }
+        });
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.className = 'toast'; }, 3000);
+        }
+
+        // ========== WALKIE-TALKIE (LIVE MIC \u2192 PHONE SPEAKER) ==========
+
+        const SAMPLE_RATE = 16000; // target rate for phone
+        const CHUNK_SIZE = 2048;
+        const MIC_GAIN = 3.0; // 3x gain boost for louder audio
+        let isTalking = false;
+        let ws = null;
+        let audioContext = null;
+        let micStream = null;
+        let scriptNode = null;
+        let talkTimer = null;
+        let talkStart = 0;
+        let actualSampleRate = 48000; // will be detected
+
+        const talkBtn = document.getElementById('talk-btn');
+        const walkieStatus = document.getElementById('walkie-status');
+        const visualizer = document.getElementById('visualizer');
+        const walkieTimer = document.getElementById('walkie-timer');
+
+        // Create visualizer bars
+        function initVisualizer() {
+            let bars = '';
+            for (let i = 0; i < 20; i++) {
+                bars += `<div class="vis-bar" style="height:4px" data-i="${i}"></div>`;
+            }
+            visualizer.innerHTML = bars;
+        }
+        initVisualizer();
+
+        // Downsample from browser's native rate to 16kHz using linear interpolation
+        function downsample(inputBuffer, inputRate, outputRate) {
+            if (inputRate === outputRate) return inputBuffer;
+            const ratio = inputRate / outputRate;
+            const outputLength = Math.round(inputBuffer.length / ratio);
+            const output = new Float32Array(outputLength);
+            for (let i = 0; i < outputLength; i++) {
+                const srcIndex = i * ratio;
+                const low = Math.floor(srcIndex);
+                const high = Math.min(low + 1, inputBuffer.length - 1);
+                const frac = srcIndex - low;
+                output[i] = inputBuffer[low] * (1 - frac) + inputBuffer[high] * frac;
+            }
+            return output;
+        }
+
+        // Convert Float32 PCM to Int16 base64
+        function float32ToBase64PCM16(float32Array) {
+            const pcm16 = new Int16Array(float32Array.length);
+            for (let i = 0; i < float32Array.length; i++) {
+                const s = Math.max(-1, Math.min(1, float32Array[i]));
+                pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            const bytes = new Uint8Array(pcm16.buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // Connect WebSocket for audio streaming
+        function connectWS() {
+            return new Promise((resolve, reject) => {
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${wsProtocol}//${location.host}`);
+                ws.onopen = () => resolve();
+                ws.onerror = (e) => reject(e);
+                ws.onclose = () => { ws = null; };
+            });
+        }
+
+        // Start talking
+        async function startTalk() {
+            if (isTalking) return;
+
+            try {
+                walkieStatus.textContent = '\u{1F504} Connecting...';
+                walkieStatus.className = 'walkie-status connecting';
+
+                // Get browser mic \u2014 let browser choose optimal sample rate
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Connect WebSocket
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    await connectWS();
+                }
+
+                // Tell device to start audio playback
+                await api.sendCommand(deviceId, 'audio_play_start');
+
+                // Create audio context � use browser's native sample rate (don't force 16kHz)
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                actualSampleRate = audioContext.sampleRate;
+                console.log(`[Walkie] AudioContext rate: ${actualSampleRate}Hz, target: ${SAMPLE_RATE}Hz`);
+
+                const source = audioContext.createMediaStreamSource(micStream);
+
+                // Gain node \u2014 boost mic volume
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = MIC_GAIN;
+
+                // ScriptProcessorNode to capture and downsample PCM chunks
+                scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+                scriptNode.onaudioprocess = (e) => {
+                    if (!isTalking || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // Downsample from native rate (e.g. 48kHz) to 16kHz
+                    const downsampled = downsample(inputData, actualSampleRate, SAMPLE_RATE);
+                    const base64 = float32ToBase64PCM16(downsampled);
+
+                    // Send audio chunk to server
+                    ws.send(JSON.stringify({
+                        type: 'browser_audio_chunk',
+                        deviceId: deviceId,
+                        data: base64
+                    }));
+
+                    // Update visualizer with original data (for responsiveness)
+                    updateVisualizer(inputData);
+                };
+
+                // Pipeline: mic \u2192 gain \u2192 scriptNode \u2192 silent output
+                source.connect(gainNode);
+                gainNode.connect(scriptNode);
+                scriptNode.connect(audioContext.destination);
+
+                isTalking = true;
+                talkBtn.classList.add('active');
+                walkieStatus.textContent = '\u{1F534} LIVE \u2022 Speaking to device...';
+                walkieStatus.className = 'walkie-status active';
+
+                // Start timer
+                talkStart = Date.now();
+                talkTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - talkStart) / 1000);
+                    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const s = String(elapsed % 60).padStart(2, '0');
+                    walkieTimer.textContent = `${m}:${s}`;
+                }, 1000);
+
+            } catch (e) {
+                showToast('Mic error: ' + e.message, true);
+                walkieStatus.textContent = 'Press and hold to talk';
+                walkieStatus.className = 'walkie-status';
+                stopTalk();
+            }
+        }
+
+        // Stop talking
+        async function stopTalk() {
+            if (!isTalking && !micStream) return;
+            isTalking = false;
+
+            // Stop timer
+            clearInterval(talkTimer);
+
+            // Disconnect audio pipeline
+            if (scriptNode) {
+                scriptNode.disconnect();
+                scriptNode = null;
+            }
+            if (audioContext) {
+                audioContext.close().catch(() => { });
+                audioContext = null;
+            }
+
+            // Stop mic
+            if (micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+
+            // Tell device to stop audio playback
+            try {
+                await api.sendCommand(deviceId, 'audio_play_stop');
+            } catch (e) { /* ignore */ }
+
+            // Close WebSocket
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+
+            talkBtn.classList.remove('active');
+            walkieStatus.textContent = 'Press and hold to talk';
+            walkieStatus.className = 'walkie-status';
+            walkieTimer.textContent = '';
+            resetVisualizer();
+        }
+
+        // Update visualizer bars based on audio levels
+        function updateVisualizer(pcmData) {
+            const bars = visualizer.querySelectorAll('.vis-bar');
+            const step = Math.floor(pcmData.length / bars.length);
+            for (let i = 0; i < bars.length; i++) {
+                let sum = 0;
+                for (let j = 0; j < step; j++) {
+                    sum += Math.abs(pcmData[i * step + j] || 0);
+                }
+                const avg = sum / step;
+                const height = Math.max(4, Math.min(36, avg * 300));
+                bars[i].style.height = height + 'px';
+            }
+        }
+
+        function resetVisualizer() {
+            visualizer.querySelectorAll('.vis-bar').forEach(b => b.style.height = '4px');
+        }
+
+        // ===== HOLD-TO-TALK EVENT HANDLERS =====
+
+        // Mouse events
+        talkBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startTalk();
+        });
+        talkBtn.addEventListener('mouseup', () => stopTalk());
+        talkBtn.addEventListener('mouseleave', () => { if (isTalking) stopTalk(); });
+
+        // Touch events (mobile)
+        talkBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startTalk();
+        });
+        talkBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopTalk();
+        });
+        talkBtn.addEventListener('touchcancel', () => stopTalk());
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isTalking) stopTalk();
+        });
+    </script>
+</body>
+
+</html>

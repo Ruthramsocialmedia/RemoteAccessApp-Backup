@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Management - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        /* ── Scheduled Queue Panel ── */
+        #scheduled-panel {
+            display: none;
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .scheduled-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .scheduled-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f59e0b;
+            letter-spacing: 0.5px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scheduled-header .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        .scheduled-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(245, 158, 11, 0.04);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .scheduled-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .scheduled-item-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .scheduled-item-info .pkg {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary, #e2e8f0);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0 0 2px 0;
+        }
+
+        .scheduled-item-info .status-label {
+            font-size: 11px;
+            color: #f59e0b;
+            margin: 0;
+        }
+
+        .btn-cancel {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 5px 14px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+
+        /* ── App list items ── */
+        .app-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--card-bg, rgba(255, 255, 255, 0.03));
+            border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+            border-radius: 8px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .app-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .app-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 3px 0;
+            color: var(--text-primary, #e2e8f0);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-info p {
+            font-size: 11px;
+            color: var(--text-muted, #64748b);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn-launch {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-launch:hover {
+            background: rgba(16, 185, 129, 0.22);
+        }
+
+        .btn-uninstall {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-uninstall:hover {
+            background: rgba(239, 68, 68, 0.22);
+        }
+
+        /* ── Misc ── */
+        #refresh-btn {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 6px 16px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+
+        #refresh-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .header-row h1 {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
+        <header>
+            <div class="header-row">
+                <h1>Installed Applications <span class="count-badge" id="app-count" style="display:none">0</span></h1>
+                <button id="refresh-btn" onclick="loadApps()">⟳ REFRESH</button>
+            </div>
+            <p>// package manager</p>
+        </header>
+
+        <!-- Scheduled Queue Panel -->
+        <div id="scheduled-panel">
+            <div class="scheduled-header">
+                <h3><span class="pulse-dot"></span> Scheduled Uninstalls</h3>
+                <span class="count-badge" id="scheduled-count">0</span>
+            </div>
+            <div id="scheduled-list"></div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+            <input type="search" id="app-search" placeholder="Search apps by name or package..." oninput="filterApps()">
+        </div>
+
+        <div id="app-list" class="app-list loading">Scanning packages...</div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        let allApps = [];
+        let ws = null;
+
+        // ── WebSocket for instant updates ──
+        function connectWS() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/`);
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'identify', role: 'browser', deviceId }));
+            };
+
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    // If device unlocks, refresh both lists instantly
+                    if (msg.type === 'device_state' && msg.deviceId === deviceId && msg.state === 'online') {
+                        setTimeout(() => {
+                            loadScheduledApps();
+                            loadApps();
+                        }, 2000);
+                    }
+                } catch (_) { }
+            };
+
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+
+        connectWS();
+
+        // ── Load app list ──
+        async function loadApps() {
+            const btn = document.getElementById('refresh-btn');
+            if (btn) btn.textContent = '⟳ Loading...';
+            try {
+                const response = await api.sendCommand(deviceId, 'apps_list');
+                if (response.success && response.data && response.data.status === 'success') {
+                    allApps = response.data.data || [];
+                    document.getElementById('app-count').style.display = 'inline-block';
+                    document.getElementById('app-count').textContent = allApps.length;
+                    renderApps(allApps);
+                } else {
+                    throw new Error(response.error || response.data?.error || 'Failed to load apps');
+                }
+            } catch (error) {
+                document.getElementById('app-list').innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`;
+            } finally {
+                if (btn) btn.textContent = '⟳ REFRESH';
+            }
+        }
+
+        // ── Load scheduled queue ──
+        async function loadScheduledApps() {
+            try {
+                const r = await fetch(`${api.baseURL}/api/device/${deviceId}/scheduled`, { credentials: 'same-origin' });
+                const data = await r.json();
+
+                if (!data.success) return;
+
+                const uninstalls = data.commands.filter(c => c.action === 'app_uninstall');
+                const panel = document.getElementById('scheduled-panel');
+                const list = document.getElementById('scheduled-list');
+
+                if (uninstalls.length > 0) {
+                    panel.style.display = 'block';
+                    document.getElementById('scheduled-count').textContent = uninstalls.length;
+                    list.innerHTML = uninstalls.map(cmd => `
+                        <div class="scheduled-item">
+                            <div class="scheduled-item-info">
+                                <p class="pkg">${escapeHtml(cmd.payload.package)}</p>
+                                <p class="status-label">⏳ Waiting for device to unlock / come online</p>
+                            </div>
+                            <button class="btn-cancel" onclick="cancelScheduled('${cmd.id}')">CANCEL</button>
+                        </div>
+                    `).join('');
+                } else {
+                    panel.style.display = 'none';
+                    list.innerHTML = '';
+                }
+            } catch (e) {
+                console.error('Failed to load scheduled commands:', e);
+            }
+        }
+
+        // ── Cancel a scheduled uninstall ──
+        async function cancelScheduled(commandId) {
+            try {
+                const r = await fetch(`${api.baseURL}/api/device/${deviceId}/schedule/${commandId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+                const data = await r.json();
+                if (data.success) {
+                    api.showToast('Scheduled uninstall cancelled', 'success');
+                    loadScheduledApps();
+                }
+            } catch (e) {
+                api.showToast('Failed to cancel', 'error');
+            }
+        }
+
+        // ── Filter/render ──
+        function filterApps() {
+            const q = document.getElementById('app-search').value.toLowerCase().trim();
+            renderApps(q ? allApps.filter(a => a.name.toLowerCase().includes(q) || a.package.toLowerCase().includes(q)) : allApps);
+        }
+
+        function renderApps(apps) {
+            const container = document.getElementById('app-list');
+            container.className = 'app-list';
+
+            if (apps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Apps Found</h2>
+                        <p>${allApps.length > 0 ? 'No apps match your search.' : 'No user apps found on device.'}</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = apps.map(app => `
+                <div class="app-item">
+                    <div class="app-info">
+                        <h3>${escapeHtml(app.name)}</h3>
+                        <p>${escapeHtml(app.package)} &nbsp;•&nbsp; v${escapeHtml(app.version || '?')}</p>
+                    </div>
+                    <div class="app-actions">
+                        <button class="btn-launch" onclick="launchApp('${app.package}')">LAUNCH</button>
+                        <button class="btn-uninstall" onclick="uninstallApp('${app.package}')">UNINSTALL</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Launch ──
+        async function launchApp(packageName) {
+            try {
+                await api.sendCommand(deviceId, 'app_launch', { package: packageName });
+                api.showToast('App launched!', 'success');
+            } catch (e) {
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        // ── Uninstall ──
+        async function uninstallApp(packageName) {
+            if (!confirm(`Uninstall ${packageName}? A confirmation dialog will appear on the device.`)) return;
+
+            try {
+                const response = await api.sendCommand(deviceId, 'app_uninstall', { package: packageName });
+                const status = response.data?.status || response.status;
+
+                if (status === 'success') {
+                    api.showToast('Uninstall dialog sent to device ✓', 'success');
+                    allApps = allApps.filter(a => a.package !== packageName);
+                    document.getElementById('app-count').textContent = allApps.length;
+                    filterApps();
+                    setTimeout(loadApps, 5000);
+                } else {
+                    throw new Error(response.data?.error || response.error || 'Failed');
+                }
+            } catch (error) {
+                const isOffline = error.message?.includes('offline');
+                const isLocked = error.message?.includes('device_locked');
+
+                if (isOffline || isLocked) {
+                    const reason = isLocked ? 'Device screen is locked 🔒' : 'Device is offline 📴';
+                    if (confirm(`${reason}\n\nSchedule this uninstall? It will run automatically when the device is unlocked or comes back online.`)) {
+                        try {
+                            const r = await fetch(`${api.baseURL}/api/device/${deviceId}/schedule`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({ action: 'app_uninstall', payload: { package: packageName } })
+                            });
+                            const data = await r.json();
+                            if (data.success) {
+                                api.showToast('Uninstall scheduled! Will run when device unlocks.', 'success');
+                                loadScheduledApps();
+                            } else {
+                                api.showToast('Failed to schedule: ' + (data.error || 'Unknown'), 'error');
+                            }
+                        } catch (e) {
+                            api.showToast('Failed to schedule: ' + e.message, 'error');
+                        }
+                    }
+                } else {
+                    api.showToast(error.message, 'error');
+                }
+            }
+        }
+
+        // ── Escape HTML to prevent XSS ──
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ── Auto-refresh scheduled queue every 10 seconds ──
+        setInterval(loadScheduledApps, 10000);
+
+        // ── Initial load ──
+        loadApps();
+        loadScheduledApps();
+    </script>
+
+    <!-- Disclaimer -->
+    <div class="container">
+        <div class="disclaimer">
+            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this application on a device without the owner's explicit
+                consent is illegal and unethical. The developers assume no liability for misuse. By using this
+                application, you agree that you are solely responsible for how it is used.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p class="footer-created">Created by</p>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
+        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    </footer>
+</body>
+
+</html>

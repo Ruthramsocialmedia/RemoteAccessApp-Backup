@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command History - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .history-controls select,
+        .history-controls input {
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .history-controls select {
+            min-width: 140px;
+        }
+
+        .history-controls input[type="text"] {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .log-table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 72vh;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .log-table th,
+        .log-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.82rem;
+        }
+
+        .log-table th {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.72rem;
+            background: var(--bg-panel);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .log-table td {
+            color: var(--text-primary);
+        }
+
+        .log-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .log-table tbody tr:nth-child(even) {
+            background: rgba(0, 255, 65, 0.015);
+        }
+
+        .log-table tbody tr:hover {
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: rgba(0, 255, 65, 0.15);
+            color: #00ff41;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .status-failed {
+            background: rgba(255, 60, 60, 0.15);
+            color: #ff4444;
+            border: 1px solid rgba(255, 60, 60, 0.3);
+        }
+
+        .status-timeout {
+            background: rgba(255, 180, 0, 0.15);
+            color: #ffb400;
+            border: 1px solid rgba(255, 180, 0, 0.3);
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 200, 255, 0.1);
+            color: #00c8ff;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+        }
+
+        .duration-cell {
+            font-family: 'Courier New', monospace;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .duration-slow {
+            color: #ffb400;
+        }
+
+        .duration-timeout {
+            color: #ff4444;
+        }
+
+        .response-preview {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .response-preview:hover {
+            white-space: normal;
+            word-break: break-all;
+            background: var(--bg-panel);
+            padding: 4px 6px;
+            border-radius: 3px;
+        }
+
+        .time-cell {
+            white-space: nowrap;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff41;
+            margin-right: 6px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 12px 18px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .stat-success .stat-value {
+            color: #00ff41;
+        }
+
+        .stat-failed .stat-value {
+            color: #ff4444;
+        }
+
+        .stat-timeout .stat-value {
+            color: #ffb400;
+        }
+
+        @media (max-width: 768px) {
+            .header-row {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .header-row .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .history-controls {
+                flex-direction: column;
+            }
+
+            .history-controls select,
+            .history-controls input {
+                width: 100%;
+            }
+
+            .stats-row {
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 10px;
+                min-width: 80px;
+            }
+
+            .stat-value {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
+        <div class="header-row">
+            <h1><span class="live-dot"></span>Command History <span class="count-badge" id="count"
+                    style="display:none">0</span></h1>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary" onclick="clearHistory()">&#x1F5D1; CLEAR</button>
+                <button class="btn btn-primary" onclick="loadHistory()">&#x21BB; REFRESH</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-card stat-success">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-card stat-success">
+                <div class="stat-value" id="stat-success">-</div>
+                <div class="stat-label">Success</div>
+            </div>
+            <div class="stat-card stat-failed">
+                <div class="stat-value" id="stat-failed">-</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card stat-timeout">
+                <div class="stat-value" id="stat-timeout">-</div>
+                <div class="stat-label">Timeout</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-avgms">-</div>
+                <div class="stat-label">Avg (ms)</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="history-controls">
+            <select id="filter-action" onchange="applyFilters()">
+                <option value="">All Actions</option>
+            </select>
+            <select id="filter-status" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option value="success">&#x2714; Success</option>
+                <option value="failed">&#x2716; Failed</option>
+                <option value="timeout">&#x231B; Timeout</option>
+            </select>
+            <input type="text" id="search-input" placeholder="Search commands..." oninput="applyFilters()" />
+        </div>
+
+        <!-- Table -->
+        <div id="history-container">
+            <div style="text-align:center;padding:40px;color:var(--text-muted)">Loading command history...</div>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="container">
+        <div class="disclaimer">
+            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this application on a device without the owner's explicit
+                consent is illegal and unethical. The developers assume no liability for misuse. By using this
+                application, you agree that you are solely responsible for how it is used.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p class="footer-created">Created by</p>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
+        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        let allHistory = [];
+        let filteredHistory = [];
+        let autoRefresh = null;
+
+        async function loadHistory() {
+            try {
+                const url = deviceId
+                    ? `/api/device/${deviceId}/history?limit=500`
+                    : `/api/history?limit=500`;
+
+                const resp = await fetch(url);
+                if (resp.status === 401) { window.location.href = '/login.html'; return; }
+                const json = await resp.json();
+
+                if (json.success) {
+                    allHistory = json.history || [];
+                    buildActionFilter();
+                    applyFilters();
+                }
+            } catch (e) {
+                document.getElementById('history-container').innerHTML =
+                    '<div class="empty-state"><h2>&#x26A0; Failed to load history</h2><p>' + e.message + '</p>' +
+                    '<button class="btn btn-primary" style="margin-top:16px" onclick="loadHistory()">RETRY</button></div>';
+            }
+        }
+
+        function buildActionFilter() {
+            const select = document.getElementById('filter-action');
+            const current = select.value;
+            const actions = [...new Set(allHistory.map(h => h.action))].sort();
+
+            select.innerHTML = '<option value="">All Actions (' + actions.length + ')</option>';
+            actions.forEach(a => {
+                const count = allHistory.filter(h => h.action === a).length;
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a + ' (' + count + ')';
+                select.appendChild(opt);
+            });
+            select.value = current;
+        }
+
+        function applyFilters() {
+            const actionFilter = document.getElementById('filter-action').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const search = document.getElementById('search-input').value.toLowerCase().trim();
+
+            filteredHistory = allHistory;
+
+            if (actionFilter) filteredHistory = filteredHistory.filter(h => h.action === actionFilter);
+            if (statusFilter) filteredHistory = filteredHistory.filter(h => h.status === statusFilter);
+            if (search) {
+                filteredHistory = filteredHistory.filter(h =>
+                    h.action.toLowerCase().includes(search) ||
+                    h.commandId.toLowerCase().includes(search) ||
+                    (h.deviceId && h.deviceId.toLowerCase().includes(search)) ||
+                    JSON.stringify(h.response || '').toLowerCase().includes(search)
+                );
+            }
+
+            updateStats();
+            renderTable();
+        }
+
+        function updateStats() {
+            const data = filteredHistory;
+            const success = data.filter(h => h.status === 'success').length;
+            const failed = data.filter(h => h.status === 'failed').length;
+            const timeout = data.filter(h => h.status === 'timeout').length;
+            const durations = data.filter(h => h.durationMs > 0).map(h => h.durationMs);
+            const avg = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
+
+            document.getElementById('stat-total').textContent = data.length;
+            document.getElementById('stat-success').textContent = success;
+            document.getElementById('stat-failed').textContent = failed;
+            document.getElementById('stat-timeout').textContent = timeout;
+            document.getElementById('stat-avgms').textContent = avg ? avg + 'ms' : '-';
+
+            const countBadge = document.getElementById('count');
+            countBadge.style.display = 'inline-block';
+            countBadge.textContent = allHistory.length;
+        }
+
+        function renderTable() {
+            const container = document.getElementById('history-container');
+
+            if (filteredHistory.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No Commands Recorded</h2><p>Commands will appear here as you use features on the dashboard.</p></div>';
+                return;
+            }
+
+            let html = '<div class="log-table-wrap"><table class="log-table">' +
+                '<thead><tr>' +
+                '<th>Time</th>' +
+                '<th>Action</th>' +
+                '<th>Status</th>' +
+                '<th>Duration</th>' +
+                '<th>Response</th>' +
+                (!deviceId ? '<th>Device</th>' : '') +
+                '</tr></thead><tbody>';
+
+            filteredHistory.forEach(h => {
+                const time = formatTime(h.timestamp);
+                const statusClass = h.status === 'success' ? 'status-success' : h.status === 'timeout' ? 'status-timeout' : 'status-failed';
+                const statusIcon = h.status === 'success' ? '&#x2714;' : h.status === 'timeout' ? '&#x231B;' : '&#x2716;';
+
+                let durationClass = 'duration-cell';
+                if (h.durationMs > 5000) durationClass += ' duration-timeout';
+                else if (h.durationMs > 1000) durationClass += ' duration-slow';
+
+                const response = h.response ? (typeof h.response === 'string' ? h.response : JSON.stringify(h.response)) : '-';
+                const responseTrunc = response.length > 60 ? response.substring(0, 60) + '...' : response;
+
+                html += '<tr>' +
+                    '<td class="time-cell">' + time + '</td>' +
+                    '<td><span class="action-badge">' + h.action + '</span></td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + statusIcon + ' ' + h.status + '</span></td>' +
+                    '<td class="' + durationClass + '">' + (h.durationMs > 0 ? h.durationMs + 'ms' : '-') + '</td>' +
+                    '<td><span class="response-preview" title="' + escapeHtml(response) + '">' + escapeHtml(responseTrunc) + '</span></td>' +
+                    (!deviceId ? '<td style="font-family:monospace;font-size:0.75rem">' + (h.deviceId ? h.deviceId.substring(0, 8) + '...' : '-') + '</td>' : '') +
+                    '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '-';
+            const d = new Date(ts);
+            const now = new Date();
+            const today = now.toDateString();
+            const dateStr = d.toDateString();
+
+            const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            if (dateStr === today) return time;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function clearHistory() {
+            if (!confirm('Clear all command history?')) return;
+            try {
+                if (deviceId) {
+                    await fetch(`/api/device/${deviceId}/history`, { method: 'DELETE' });
+                }
+                allHistory = [];
+                applyFilters();
+                api.showToast('History cleared', 'success');
+            } catch (e) {
+                api.showToast('Failed to clear history', 'error');
+            }
+        }
+
+        // Auto-refresh every 10 seconds
+        function startAutoRefresh() {
+            autoRefresh = setInterval(loadHistory, 10000);
+        }
+
+        // Pause auto-refresh when page is hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(autoRefresh);
+            } else {
+                loadHistory();
+                startAutoRefresh();
+            }
+        });
+
+        // Init
+        loadHistory();
+        startAutoRefresh();
+    </script>
+</body>
+
+</html>

