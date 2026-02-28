@@ -190,8 +190,8 @@
             if (callState !== 'IDLE') pollCurrentState();
         }, 5000);
 
-        // Slow fallback for any missed IDLE→RINGING transitions
-        setInterval(pollCurrentState, 60000);
+        // Fast fallback poll for detecting new calls even if WS push is missed
+        setInterval(pollCurrentState, 15000);
 
         connectWS();
     }
