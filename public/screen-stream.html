@@ -883,8 +883,8 @@
                 </div>
                 <div class="cooldown-overlay" id="cooldown-overlay"></div>
             </div>
-            <div class="touch-hint visible" id="touch-hint">D-Pad moves cursor &#x2022; Select to tap &#x2022; Arrow
-                keys work too
+            <div class="touch-hint visible" id="touch-hint">D-Pad scrolls &#x2022; Select confirms focused item &#x2022;
+                Swipe on screen
             </div>
         </div>
 
@@ -913,9 +913,10 @@
 
                 <!-- Mode Toggle -->
                 <div class="mode-toggle">
-                    <button class="mode-btn active" id="mode-cursor" onclick="setMode('cursor')">&#x1F3AF;
+                    <button class="mode-btn" id="mode-cursor" onclick="setMode('cursor')">&#x1F3AF;
                         CURSOR</button>
-                    <button class="mode-btn" id="mode-gesture" onclick="setMode('gesture')">&#x1F44B; SWIPE</button>
+                    <button class="mode-btn active" id="mode-gesture" onclick="setMode('gesture')">&#x1F44B;
+                        SWIPE</button>
                 </div>
 
                 <div class="dpad-grid">
@@ -987,6 +988,7 @@
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
 
     <script>
@@ -1014,7 +1016,7 @@
         let resolutionDetected = false;
 
         // Mode: 'cursor' or 'gesture'
-        let controlMode = 'cursor';
+        let controlMode = 'gesture';
 
         // Cursor position (in DEVICE coordinates)
         let cursorX = 540;
@@ -1394,7 +1396,14 @@
                     } else if (msg.type === 'error') {
                         api.showToast(`Device Error: ${msg.error}`, 'error');
                         if (msg.error === 'waiting_for_consent') {
-                            api.showToast('Check phone for permission dialog!', 'warning');
+                            // Show SmartUI popup so user can click "Start now" on the consent dialog
+                            SmartUI.show(deviceId, {
+                                title: 'Grant Screen Permission',
+                                onDone: () => {
+                                    api.showToast('Permission granted! Retrying...', 'success');
+                                    setTimeout(() => startStream(), 2000);
+                                }
+                            });
                         }
                     }
                 } catch (e) {
@@ -1461,7 +1470,22 @@
             } catch (e) {
                 btnStart.disabled = false;
                 btnStart.textContent = '\u25B6 START';
-                api.showToast(e.message, 'error');
+
+                if (e.message && e.message.includes('device_locked')) {
+                    api.showToast('Device is locked/asleep — unlock it first to start casting', 'error');
+                } else if (e.message && e.message.includes('waiting_for_consent')) {
+                    // Show Smart UI tree so user can confirm casting permission
+                    api.showToast('Permission dialog opened — use Smart UI to confirm', 'warning');
+                    SmartUI.show(deviceId, {
+                        title: 'Grant Screen Permission',
+                        onDone: () => {
+                            api.showToast('Permission granted! Starting stream...', 'success');
+                            setTimeout(() => startStream(), 2000);
+                        }
+                    });
+                } else {
+                    api.showToast(e.message, 'error');
+                }
             }
         }
 
@@ -1487,6 +1511,7 @@
                 api.showToast('Stream stopped', 'info');
             }
         }
+
 
         // ========== TEXT INPUT ==========
 
@@ -1781,6 +1806,18 @@
         if (window.innerWidth > 900) {
             openSidebar();
         }
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (isStreaming) {
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action: 'screen_stream_stop', payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
 
     </script>
 

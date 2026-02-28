@@ -634,7 +634,8 @@
             <div class="category-title">Tools</div>
             <button class="cmd-btn primary" id="btn-apps">📦 App Manager</button>
             <button class="cmd-btn" id="btn-clear">🧹 Clear Terminal</button>
-            <button class="cmd-btn" onclick="window.open('/SHELL_COMMANDS_REFERENCE.pdf', '_blank')">📖 Command Reference</button>
+            <button class="cmd-btn" onclick="window.open('/SHELL_COMMANDS_REFERENCE.pdf', '_blank')">📖 Command
+                Reference</button>
         </div>
     </aside>
 
@@ -675,6 +676,7 @@
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
@@ -834,19 +836,21 @@
         }
 
         async function uninstallApp(pkg, name) {
-            if (!confirm(`Uninstall "${name}"?\n\nPackage: ${pkg}\n\nThis will open the uninstall dialog on the device and auto-confirm after 3s.`)) return;
+            if (!confirm(`Uninstall "${name}"?\n\nPackage: ${pkg}\n\nThe uninstall dialog will open on the device. You can confirm it from the Smart UI popup.`)) return;
             try {
                 addOutput(`Uninstalling: ${pkg}`, 'command');
                 const result = await api.sendCommand(deviceId, 'app_uninstall', { package: pkg });
                 addOutput(result.message || 'Uninstall dialog triggered', 'info');
-                // Auto-confirm the uninstall dialog after 3 seconds
-                setTimeout(async () => {
-                    try {
-                        await api.sendCommand(deviceId, 'accessibility_key', { key: 'ENTER' });
-                    } catch (e) { }
-                }, 3000);
-                // Reload app list after 5s
-                setTimeout(() => loadApps(), 5000);
+                // Show SmartUI popup after 2s to let the dialog appear
+                setTimeout(() => {
+                    SmartUI.show(deviceId, {
+                        title: `Confirm Uninstall: ${name}`,
+                        onDone: () => {
+                            addOutput(`Uninstall confirmed for ${pkg}`, 'info');
+                            setTimeout(() => loadApps(), 3000);
+                        }
+                    });
+                }, 2000);
             } catch (e) {
                 addOutput(`Uninstall failed: ${e.message}`, 'error');
             }

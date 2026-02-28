@@ -120,7 +120,7 @@ class RemoteAPI {
             container.id = 'toast-container';
             container.style.cssText = `
         position: fixed;
-        top: 20px;
+        bottom: 20px;
         right: 20px;
         z-index: 10000;
       `;
@@ -176,22 +176,22 @@ const style = document.createElement('style');
 style.textContent = `
   @keyframes slideIn {
     from {
-      transform: translateX(100%);
+      transform: translateY(20px);
       opacity: 0;
     }
     to {
-      transform: translateX(0);
+      transform: translateY(0);
       opacity: 1;
     }
   }
   
   @keyframes slideOut {
     from {
-      transform: translateX(0);
+      transform: translateY(0);
       opacity: 1;
     }
     to {
-      transform: translateX(100%);
+      transform: translateY(20px);
       opacity: 0;
     }
   }

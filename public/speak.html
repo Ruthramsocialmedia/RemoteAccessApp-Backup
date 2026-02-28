@@ -277,6 +277,127 @@
             }
         }
 
+        /* ===== AUDIO FILE PLAYER ===== */
+        .audio-file-card {
+            border-color: rgba(255, 165, 0, 0.15);
+        }
+
+        .audio-file-card label {
+            color: #ffaa00;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 165, 0, 0.2);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: rgba(255, 165, 0, 0.5);
+            background: rgba(255, 165, 0, 0.04);
+        }
+
+        .file-drop-zone .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .file-drop-zone .hint {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .file-info {
+            display: none;
+            padding: 10px;
+            background: rgba(255, 165, 0, 0.04);
+            border: 1px solid rgba(255, 165, 0, 0.12);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 11px;
+        }
+
+        .file-info .name {
+            color: #ffaa00;
+            font-weight: bold;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-info .meta {
+            color: #666;
+        }
+
+        .audio-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            margin: 12px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .audio-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffaa00, #ff6600);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .audio-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid rgba(255, 165, 0, 0.25);
+            border-radius: 8px;
+            background: rgba(255, 165, 0, 0.06);
+            color: #ffaa00;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .audio-btn:hover {
+            background: rgba(255, 165, 0, 0.12);
+        }
+
+        .audio-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .audio-btn.playing {
+            animation: speakPulse 1s ease-in-out infinite;
+            border-color: #ffaa00;
+        }
+
+        .audio-btn.stop-btn {
+            border-color: rgba(255, 60, 60, 0.25);
+            background: rgba(255, 60, 60, 0.06);
+            color: #ff4444;
+        }
+
+        .audio-status {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            margin-top: 8px;
+            min-height: 14px;
+        }
+
         /* ===== QUICK PHRASES ===== */
         .phrases-grid {
             display: flex;
@@ -399,6 +520,32 @@
             <div class="talk-label">HOLD TO TALK</div>
             <div class="visualizer" id="visualizer"></div>
             <div class="walkie-timer" id="walkie-timer"></div>
+        </div>
+
+        <!-- Audio File Player -->
+        <div class="card audio-file-card">
+            <label>&#x1F3B5; Play Audio File on Device</label>
+            <div class="file-drop-zone" id="file-drop-zone"
+                onclick="document.getElementById('audio-file-input').click()">
+                <div class="icon">&#x1F4C1;</div>
+                <div>Click to select audio file</div>
+                <div class="hint">MP3, WAV, OGG, M4A, FLAC — any format</div>
+            </div>
+            <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
+            <div class="file-info" id="file-info">
+                <div class="name" id="file-name"></div>
+                <div class="meta" id="file-meta"></div>
+            </div>
+            <div class="audio-progress" id="audio-progress">
+                <div class="audio-progress-bar" id="audio-progress-bar"></div>
+            </div>
+            <div class="audio-controls">
+                <button class="audio-btn" id="btn-play-audio" disabled onclick="playAudioFile()">&#x25B6; PLAY ON
+                    DEVICE</button>
+                <button class="audio-btn stop-btn" id="btn-stop-audio" disabled onclick="stopAudioFile()">&#x25A0;
+                    STOP</button>
+            </div>
+            <div class="audio-status" id="audio-status"></div>
         </div>
 
         <!-- Text-to-Speech -->
@@ -784,9 +931,192 @@
         });
         talkBtn.addEventListener('touchcancel', () => stopTalk());
 
+        // ========== AUDIO FILE PLAYER ==========
+
+        let audioFileBuffer = null; // decoded AudioBuffer
+        let audioFileName = '';
+        let isPlayingFile = false;
+        let audioFileWs = null;
+        let playbackAbort = null; // AbortController for cancellation
+
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('audio-file-input');
+        const fileInfo = document.getElementById('file-info');
+        const audioProgress = document.getElementById('audio-progress');
+        const audioProgressBar = document.getElementById('audio-progress-bar');
+        const audioStatusEl = document.getElementById('audio-status');
+        const btnPlayAudio = document.getElementById('btn-play-audio');
+        const btnStopAudio = document.getElementById('btn-stop-audio');
+
+        // Drag & drop
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+        fileDropZone.addEventListener('dragleave', () => fileDropZone.classList.remove('dragover'));
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file && file.type.startsWith('audio/')) loadAudioFile(file);
+            else showToast('Please drop an audio file', true);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) loadAudioFile(file);
+        });
+
+        async function loadAudioFile(file) {
+            audioFileName = file.name;
+            audioStatusEl.textContent = 'Decoding audio...';
+            btnPlayAudio.disabled = true;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                audioFileBuffer = await ctx.decodeAudioData(arrayBuffer);
+                ctx.close();
+
+                const duration = audioFileBuffer.duration.toFixed(1);
+                const sizeKB = (file.size / 1024).toFixed(0);
+                const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+                const sizeStr = file.size > 1048576 ? `${sizeMB} MB` : `${sizeKB} KB`;
+
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-meta').textContent = `${duration}s • ${sizeStr} • ${audioFileBuffer.sampleRate}Hz`;
+                fileInfo.style.display = 'block';
+                fileDropZone.innerHTML = '<div class="icon">\u2705</div><div>File loaded — click to change</div>';
+
+                btnPlayAudio.disabled = false;
+                audioStatusEl.textContent = 'Ready to play';
+            } catch (e) {
+                showToast('Failed to decode audio: ' + e.message, true);
+                audioStatusEl.textContent = 'Decode failed';
+            }
+        }
+
+        async function playAudioFile() {
+            if (!audioFileBuffer || isPlayingFile) return;
+
+            isPlayingFile = true;
+            playbackAbort = new AbortController();
+            btnPlayAudio.disabled = true;
+            btnPlayAudio.classList.add('playing');
+            btnStopAudio.disabled = false;
+            audioProgress.style.display = 'block';
+            audioProgressBar.style.width = '0%';
+
+            try {
+                // Connect WebSocket
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                audioFileWs = new WebSocket(`${wsProtocol}//${location.host}`);
+                await new Promise((res, rej) => {
+                    audioFileWs.onopen = res;
+                    audioFileWs.onerror = rej;
+                });
+
+                // Tell device to start audio playback
+                await api.sendCommand(deviceId, 'audio_play_start');
+                audioStatusEl.textContent = 'Playing: ' + audioFileName;
+
+                // Get PCM data and downsample to 16kHz
+                const channelData = audioFileBuffer.getChannelData(0); // mono
+                const srcRate = audioFileBuffer.sampleRate;
+                const targetRate = 16000;
+                const ratio = srcRate / targetRate;
+                const totalSamples = Math.floor(channelData.length / ratio);
+
+                // Stream in chunks matching walkie-talkie format
+                const chunkSamples = 2048; // ~128ms at 16kHz
+                const totalChunks = Math.ceil(totalSamples / chunkSamples);
+                const signal = playbackAbort.signal;
+
+                for (let c = 0; c < totalChunks; c++) {
+                    if (signal.aborted) break;
+
+                    const start = c * chunkSamples;
+                    const end = Math.min(start + chunkSamples, totalSamples);
+                    const chunk = new Float32Array(end - start);
+
+                    // Downsample
+                    for (let i = 0; i < chunk.length; i++) {
+                        const srcIdx = (start + i) * ratio;
+                        const low = Math.floor(srcIdx);
+                        const high = Math.min(low + 1, channelData.length - 1);
+                        const frac = srcIdx - low;
+                        chunk[i] = channelData[low] * (1 - frac) + channelData[high] * frac;
+                    }
+
+                    // Apply volume from slider
+                    const vol = parseInt(document.getElementById('volume').value) / 100;
+                    for (let i = 0; i < chunk.length; i++) {
+                        chunk[i] = chunk[i] * vol;
+                    }
+
+                    // Convert to PCM16 base64
+                    const pcm16 = new Int16Array(chunk.length);
+                    for (let i = 0; i < chunk.length; i++) {
+                        const s = Math.max(-1, Math.min(1, chunk[i]));
+                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    const bytes = new Uint8Array(pcm16.buffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const base64 = btoa(binary);
+
+                    // Send via WebSocket
+                    if (audioFileWs.readyState === WebSocket.OPEN) {
+                        audioFileWs.send(JSON.stringify({
+                            type: 'browser_audio_chunk',
+                            deviceId: deviceId,
+                            data: base64
+                        }));
+                    }
+
+                    // Update progress
+                    const pct = ((c + 1) / totalChunks * 100).toFixed(1);
+                    audioProgressBar.style.width = pct + '%';
+
+                    // Pace to real-time (~128ms per chunk)
+                    const chunkDurationMs = (chunk.length / targetRate) * 1000;
+                    await new Promise(r => setTimeout(r, chunkDurationMs * 0.85));
+                }
+
+                // Wait for last chunk to finish playing
+                if (!signal.aborted) {
+                    audioStatusEl.textContent = 'Finishing playback...';
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+            } catch (e) {
+                if (!playbackAbort?.signal.aborted) {
+                    showToast('Playback error: ' + e.message, true);
+                }
+            } finally {
+                // Stop device playback
+                try { await api.sendCommand(deviceId, 'audio_play_stop'); } catch (e) { }
+                if (audioFileWs) { audioFileWs.close(); audioFileWs = null; }
+
+                isPlayingFile = false;
+                btnPlayAudio.disabled = false;
+                btnPlayAudio.classList.remove('playing');
+                btnStopAudio.disabled = true;
+                audioProgressBar.style.width = '100%';
+                audioStatusEl.textContent = playbackAbort?.signal.aborted ? 'Stopped' : 'Done ✓';
+            }
+        }
+
+        function stopAudioFile() {
+            if (playbackAbort) playbackAbort.abort();
+        }
+
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (isTalking) stopTalk();
+            if (isPlayingFile) stopAudioFile();
         });
     </script>
 </body>

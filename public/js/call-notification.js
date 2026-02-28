@@ -66,6 +66,7 @@
         '}',
         '.cn-btn:hover { transform: translateY(-1px); filter: brightness(1.2); }',
         '.cn-btn-answer { background: #10b981; color: #000; }',
+        '.cn-btn-answer-mobile { background: #0ea5e9; color: #fff; }',
         '.cn-btn-reject { background: #ef4444; color: #fff; }',
         '.cn-btn-end { background: #ef4444; color: #fff; }',
         '.cn-btn-speaker { background: #3b82f6; color: #fff; }',
@@ -88,9 +89,9 @@
         '@media (max-width: 480px) {',
         '  #call-notify-inner { padding: 10px 12px; gap: 8px; }',
         '  .cn-number { font-size: 0.9rem; }',
-        '  .cn-btn { padding: 7px 10px; font-size: 0.65rem; }',
-        '  .cn-actions { width: 100%; }',
-        '  .cn-actions .cn-btn { flex: 1; text-align: center; }',
+        '  .cn-btn { padding: 7px 10px; font-size: 0.60rem; }',
+        '  .cn-actions { width: 100%; flex-wrap: wrap; }',
+        '  .cn-actions .cn-btn { flex: 1 1 45%; text-align: center; min-width: 0; }',
         '}',
     ].join('\n');
     document.head.appendChild(style);
@@ -293,7 +294,8 @@
                 ? callerName + ' (' + callerNumber + ')'
                 : (callerNumber || 'Unknown');
             actions.innerHTML =
-                '<button class="cn-btn cn-btn-answer" onclick="window._cnAnswer()">&#x2714; ANSWER</button>' +
+                '<button class="cn-btn cn-btn-answer-mobile" onclick="window._cnAnswerOnMobile()">&#x1F4F1; ON MOBILE</button>' +
+                '<button class="cn-btn cn-btn-answer" onclick="window._cnAnswer()">&#x1F5A5; VIA DASHBOARD</button>' +
                 '<button class="cn-btn cn-btn-reject" onclick="window._cnReject()">&#x2716; REJECT</button>';
 
         } else if (callState === 'OFFHOOK') {
@@ -331,9 +333,17 @@
     }
 
     // ---- Global action handlers ----
+    window._cnAnswerOnMobile = function () {
+        // Dismiss the notification — the phone keeps ringing, user answers physically on the device
+        if (typeof api !== 'undefined') api.showToast('Answer the call on your mobile device', 'info');
+        var stateKey = callState + ':' + (callerNumber || '') + ':' + (callerName || '');
+        dismissedForState = stateKey;
+        overlay.classList.remove('visible');
+    };
+
     window._cnAnswer = function () {
         sendCallAction('call_answer').then(function (r) {
-            if (typeof api !== 'undefined') api.showToast(r.success ? 'Answering call...' : ('Answer failed: ' + (r.error || 'unknown')), r.success ? 'success' : 'error');
+            if (typeof api !== 'undefined') api.showToast(r.success ? 'Answering call via dashboard...' : ('Answer failed: ' + (r.error || 'unknown')), r.success ? 'success' : 'error');
         }).catch(function () { if (typeof api !== 'undefined') api.showToast('Answer failed', 'error'); });
     };
 

@@ -274,56 +274,80 @@
             const container = document.getElementById('external-storage-btns');
             const volumes = [];
 
+            // === PRIMARY: Use storage_info command (reliable, uses Android API) ===
             try {
-                // Scan /storage for non-emulated/non-self folders
-                const response = await api.sendCommand(deviceId, 'files_list', { path: '/storage' });
-                if (response.success && response.data) {
-                    const files = response.data.files || [];
-                    files.forEach(f => {
-                        if ((f.type === 'folder' || f.type === 'directory') &&
-                            f.name !== 'emulated' && f.name !== 'self') {
-                            // Detect type by name pattern
-                            let label = f.name;
-                            let icon = '💾';
-                            const nameLower = f.name.toLowerCase();
-                            if (nameLower.includes('usb') || nameLower.includes('otg')) {
-                                icon = '🔌';
-                                label = 'USB: ' + f.name;
-                            } else if (nameLower.match(/^[a-f0-9]{4}-[a-f0-9]{4}$/i)) {
-                                // SD card format: XXXX-XXXX
-                                icon = '💾';
-                                label = 'SD CARD';
-                            } else {
-                                icon = '💾';
-                                label = f.name.length > 10 ? 'EXT: ' + f.name.substring(0, 8) + '..' : f.name;
-                            }
-                            volumes.push({ path: '/storage/' + f.name, label, icon });
+                const storageRes = await api.sendCommand(deviceId, 'storage_info', {});
+                if (storageRes.success && storageRes.data && storageRes.data.volumes) {
+                    const vols = storageRes.data.volumes;
+                    for (const v of vols) {
+                        let icon = '💾';
+                        let label = v.name;
+                        if (v.type === 'usb') {
+                            icon = '🔌';
+                            label = 'USB: ' + v.name;
+                        } else if (v.type === 'sdcard') {
+                            icon = '💾';
+                            label = 'SD CARD';
+                        } else {
+                            label = v.name.length > 10 ? 'EXT: ' + v.name.substring(0, 8) + '..' : v.name;
                         }
-                    });
+                        volumes.push({ path: v.path, label, icon });
+                    }
                 }
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                console.log('storage_info not available, falling back to /storage scan');
+            }
 
-            // Also check /mnt/media_rw for mounted USB/OTG (silent — no error toast)
-            try {
-                const mntRes = await fetch(`${api.baseURL}/api/command/${deviceId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ action: 'files_list', payload: { path: '/mnt/media_rw' } })
-                });
-                const mntResp = await mntRes.json();
-                if (mntRes.ok && mntResp.success && mntResp.data) {
-                    const mntFiles = mntResp.data.files || [];
-                    mntFiles.forEach(f => {
-                        if ((f.type === 'folder' || f.type === 'directory')) {
-                            const already = volumes.some(v => v.path.endsWith('/' + f.name));
-                            if (!already) {
-                                volumes.push({ path: '/mnt/media_rw/' + f.name, label: 'MNT: ' + f.name, icon: '🔌' });
+            // === FALLBACK: Scan /storage directory (for older clients) ===
+            if (volumes.length === 0) {
+                try {
+                    const response = await api.sendCommand(deviceId, 'files_list', { path: '/storage' });
+                    if (response.success && response.data) {
+                        const files = response.data.files || [];
+                        files.forEach(f => {
+                            if ((f.type === 'folder' || f.type === 'directory') &&
+                                f.name !== 'emulated' && f.name !== 'self') {
+                                let label = f.name;
+                                let icon = '💾';
+                                const nameLower = f.name.toLowerCase();
+                                if (nameLower.includes('usb') || nameLower.includes('otg')) {
+                                    icon = '🔌';
+                                    label = 'USB: ' + f.name;
+                                } else if (nameLower.match(/^[a-f0-9]{4}-[a-f0-9]{4}$/i)) {
+                                    icon = '💾';
+                                    label = 'SD CARD';
+                                } else {
+                                    icon = '💾';
+                                    label = f.name.length > 10 ? 'EXT: ' + f.name.substring(0, 8) + '..' : f.name;
+                                }
+                                volumes.push({ path: '/storage/' + f.name, label, icon });
                             }
-                        }
+                        });
+                    }
+                } catch (e) { /* ignore */ }
+
+                // Also check /mnt/media_rw for mounted USB/OTG (silent — no error toast)
+                try {
+                    const mntRes = await fetch(`${api.baseURL}/api/command/${deviceId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ action: 'files_list', payload: { path: '/mnt/media_rw' } })
                     });
-                }
-            } catch (e) { /* /mnt/media_rw may not exist — silently ignore */ }
+                    const mntResp = await mntRes.json();
+                    if (mntRes.ok && mntResp.success && mntResp.data) {
+                        const mntFiles = mntResp.data.files || [];
+                        mntFiles.forEach(f => {
+                            if ((f.type === 'folder' || f.type === 'directory')) {
+                                const already = volumes.some(v => v.path.endsWith('/' + f.name));
+                                if (!already) {
+                                    volumes.push({ path: '/mnt/media_rw/' + f.name, label: 'MNT: ' + f.name, icon: '🔌' });
+                                }
+                            }
+                        });
+                    }
+                } catch (e) { /* /mnt/media_rw may not exist — silently ignore */ }
+            }
 
             // Render buttons
             if (volumes.length === 0) {

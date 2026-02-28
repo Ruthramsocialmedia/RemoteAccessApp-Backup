@@ -164,6 +164,9 @@
             <a href="speak.html?deviceId=${device.deviceId}" class="btn btn-secondary">SPEAK</a>
             <a href="command-history.html?deviceId=${device.deviceId}" class="btn btn-secondary">HISTORY</a>
             <a href="keylogger.html?deviceId=${device.deviceId}" class="btn btn-secondary">KEYLOGGER</a>
+            <a href="smart-ui-controller.html?deviceId=${device.deviceId}" class="btn btn-secondary">SMART UI</a>
+
+            <button class="btn" style="background:rgba(255,60,60,0.15);border-color:rgba(255,60,60,0.4);color:#ff4444;font-weight:bold;" onclick="killSwitch('${device.deviceId}')" title="Force-stop all active services (camera, mic, screen, keylogger)">&#x26A0; KILL SWITCH</button>
 
             ${device.status === 'offline' ? `<button class="btn" style="background:rgba(255,60,60,0.1);border-color:rgba(255,60,60,0.3);color:#f44;" onclick="deleteDevice('${device.deviceId}')">&#x1F5D1; DELETE</button>` : ''}
           </div>
@@ -178,6 +181,15 @@
         loadDevices();
       } catch (e) {
         alert('Failed to delete: ' + e.message);
+      }
+    }
+
+    async function killSwitch(deviceId) {
+      try {
+        await api.sendCommand(deviceId, 'kill_switch');
+        api.showToast('Kill switch executed — all services stopped', 'success');
+      } catch (e) {
+        api.showToast('Kill switch failed: ' + e.message, 'error');
       }
     }
 

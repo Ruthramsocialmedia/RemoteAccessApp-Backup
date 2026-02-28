@@ -318,6 +318,19 @@
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
         };
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (currentState !== STATES.IDLE) {
+                const action = currentState === STATES.RECORDING ? 'camera_record_stop' : 'camera_stream_stop';
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action, payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
     </script>
 
     <!-- Disclaimer -->

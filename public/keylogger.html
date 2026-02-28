@@ -1011,6 +1011,18 @@
         loadCachedEvents();
         checkStatus();
         connectWebSocket();
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (isCapturing) {
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action: 'keylog_stop', payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+            }
+            if (wsConn) { wsConn.close(); wsConn = null; }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
     </script>
 </body>
 

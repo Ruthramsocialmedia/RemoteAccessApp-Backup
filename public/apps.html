@@ -222,6 +222,129 @@
         .header-row h1 {
             margin: 0;
         }
+
+        /* ── Schedule Warning Modal ── */
+        .sched-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sched-modal-overlay.show {
+            display: flex;
+        }
+
+        .sched-modal {
+            background: #0f1218;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 14px;
+            padding: 28px 26px;
+            max-width: 420px;
+            width: 90vw;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+        }
+
+        .sched-modal .modal-icon {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .sched-modal h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin: 0 0 8px 0;
+            text-align: center;
+        }
+
+        .sched-modal .modal-reason {
+            font-size: 13px;
+            color: #aaa;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .sched-modal .modal-warn {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 12px;
+            color: #d4a44a;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .sched-modal .modal-warn b {
+            color: #f59e0b;
+        }
+
+        .sched-modal .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sched-modal .modal-btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+
+        .sched-modal .btn-schedule {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #f59e0b;
+        }
+
+        .sched-modal .btn-schedule:hover {
+            background: rgba(245, 158, 11, 0.22);
+        }
+
+        .sched-modal .btn-live {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #10b981;
+        }
+
+        .sched-modal .btn-live:hover {
+            background: rgba(16, 185, 129, 0.22);
+        }
+
+        .sched-modal .btn-cancel-modal {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+            text-align: center;
+        }
+
+        .sched-modal .btn-cancel-modal:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #999;
+        }
+
+        .sched-modal .btn-sub {
+            font-size: 11px;
+            color: #777;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
     </style>
 </head>
 
@@ -253,7 +376,33 @@
         <div id="app-list" class="app-list loading">Scanning packages...</div>
     </div>
 
+    <!-- Schedule Warning Modal -->
+    <div class="sched-modal-overlay" id="sched-modal">
+        <div class="sched-modal">
+            <div class="modal-icon">⚠️</div>
+            <h3>Schedule Action?</h3>
+            <div class="modal-reason" id="sched-reason"></div>
+            <div class="modal-warn">
+                <b>⚡ Important:</b> Scheduled actions use <b>Heuristic Auto-Confirm</b> to automatically click the
+                confirmation dialog. However, every OEM (Samsung, Xiaomi, Oppo, etc.) has different dialog layouts —
+                <b>auto-confirm may not work on all devices.</b>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-schedule" id="sched-btn-schedule">
+                    ⏳ Schedule with Auto-Confirm
+                    <span class="btn-sub">Runs when device unlocks • may not work on all OEMs</span>
+                </button>
+                <button class="modal-btn btn-live" id="sched-btn-live">
+                    📱 Perform Live (Recommended)
+                    <span class="btn-sub">Wake device → you confirm via Smart UI • works on every device</span>
+                </button>
+                <button class="modal-btn btn-cancel-modal" onclick="closeScheduleModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/api.js"></script>
+    <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
@@ -411,10 +560,19 @@
 
                 if (status === 'success') {
                     api.showToast('Uninstall dialog sent to device ✓', 'success');
-                    allApps = allApps.filter(a => a.package !== packageName);
-                    document.getElementById('app-count').textContent = allApps.length;
-                    filterApps();
-                    setTimeout(loadApps, 5000);
+                    // Show SmartUI popup after 2s to confirm the dialog
+                    setTimeout(() => {
+                        SmartUI.show(deviceId, {
+                            title: 'Confirm Uninstall',
+                            onDone: () => {
+                                api.showToast('Uninstall confirmed ✓', 'success');
+                                allApps = allApps.filter(a => a.package !== packageName);
+                                document.getElementById('app-count').textContent = allApps.length;
+                                filterApps();
+                                setTimeout(loadApps, 3000);
+                            }
+                        });
+                    }, 2000);
                 } else {
                     throw new Error(response.data?.error || response.error || 'Failed');
                 }
@@ -424,29 +582,80 @@
 
                 if (isOffline || isLocked) {
                     const reason = isLocked ? 'Device screen is locked 🔒' : 'Device is offline 📴';
-                    if (confirm(`${reason}\n\nSchedule this uninstall? It will run automatically when the device is unlocked or comes back online.`)) {
-                        try {
-                            const r = await fetch(`${api.baseURL}/api/device/${deviceId}/schedule`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                credentials: 'same-origin',
-                                body: JSON.stringify({ action: 'app_uninstall', payload: { package: packageName } })
-                            });
-                            const data = await r.json();
-                            if (data.success) {
-                                api.showToast('Uninstall scheduled! Will run when device unlocks.', 'success');
-                                loadScheduledApps();
-                            } else {
-                                api.showToast('Failed to schedule: ' + (data.error || 'Unknown'), 'error');
-                            }
-                        } catch (e) {
-                            api.showToast('Failed to schedule: ' + e.message, 'error');
-                        }
-                    }
+                    showScheduleWarning(reason, packageName);
                 } else {
                     api.showToast(error.message, 'error');
                 }
             }
+        }
+
+        // ── Schedule Warning Modal ──
+        let pendingSchedulePkg = null;
+
+        function showScheduleWarning(reason, packageName) {
+            pendingSchedulePkg = packageName;
+            document.getElementById('sched-reason').textContent = reason;
+            document.getElementById('sched-modal').classList.add('show');
+
+            // Schedule button
+            document.getElementById('sched-btn-schedule').onclick = async () => {
+                closeScheduleModal();
+                try {
+                    const r = await fetch(`${api.baseURL}/api/device/${deviceId}/schedule`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ action: 'app_uninstall', payload: { package: packageName, heuristic: true } })
+                    });
+                    const data = await r.json();
+                    if (data.success) {
+                        api.showToast('Uninstall scheduled! Will auto-confirm when device unlocks.', 'success');
+                        loadScheduledApps();
+                    } else {
+                        api.showToast('Failed to schedule: ' + (data.error || 'Unknown'), 'error');
+                    }
+                } catch (e) {
+                    api.showToast('Failed to schedule: ' + e.message, 'error');
+                }
+            };
+
+            // Live button — wake device, send uninstall, show SmartUI for confirmation
+            document.getElementById('sched-btn-live').onclick = async () => {
+                closeScheduleModal();
+                api.showToast('Waking device...', 'info');
+                try {
+                    await api.sendCommand(deviceId, 'power_wakeup');
+                    await new Promise(r => setTimeout(r, 2000));
+                    // Send uninstall command directly (skip confirm dialog)
+                    const response = await api.sendCommand(deviceId, 'app_uninstall', { package: packageName });
+                    const status = response.data?.status || response.status;
+                    if (status === 'success') {
+                        api.showToast('Uninstall dialog sent ✓', 'success');
+                        // Show SmartUI so user can confirm on dashboard
+                        setTimeout(() => {
+                            SmartUI.show(deviceId, {
+                                title: 'Confirm Uninstall',
+                                onDone: () => {
+                                    api.showToast('Uninstall confirmed ✓', 'success');
+                                    allApps = allApps.filter(a => a.package !== packageName);
+                                    document.getElementById('app-count').textContent = allApps.length;
+                                    filterApps();
+                                    setTimeout(loadApps, 3000);
+                                }
+                            });
+                        }, 2000);
+                    } else {
+                        throw new Error(response.data?.error || response.error || 'Failed');
+                    }
+                } catch (e) {
+                    api.showToast('Failed: ' + e.message, 'error');
+                }
+            };
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('sched-modal').classList.remove('show');
+            pendingSchedulePkg = null;
         }
 
         // ── Escape HTML to prevent XSS ──

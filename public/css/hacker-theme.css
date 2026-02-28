@@ -1363,7 +1363,7 @@ input[type="file"] {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     color: var(--text-primary) !important;
-    animation: slideInRight 0.3s ease-out !important;
+    animation: slideInUp 0.3s ease-out !important;
     border-left: 3px solid var(--accent) !important;
 }
 
@@ -1379,15 +1379,15 @@ input[type="file"] {
     border-left-color: var(--info) !important;
 }
 
-@keyframes slideInRight {
+@keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateX(40px);
+        transform: translateY(20px);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 

@@ -24,7 +24,7 @@
 
         .status-indicator {
             text-align: center;
-            padding: 32px;
+            padding: 24px;
             margin-bottom: 24px;
             background: var(--bg-panel);
             border-radius: 4px;
@@ -84,64 +84,67 @@
             flex-wrap: wrap;
         }
 
-        .audio-visualizer {
+        /* ===== Sound Wave Canvas ===== */
+        .waveform-container {
             margin-top: 16px;
-            height: 50px;
+            height: 120px;
             background: var(--bg-input, #1a1a2e);
-            border-radius: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .waveform-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .waveform-placeholder {
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 100%;
             color: var(--text-secondary);
             font-size: 0.85rem;
-            overflow: hidden;
-            gap: 3px;
-            padding: 0 12px;
         }
 
-        .vis-bar {
-            width: 4px;
-            background: var(--primary);
-            border-radius: 2px;
-            animation: visBar 0.4s ease-in-out infinite alternate;
-        }
-
-        @keyframes visBar {
-            from {
-                height: 6px;
-                opacity: 0.3;
-            }
-
-            to {
-                height: 40px;
-                opacity: 1;
-            }
-        }
-
-        .rec-timer {
-            display: inline-flex;
+        /* ===== Recording Overlay on Waveform ===== */
+        .rec-overlay {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: none;
             align-items: center;
-            gap: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            color: var(--danger);
+            gap: 6px;
+            background: rgba(255, 0, 0, 0.15);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            border-radius: 6px;
+            padding: 4px 10px;
+            z-index: 2;
+        }
+
+        .rec-overlay.visible {
+            display: flex;
         }
 
         .rec-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--danger);
             animation: pulse 1s ease-in-out infinite;
         }
 
-        .buffer-info {
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+        .rec-time {
             font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--danger);
+            font-weight: bold;
         }
 
+        /* ===== Volume ===== */
         .volume-control {
             margin-top: 16px;
             display: flex;
@@ -158,6 +161,13 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             min-width: 60px;
+        }
+
+        .buffer-info {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: 'Courier New', monospace;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -199,30 +209,36 @@
         </div>
 
         <div class="control-panel">
-            <h2>Live Audio</h2>
+            <h2>Audio Preview & Recording</h2>
             <div class="controls">
-                <button class="btn btn-primary" id="btn-start-live">START LIVE LISTEN</button>
-                <button class="btn btn-danger" id="btn-stop-live" disabled>STOP LIVE</button>
+                <!-- Preview Controls -->
+                <button class="btn btn-primary" id="btn-start-preview">START PREVIEW</button>
+                <button class="btn btn-secondary" id="btn-stop-preview" style="display:none;">STOP PREVIEW</button>
+
+                <!-- Recording Controls (only available during preview) -->
+                <button class="btn btn-danger" id="btn-start-record" disabled>● RECORD</button>
+                <button class="btn btn-danger" id="btn-stop-record" style="display:none;">■ STOP RECORDING</button>
             </div>
-            <div class="audio-visualizer" id="visualizer">Waiting for audio...</div>
+
+            <!-- Sound Wave Visualizer -->
+            <div class="waveform-container" id="waveform-container">
+                <div class="waveform-placeholder" id="waveform-placeholder">
+                    Click "START PREVIEW" to hear device audio
+                </div>
+                <canvas id="waveform-canvas" style="display:none;"></canvas>
+                <!-- Recording timer overlay -->
+                <div class="rec-overlay" id="rec-overlay">
+                    <span class="rec-dot"></span>
+                    <span class="rec-time" id="rec-time">00:00</span>
+                </div>
+            </div>
+
             <div class="volume-control">
                 <label>Volume:</label>
                 <input type="range" id="volume" min="0" max="200" value="100">
                 <span id="volume-label">100%</span>
             </div>
             <div class="buffer-info" id="buffer-info"></div>
-        </div>
-
-        <div class="control-panel">
-            <h2>Recording</h2>
-            <div class="controls">
-                <button class="btn btn-primary" id="btn-start-record">START RECORDING</button>
-                <button class="btn btn-danger" id="btn-stop-record" disabled>STOP RECORDING</button>
-            </div>
-            <div class="rec-timer" id="mic-rec-timer" style="display:none; margin-top: 10px;">
-                <span class="rec-dot"></span>
-                <span id="mic-rec-time">00:00</span>
-            </div>
         </div>
     </div>
 
@@ -252,25 +268,40 @@
     <script>
         // ===== Configuration =====
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
-        const SAMPLE_RATE = 16000;
-        const RING_BUFFER_SECONDS = 3; // 3 seconds of buffer capacity
+        const SAMPLE_RATE = 44100;
+        const RING_BUFFER_SECONDS = 3;
         const RING_BUFFER_SIZE = SAMPLE_RATE * RING_BUFFER_SECONDS;
-        const SCRIPT_BUFFER_SIZE = 2048; // ScriptProcessorNode buffer (128ms at 16kHz)
+        const SCRIPT_BUFFER_SIZE = 4096;
 
         if (!deviceId) {
             window.location.href = 'index.html';
         }
 
-        // ===== State =====
-        let currentState = 'idle';
+        // ===== State Machine (like Camera) =====
+        const STATES = {
+            IDLE: 'idle',
+            PREVIEWING: 'previewing',   // Live listening (like camera preview)
+            RECORDING: 'recording'       // Live + recording (like camera recording)
+        };
+        let currentState = STATES.IDLE;
+
+        // ===== Audio State =====
         let audioContext = null;
         let scriptNode = null;
         let gainNode = null;
+        let analyserNode = null;
         let ws = null;
-        let micRecStart = null;
-        let micRecInterval = null;
+        let recStartTime = null;
+        let recTimerInterval = null;
+        let animFrameId = null;
 
-        // ===== Ring Buffer (lock-free, single producer / single consumer) =====
+        // ===== Elements =====
+        const btnStartPreview = document.getElementById('btn-start-preview');
+        const btnStopPreview = document.getElementById('btn-stop-preview');
+        const btnStartRecord = document.getElementById('btn-start-record');
+        const btnStopRecord = document.getElementById('btn-stop-record');
+
+        // ===== Ring Buffer =====
         class AudioRingBuffer {
             constructor(capacity) {
                 this.buffer = new Float32Array(capacity);
@@ -280,7 +311,6 @@
                 this.availableSamples = 0;
             }
 
-            // Write PCM samples into the ring buffer
             write(samples) {
                 const len = samples.length;
                 for (let i = 0; i < len; i++) {
@@ -290,15 +320,12 @@
                 this.availableSamples = Math.min(this.availableSamples + len, this.capacity);
             }
 
-            // Read samples from the ring buffer into output array
-            // Returns number of samples actually read
             read(output) {
                 const toRead = Math.min(output.length, this.availableSamples);
                 for (let i = 0; i < toRead; i++) {
                     output[i] = this.buffer[this.readPos];
                     this.readPos = (this.readPos + 1) % this.capacity;
                 }
-                // Fill remaining with silence
                 for (let i = toRead; i < output.length; i++) {
                     output[i] = 0;
                 }
@@ -306,17 +333,14 @@
                 return toRead;
             }
 
-            // Get buffer fill level as percentage
             fillLevel() {
                 return ((this.availableSamples / this.capacity) * 100).toFixed(1);
             }
 
-            // Get available samples count
             available() {
                 return this.availableSamples;
             }
 
-            // Clear the ring buffer
             clear() {
                 this.writePos = 0;
                 this.readPos = 0;
@@ -327,35 +351,45 @@
         const ringBuffer = new AudioRingBuffer(RING_BUFFER_SIZE);
 
         // ===== Recording Timer =====
-        function startMicRecTimer() {
-            micRecStart = Date.now();
-            document.getElementById('mic-rec-timer').style.display = 'inline-flex';
-            micRecInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - micRecStart) / 1000);
+        function startRecTimer() {
+            recStartTime = Date.now();
+            document.getElementById('rec-overlay').classList.add('visible');
+            recTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
                 const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
                 const s = String(elapsed % 60).padStart(2, '0');
-                document.getElementById('mic-rec-time').textContent = `${m}:${s}`;
+                document.getElementById('rec-time').textContent = `${m}:${s}`;
             }, 1000);
         }
 
-        function stopMicRecTimer() {
-            clearInterval(micRecInterval);
-            document.getElementById('mic-rec-timer').style.display = 'none';
-            document.getElementById('mic-rec-time').textContent = '00:00';
+        function stopRecTimer() {
+            clearInterval(recTimerInterval);
+            recTimerInterval = null;
+            document.getElementById('rec-overlay').classList.remove('visible');
+            document.getElementById('rec-time').textContent = '00:00';
         }
 
-        // ===== Audio Initialization =====
+        // ===== Audio Init =====
         function initAudio() {
             if (!audioContext) {
-                // Create AudioContext at exact sample rate to avoid resampling
                 audioContext = new (window.AudioContext || window.webkitAudioContext)({
                     sampleRate: SAMPLE_RATE
                 });
                 console.log(`AudioContext created at ${audioContext.sampleRate}Hz`);
+                forceSpeakerOutput();
             }
         }
 
-        // ===== Base64 PCM ? Float32 Conversion =====
+        function forceSpeakerOutput() {
+            try {
+                const silentAudio = document.createElement('audio');
+                silentAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+                silentAudio.volume = 0.01;
+                silentAudio.play().catch(() => { });
+            } catch (e) { }
+        }
+
+        // ===== Base64 → Float32 =====
         function base64ToFloat32(base64) {
             const binaryString = atob(base64);
             const bytes = new Uint8Array(binaryString.length);
@@ -370,7 +404,7 @@
             return float32;
         }
 
-        // ===== WebSocket Connection =====
+        // ===== WebSocket =====
         function connectWebSocket() {
             return new Promise((resolve, reject) => {
                 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -385,15 +419,11 @@
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-
-                        // Handle mic_chunk messages - data.data is now raw base64 PCM
                         if (data.type === 'mic_chunk' && data.deviceId === deviceId) {
                             const pcmFloat32 = base64ToFloat32(data.data);
                             ringBuffer.write(pcmFloat32);
                         }
-                    } catch (error) {
-                        // Ignore non-JSON messages
-                    }
+                    } catch (error) { }
                 };
 
                 ws.onerror = (error) => {
@@ -403,22 +433,23 @@
 
                 ws.onclose = () => {
                     console.log('WebSocket disconnected');
-                    if (currentState === 'live') {
+                    if (currentState !== STATES.IDLE) {
                         setTimeout(() => connectWebSocket().catch(() => { }), 2000);
                     }
                 };
             });
         }
 
-        // ===== ScriptProcessorNode (Pull-Based Playback) =====
-        // This is called by the audio hardware at a fixed rate,
-        // pulling samples from the ring buffer. This guarantees
-        // gapless, smooth audio with no scheduling artifacts.
+        // ===== Audio Pipeline + Analyser =====
         function createAudioPipeline() {
-            // Gain node for volume control
             gainNode = audioContext.createGain();
             gainNode.gain.value = document.getElementById('volume').value / 100;
             gainNode.connect(audioContext.destination);
+
+            // Analyser for waveform visualization
+            analyserNode = audioContext.createAnalyser();
+            analyserNode.fftSize = 256;
+            analyserNode.smoothingTimeConstant = 0.7;
 
             // ScriptProcessor pulls from ring buffer
             scriptNode = audioContext.createScriptProcessor(SCRIPT_BUFFER_SIZE, 0, 1);
@@ -426,12 +457,100 @@
                 const output = e.outputBuffer.getChannelData(0);
                 ringBuffer.read(output);
             };
-            scriptNode.connect(gainNode);
 
-            console.log('Audio pipeline created (ScriptProcessor ? Gain ? Destination)');
+            // Chain: ScriptProcessor → Analyser → Gain → Speakers
+            scriptNode.connect(analyserNode);
+            analyserNode.connect(gainNode);
+
+            console.log('Audio pipeline created (ScriptProcessor → Analyser → Gain → Destination)');
         }
 
-        // ===== Buffer Info Update =====
+        // ===== Waveform Visualizer =====
+        function startWaveform() {
+            const canvas = document.getElementById('waveform-canvas');
+            const placeholder = document.getElementById('waveform-placeholder');
+            canvas.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                animFrameId = requestAnimationFrame(draw);
+
+                // Size canvas to container
+                const container = document.getElementById('waveform-container');
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+
+                analyserNode.getByteFrequencyData(dataArray);
+
+                // Background
+                ctx.fillStyle = 'rgba(10, 10, 30, 0.85)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw waveform bars
+                const barCount = 60;
+                const barWidth = (canvas.width / barCount) * 0.65;
+                const gap = (canvas.width / barCount) * 0.35;
+                const step = Math.floor(bufferLength / barCount);
+
+                for (let i = 0; i < barCount; i++) {
+                    const val = dataArray[i * step] || 0;
+                    const barHeight = (val / 255) * (canvas.height * 0.85);
+                    const x = i * (barWidth + gap) + gap / 2;
+                    const y = canvas.height - barHeight;
+
+                    // Gradient color based on recording state
+                    if (currentState === STATES.RECORDING) {
+                        const intensity = val / 255;
+                        ctx.fillStyle = `rgba(255, ${60 + intensity * 40}, ${60 - intensity * 30}, ${0.5 + intensity * 0.5})`;
+                    } else {
+                        const intensity = val / 255;
+                        ctx.fillStyle = `rgba(0, ${180 + intensity * 75}, ${80 + intensity * 40}, ${0.4 + intensity * 0.6})`;
+                    }
+
+                    // Draw rounded bar
+                    const radius = Math.min(barWidth / 2, 3);
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + barWidth - radius, y);
+                    ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+                    ctx.lineTo(x + barWidth, canvas.height);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.fill();
+                }
+
+                // Center line
+                ctx.strokeStyle = currentState === STATES.RECORDING
+                    ? 'rgba(255, 80, 80, 0.2)'
+                    : 'rgba(0, 230, 118, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+            }
+
+            draw();
+        }
+
+        function stopWaveform() {
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+            const canvas = document.getElementById('waveform-canvas');
+            const placeholder = document.getElementById('waveform-placeholder');
+            canvas.style.display = 'none';
+            placeholder.style.display = 'flex';
+            placeholder.textContent = 'Click "START PREVIEW" to hear device audio';
+        }
+
+        // ===== Buffer Info =====
         let bufferInfoInterval = null;
         function startBufferInfo() {
             bufferInfoInterval = setInterval(() => {
@@ -446,36 +565,43 @@
             document.getElementById('buffer-info').textContent = '';
         }
 
-        // ===== Visualizer =====
-        function updateVisualizer(active) {
-            const vis = document.getElementById('visualizer');
-            if (active) {
-                let bars = '';
-                for (let i = 0; i < 20; i++) {
-                    bars += `<div class="vis-bar" style="animation-delay:${(i * 0.07).toFixed(2)}s"></div>`;
-                }
-                vis.innerHTML = bars;
-            } else {
-                vis.textContent = 'Waiting for audio...';
-            }
-        }
-
-        // ===== Status Update =====
-        function updateStatus(state, message) {
-            const statusEl = document.getElementById('status');
-            statusEl.className = 'status-indicator';
-
-            if (state === 'live') {
-                statusEl.className += ' active';
-                statusEl.innerHTML = '<h2>&#x1F7E2; Live Listening</h2><p>' + message + '</p>';
-            } else if (state === 'recording') {
-                statusEl.className += ' recording';
-                statusEl.innerHTML = '<h2>&#x1F534; Recording</h2><p>' + message + '</p>';
-            } else {
-                statusEl.innerHTML = '<h2>&#x26AA; Idle</h2><p>No active microphone session</p>';
-            }
-
+        // ===== UI State Machine =====
+        function updateUI(state) {
             currentState = state;
+            const statusEl = document.getElementById('status');
+
+            const show = (el) => { el.style.display = 'inline-block'; el.disabled = false; el.style.opacity = '1'; };
+            const hide = (el) => el.style.display = 'none';
+            const disable = (el) => { el.style.display = 'inline-block'; el.disabled = true; el.style.opacity = '0.5'; };
+
+            switch (state) {
+                case STATES.IDLE:
+                    statusEl.className = 'status-indicator';
+                    statusEl.innerHTML = '<h2>&#x26AA; Idle</h2><p>No active microphone session</p>';
+                    show(btnStartPreview);
+                    hide(btnStopPreview);
+                    disable(btnStartRecord);
+                    hide(btnStopRecord);
+                    break;
+
+                case STATES.PREVIEWING:
+                    statusEl.className = 'status-indicator active';
+                    statusEl.innerHTML = '<h2>&#x1F7E2; Live Listening</h2><p>Audio is being streamed from device</p>';
+                    hide(btnStartPreview);
+                    show(btnStopPreview);
+                    show(btnStartRecord);
+                    hide(btnStopRecord);
+                    break;
+
+                case STATES.RECORDING:
+                    statusEl.className = 'status-indicator recording';
+                    statusEl.innerHTML = '<h2>&#x1F534; Recording</h2><p>Live listening + recording to device file</p>';
+                    hide(btnStartPreview);
+                    hide(btnStopPreview);
+                    hide(btnStartRecord);
+                    show(btnStopRecord);
+                    break;
+            }
         }
 
         // ===== Volume Control =====
@@ -487,107 +613,74 @@
             }
         });
 
-        // ===== START LIVE =====
-        async function startLive() {
+        // ===== START PREVIEW (Live Listen) =====
+        async function startPreview() {
             try {
-                // Init audio system
                 initAudio();
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
 
-                // Clear ring buffer
                 ringBuffer.clear();
-
-                // Connect WebSocket (wait for connection)
                 await connectWebSocket();
-
-                // Create audio pipeline
                 createAudioPipeline();
 
-                // Tell device to start mic
+                // Tell device to start mic streaming
                 await api.sendCommand(deviceId, 'mic_start');
 
-                // Start buffer info display
                 startBufferInfo();
-
-                updateStatus('live', 'Audio is being streamed from device');
-                updateVisualizer(true);
-                document.getElementById('btn-start-live').disabled = true;
-                document.getElementById('btn-stop-live').disabled = false;
-                document.getElementById('btn-start-record').disabled = true; // Mutual exclusion
+                startWaveform();
+                updateUI(STATES.PREVIEWING);
                 api.showToast('Live listening started', 'success');
             } catch (error) {
                 api.showToast('Failed: ' + error.message, 'error');
             }
         }
 
-        // ===== STOP LIVE =====
-        async function stopLive() {
+        // ===== STOP PREVIEW =====
+        async function stopPreview() {
             try {
                 await api.sendCommand(deviceId, 'mic_stop');
 
-                // Tear down audio pipeline
-                if (scriptNode) {
-                    scriptNode.disconnect();
-                    scriptNode = null;
-                }
-                if (gainNode) {
-                    gainNode.disconnect();
-                    gainNode = null;
-                }
+                if (scriptNode) { scriptNode.disconnect(); scriptNode = null; }
+                if (analyserNode) { analyserNode.disconnect(); analyserNode = null; }
+                if (gainNode) { gainNode.disconnect(); gainNode = null; }
+                if (ws) { ws.close(); ws = null; }
 
-                // Close WebSocket
-                if (ws) {
-                    ws.close();
-                    ws = null;
-                }
-
-                // Clear buffer
                 ringBuffer.clear();
                 stopBufferInfo();
-
-                updateStatus('idle', '');
-                updateVisualizer(false);
-                document.getElementById('btn-start-live').disabled = false;
-                document.getElementById('btn-stop-live').disabled = true;
-                document.getElementById('btn-start-record').disabled = false; // Re-enable
+                stopWaveform();
+                updateUI(STATES.IDLE);
                 api.showToast('Live listening stopped', 'success');
             } catch (error) {
                 api.showToast('Failed: ' + error.message, 'error');
             }
         }
 
-        // ===== START RECORDING =====
-        async function startRecord() {
+        // ===== START RECORDING (while preview continues) =====
+        async function startRecording() {
             try {
                 await api.sendCommand(deviceId, 'mic_record_start');
-                updateStatus('recording', 'Audio is being recorded to file on device');
-                document.getElementById('btn-start-record').disabled = true;
-                document.getElementById('btn-stop-record').disabled = false;
-                document.getElementById('btn-start-live').disabled = true; // Mutual exclusion
-                startMicRecTimer();
-                api.showToast('Recording started', 'success');
+                updateUI(STATES.RECORDING);
+                startRecTimer();
+                api.showToast('Recording started (preview continues)', 'success');
             } catch (error) {
                 api.showToast('Failed: ' + error.message, 'error');
             }
         }
 
-        // ===== STOP RECORDING =====
-        async function stopRecord() {
+        // ===== STOP RECORDING (back to preview) =====
+        async function stopRecording() {
             try {
                 const result = await api.sendCommand(deviceId, 'mic_record_stop');
-                stopMicRecTimer();
-                updateStatus('idle', '');
-                document.getElementById('btn-start-record').disabled = false;
-                document.getElementById('btn-stop-record').disabled = true;
-                document.getElementById('btn-start-live').disabled = false; // Re-enable
+                stopRecTimer();
+                updateUI(STATES.PREVIEWING); // Back to preview, NOT idle
 
                 if (result && result.path) {
                     const size = result.sizeFormatted || '';
                     api.showToast(`Recording saved: ${result.path} (${size})`, 'success');
                 } else {
-                    api.showToast('Recording stopped', 'success');
+                    api.showToast('Recording saved', 'success');
                 }
             } catch (error) {
                 api.showToast('Failed: ' + error.message, 'error');
@@ -595,10 +688,32 @@
         }
 
         // ===== Event Listeners =====
-        document.getElementById('btn-start-live').addEventListener('click', startLive);
-        document.getElementById('btn-stop-live').addEventListener('click', stopLive);
-        document.getElementById('btn-start-record').addEventListener('click', startRecord);
-        document.getElementById('btn-stop-record').addEventListener('click', stopRecord);
+        btnStartPreview.addEventListener('click', startPreview);
+        btnStopPreview.addEventListener('click', stopPreview);
+        btnStartRecord.addEventListener('click', startRecording);
+        btnStopRecord.addEventListener('click', stopRecording);
+
+        // Initialize
+        updateUI(STATES.IDLE);
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (currentState === STATES.RECORDING) {
+                // Stop recording first
+                const url1 = `/api/command/${deviceId}`;
+                const body1 = JSON.stringify({ action: 'mic_record_stop', payload: {} });
+                navigator.sendBeacon(url1, new Blob([body1], { type: 'application/json' }));
+            }
+            if (currentState !== STATES.IDLE) {
+                // Stop mic streaming
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action: 'mic_stop', payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); ws = null; }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
     </script>
 
 </body>

