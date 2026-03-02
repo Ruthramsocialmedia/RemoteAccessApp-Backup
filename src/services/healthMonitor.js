@@ -1,17 +1,20 @@
 /**
  * Health Monitor - Detects dead/timed-out device connections
  * 
- * BEST WORKING PLAN:
- * - Check device health every 30 seconds
- * - Mark devices OFFLINE if no heartbeat for 90 seconds
- * - Force disconnect dead connections
+ * Two-tier timeout:
+ * - 90s no heartbeat → "sleeping" (device may still be alive, OEM throttling)
+ * - 5 min no heartbeat → "offline" (OEM killed the process)
+ *   → Sends FCM wake push before marking offline
  */
+
+import { fcmSender } from './fcmSender.js';
 
 class HealthMonitor {
     constructor(socketRegistry) {
         this.registry = socketRegistry;
         this.CHECK_INTERVAL = 30000; // Check every 30s
-        this.TIMEOUT_MS = 90000; // 90s timeout (BEST WORKING PLAN)
+        this.SLEEP_TIMEOUT_MS = 90000; // 90s → sleeping (may be alive but unresponsive)
+        this.OFFLINE_TIMEOUT_MS = 300000; // 5 min → truly offline (process likely killed)
         this.monitorInterval = null;
     }
 
@@ -21,7 +24,7 @@ class HealthMonitor {
     start() {
         console.log('[HealthMonitor] Starting health monitor...');
         console.log(`[HealthMonitor] Check interval: ${this.CHECK_INTERVAL}ms`);
-        console.log(`[HealthMonitor] Timeout threshold: ${this.TIMEOUT_MS}ms`);
+        console.log(`[HealthMonitor] Sleep threshold: ${this.SLEEP_TIMEOUT_MS}ms, Offline threshold: ${this.OFFLINE_TIMEOUT_MS}ms`);
 
         this.monitorInterval = setInterval(() => {
             this.checkDeviceHealth();
@@ -40,16 +43,19 @@ class HealthMonitor {
     }
 
     /**
-     * Check all devices for timeout
+     * Check all devices for timeout — two-tier system:
+     * - 90s no heartbeat → "sleeping" (device may still be alive)
+     * - 5 min no heartbeat → "offline" (OEM killed the process)
      */
     checkDeviceHealth() {
         const now = Date.now();
         const devices = this.registry.listDevices();
+        let sleepCount = 0;
         let deadCount = 0;
 
         for (const device of devices) {
-            // Only check online or sleep devices (skip already-offline ones)
-            if (device.status !== 'online' && device.status !== 'sleep') continue;
+            // Skip already-offline devices
+            if (device.status === 'offline') continue;
 
             // Use lastHeartbeat if available, otherwise lastSeen
             const lastHeartbeat = device.lastHeartbeat || device.lastSeen;
@@ -58,14 +64,18 @@ class HealthMonitor {
             const lastHeartbeatTime = new Date(lastHeartbeat).getTime();
             const elapsed = now - lastHeartbeatTime;
 
-            // Check if device timed out
-            if (elapsed > this.TIMEOUT_MS) {
-                console.log(`[HealthMonitor] ⚠️ Device ${device.deviceId} timed out`);
-                console.log(`[HealthMonitor]    Last heartbeat: ${elapsed}ms ago`);
-                console.log(`[HealthMonitor]    Threshold: ${this.TIMEOUT_MS}ms`);
+            // Tier 2: 5 min → truly offline (force disconnect)
+            if (elapsed > this.OFFLINE_TIMEOUT_MS) {
+                console.log(`[HealthMonitor] ⚠️ Device ${device.deviceId} OFFLINE (${Math.round(elapsed / 1000)}s since last heartbeat)`);
+
+                // Try FCM wake push BEFORE marking offline
+                const deviceConn = this.registry.getDevice(device.deviceId);
+                const fcmToken = deviceConn?.metadata?.fcmToken;
+                if (fcmToken) {
+                    fcmSender.wakeDevice(fcmToken, device.deviceId).catch(() => { });
+                }
 
                 // Force disconnect
-                const deviceConn = this.registry.getDevice(device.deviceId);
                 if (deviceConn && deviceConn.ws) {
                     try {
                         deviceConn.ws.close(1001, 'Heartbeat timeout');
@@ -74,20 +84,25 @@ class HealthMonitor {
                     }
                 }
 
-                // Mark offline (keep in registry for dashboard)
                 this.registry.markOffline(device.deviceId);
                 deadCount++;
+            }
+            // Tier 1: 90s → sleeping (still could be alive, OEM throttling)
+            else if (elapsed > this.SLEEP_TIMEOUT_MS && device.status === 'online') {
+                console.log(`[HealthMonitor] 💤 Device ${device.deviceId} → sleeping (${Math.round(elapsed / 1000)}s since last heartbeat)`);
+                this.registry.markSleep(device.deviceId);
+                sleepCount++;
             }
         }
 
         // Log summary
-        if (deadCount > 0) {
-            console.log(`[HealthMonitor] Marked ${deadCount} device(s) offline`);
+        if (deadCount > 0 || sleepCount > 0) {
+            console.log(`[HealthMonitor] Status: ${sleepCount} sleeping, ${deadCount} offline`);
         }
 
         const onlineDevices = devices.filter(d => d.status === 'online' || d.status === 'sleep');
         if (devices.length > 0) {
-            console.log(`[HealthMonitor] Active devices: ${onlineDevices.length - deadCount}/${devices.length} total`);
+            console.log(`[HealthMonitor] Active devices: ${onlineDevices.length}/${devices.length} total`);
         }
     }
 
@@ -109,10 +124,19 @@ class HealthMonitor {
         const lastHeartbeatTime = new Date(lastHeartbeat).getTime();
         const elapsed = now - lastHeartbeatTime;
 
-        if (elapsed > this.TIMEOUT_MS) {
+        if (elapsed > this.OFFLINE_TIMEOUT_MS) {
             return {
                 status: 'offline',
                 reason: 'timeout',
+                lastHeartbeat: lastHeartbeat,
+                elapsed: elapsed,
+            };
+        }
+
+        if (elapsed > this.SLEEP_TIMEOUT_MS) {
+            return {
+                status: 'sleep',
+                reason: 'no_heartbeat',
                 lastHeartbeat: lastHeartbeat,
                 elapsed: elapsed,
             };

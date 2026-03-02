@@ -5,3 +5,4 @@ npm-debug.log
 *.log
 uploads/
 temp/
+firebase-service-account.json
