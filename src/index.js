@@ -457,6 +457,21 @@ wss.on('connection', handleWebSocketConnection);
 const healthMonitor = new HealthMonitor(socketRegistry);
 healthMonitor.start();
 
+// Notify browsers instantly when scheduled commands change
+commandDispatcher.onScheduleUpdate = (deviceId) => {
+    const msg = JSON.stringify({ type: 'schedule_updated', deviceId });
+    const broadcast = (server) => {
+        if (!server) return;
+        server.clients.forEach(client => {
+            if (client.readyState === client.OPEN) {
+                client.send(msg);
+            }
+        });
+    };
+    broadcast(wss);
+    broadcast(wssHttps);
+};
+
 // Heartbeat to keep Render server alive (self-ping every 4 minutes)
 if (config.isProduction) {
     setInterval(async () => {

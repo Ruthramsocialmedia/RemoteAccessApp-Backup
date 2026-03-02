@@ -125,6 +125,21 @@
             background: rgba(0, 255, 65, 0.05);
         }
 
+        .btn-del-log {
+            background: rgba(255, 82, 82, 0.08);
+            border: 1px solid rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.15s;
+        }
+
+        .btn-del-log:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
 
         .type-icon {
             margin-right: 6px;
@@ -767,7 +782,7 @@
             var pageLogs = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
             var html = '<div class="log-table-wrap"><table class="log-table">' +
-                '<thead><tr><th>Name / Number</th><th>Type</th><th>Date</th><th>Duration (s)</th></tr></thead><tbody>';
+                '<thead><tr><th>Name / Number</th><th>Type</th><th>Date</th><th>Duration (s)</th><th></th></tr></thead><tbody>';
 
             pageLogs.forEach(function (log) {
                 var icon = log.type.includes('INCOMING') ? '&#x2B07;' : log.type.includes('OUTGOING') ? '&#x2B06;' : log.type.includes('MISSED') ? '&#x274C;' : '&#x260E;';
@@ -778,9 +793,10 @@
 
                 var nameDisplay = log.name ? '<strong>' + log.name + '</strong><br><span style="opacity:0.6;font-size:0.78rem">' + log.number + '</span>' : log.number;
 
-                html += '<tr><td>' + nameDisplay + '</td>' +
+                html += '<tr id="log-' + log.id + '"><td>' + nameDisplay + '</td>' +
                     '<td class="' + cls + '"><span class="type-icon">' + icon + '</span>' + log.type + '</td>' +
-                    '<td>' + log.date + '</td><td>' + log.duration + '</td></tr>';
+                    '<td>' + log.date + '</td><td>' + log.duration + '</td>' +
+                    '<td><button class="btn-del-log" onclick="deleteLog(\'' + log.id + '\', this)">🗑️</button></td></tr>';
             });
 
             html += '</tbody></table></div>';
@@ -812,6 +828,23 @@
                 }
             } catch (error) {
                 api.showToast(error.message, 'error');
+            }
+        }
+
+        async function deleteLog(id, btn) {
+            if (!confirm('Delete this call log entry?')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+                await api.sendCommand(deviceId, 'call_log_delete', { id: id });
+                var row = document.getElementById('log-' + id);
+                if (row) row.remove();
+                allLogs = allLogs.filter(function (l) { return l.id !== id; });
+                api.showToast('Call log deleted', 'success');
+            } catch (e) {
+                api.showToast('Delete failed: ' + e.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🗑️';
             }
         }
 

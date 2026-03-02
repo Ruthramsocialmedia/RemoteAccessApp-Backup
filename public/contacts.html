@@ -17,20 +17,27 @@
             min-width: 0;
         }
 
-        .btn-contact-call {
-            background: #10b981;
-            color: #000;
+        .contact-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-contact-action {
             border: none;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            white-space: nowrap;
-            flex-shrink: 0;
+            letter-spacing: 0.5px;
             transition: all 0.2s;
+        }
+
+        .btn-contact-call {
+            background: #10b981;
+            color: #000;
         }
 
         .btn-contact-call:hover {
@@ -38,10 +45,281 @@
             transform: translateY(-1px);
         }
 
+        .btn-contact-edit {
+            background: rgba(0, 170, 255, 0.15);
+            color: #00aaff;
+            border: 1px solid rgba(0, 170, 255, 0.25);
+        }
+
+        .btn-contact-edit:hover {
+            background: rgba(0, 170, 255, 0.25);
+        }
+
+        .btn-contact-delete {
+            background: rgba(255, 82, 82, 0.1);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.2);
+        }
+
+        .btn-contact-delete:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            border-radius: 12px;
+            width: 420px;
+            max-width: 92vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 4px rgba(0, 255, 65, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            flex: 1;
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 0, 0, 0.12);
+            color: #ff5252;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            transition: border-color 0.15s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-dim);
+        }
+
+        .phones-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .phone-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .phone-row input {
+            flex: 1;
+        }
+
+        .btn-remove-phone {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .btn-remove-phone:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
+        .btn-add-phone {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px dashed rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.15s;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .btn-add-phone:hover {
+            background: rgba(0, 255, 65, 0.1);
+            border-color: var(--accent-dim);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-modal {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .btn-modal-cancel {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-modal-cancel:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-modal-save {
+            background: rgba(0, 255, 65, 0.1);
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+        }
+
+        .btn-modal-save:hover {
+            background: rgba(0, 255, 65, 0.18);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.15);
+        }
+
+        .btn-modal-save:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-modal-delete {
+            background: rgba(255, 82, 82, 0.1);
+            border-color: rgba(255, 82, 82, 0.25);
+            color: #ff5252;
+        }
+
+        .btn-modal-delete:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
+        /* ===== CONFIRM DIALOG ===== */
+        .confirm-body {
+            text-align: center;
+            padding: 24px 20px;
+        }
+
+        .confirm-body .warn-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .confirm-body h3 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+            color: #ff5252;
+        }
+
+        .confirm-body p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
         @media (max-width: 480px) {
-            .btn-contact-call {
+            .contact-actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .btn-contact-action {
                 padding: 5px 10px;
-                font-size: 0.68rem;
+                font-size: 0.65rem;
             }
         }
     </style>
@@ -52,7 +330,10 @@
         <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
         <div class="header-row">
             <h1>Contacts <span class="count-badge" id="contact-count" style="display:none">0</span></h1>
-            <button class="btn btn-primary" onclick="exportContacts()">EXPORT CSV</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="openAddModal()">+ ADD CONTACT</button>
+                <button class="btn btn-secondary" onclick="exportContacts()">EXPORT CSV</button>
+            </div>
         </div>
 
         <!-- Search bar -->
@@ -70,6 +351,50 @@
         </div>
     </div>
 
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="contact-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">ADD CONTACT</h2>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="modal-name" placeholder="Contact name...">
+                </div>
+                <div class="form-group">
+                    <label>Phone Numbers</label>
+                    <div class="phones-list" id="phones-list">
+                        <div class="phone-row">
+                            <input type="tel" placeholder="Phone number...">
+                        </div>
+                    </div>
+                    <button class="btn-add-phone" onclick="addPhoneRow()">+ Add Phone</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-cancel" onclick="closeModal()">CANCEL</button>
+                <button class="btn-modal btn-modal-save" id="modal-save" onclick="saveContact()">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal" style="max-width:380px;">
+            <div class="confirm-body">
+                <span class="warn-icon">⚠️</span>
+                <h3>Delete Contact?</h3>
+                <p id="delete-info">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button class="btn-modal btn-modal-cancel" onclick="closeDeleteModal()">CANCEL</button>
+                <button class="btn-modal btn-modal-delete" id="delete-confirm" onclick="confirmDelete()">DELETE</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/api.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
@@ -81,8 +406,13 @@
         var hasMore = true;
         var isLoading = false;
         var searchTimeout = null;
-        var isSearchMode = false;   // true when showing search results
+        var isSearchMode = false;
         var searchQuery = '';
+
+        // Modal state
+        var editingContactId = null; // null = adding, string = editing
+        var deletingContactId = null;
+        var deletingContactName = '';
 
         // --- Normal paginated fetch (no query) ---
         async function fetchPage(offset) {
@@ -174,7 +504,6 @@
             var q = this.value.trim();
 
             if (!q) {
-                // Cleared search - go back to normal paginated view
                 if (isSearchMode) {
                     isSearchMode = false;
                     searchQuery = '';
@@ -214,6 +543,12 @@
             loadPage(currentPage + 1);
         }
 
+        function escHtml(str) {
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
         function renderContacts(contacts) {
             var container = document.getElementById('contact-list');
             container.className = 'contact-list';
@@ -226,16 +561,173 @@
             }
 
             container.innerHTML = contacts.map(function (c) {
+                var phonesDisplay = c.phones.map(function (p) { return escHtml(p); }).join(', ');
+                var phonesJson = escHtml(JSON.stringify(c.phones));
+                var nameEsc = escHtml(c.name);
                 var callBtn = c.phones.length > 0
-                    ? '<button class="btn-contact-call" onclick="callContact(\'' + c.phones[0].replace(/'/g, "\\'") + '\')">&#x1F4DE; CALL</button>'
+                    ? '<button class="btn-contact-action btn-contact-call" onclick="callContact(\'' + c.phones[0].replace(/'/g, "\\'") + '\')">&#x1F4DE; CALL</button>'
                     : '';
+
                 return '<div class="contact-card">' +
                     '<div class="avatar">' + c.name.charAt(0).toUpperCase() + '</div>' +
-                    '<div class="info"><h3>' + c.name + '</h3><p>' + c.phones.join(', ') + '</p></div>' +
+                    '<div class="info"><h3>' + nameEsc + '</h3><p>' + phonesDisplay + '</p></div>' +
+                    '<div class="contact-actions">' +
+                    '<button class="btn-contact-action btn-contact-edit" onclick=\'openEditModal("' + c.id + '", "' + nameEsc.replace(/"/g, '&quot;') + '", ' + phonesJson + ')\'>✏️ EDIT</button>' +
+                    '<button class="btn-contact-action btn-contact-delete" onclick=\'openDeleteModal("' + c.id + '", "' + nameEsc.replace(/"/g, '&quot;') + '")\'>🗑️</button>' +
                     callBtn +
+                    '</div>' +
                     '</div>';
             }).join('');
         }
+
+        // ========== MODAL FUNCTIONS ==========
+
+        function openAddModal() {
+            editingContactId = null;
+            document.getElementById('modal-title').textContent = 'ADD CONTACT';
+            document.getElementById('modal-name').value = '';
+            document.getElementById('phones-list').innerHTML = '<div class="phone-row"><input type="tel" placeholder="Phone number..."></div>';
+            document.getElementById('contact-modal').classList.add('active');
+            document.getElementById('modal-name').focus();
+        }
+
+        function openEditModal(contactId, name, phones) {
+            editingContactId = contactId;
+            document.getElementById('modal-title').textContent = 'EDIT CONTACT';
+            document.getElementById('modal-name').value = name;
+
+            var phonesList = document.getElementById('phones-list');
+            if (phones && phones.length > 0) {
+                phonesList.innerHTML = phones.map(function (p) {
+                    return '<div class="phone-row">' +
+                        '<input type="tel" value="' + escHtml(p) + '" placeholder="Phone number...">' +
+                        (phones.length > 1 ? '<button class="btn-remove-phone" onclick="removePhoneRow(this)">✕</button>' : '') +
+                        '</div>';
+                }).join('');
+            } else {
+                phonesList.innerHTML = '<div class="phone-row"><input type="tel" placeholder="Phone number..."></div>';
+            }
+
+            document.getElementById('contact-modal').classList.add('active');
+            document.getElementById('modal-name').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('contact-modal').classList.remove('active');
+            editingContactId = null;
+        }
+
+        function addPhoneRow() {
+            var row = document.createElement('div');
+            row.className = 'phone-row';
+            row.innerHTML = '<input type="tel" placeholder="Phone number...">' +
+                '<button class="btn-remove-phone" onclick="removePhoneRow(this)">✕</button>';
+            document.getElementById('phones-list').appendChild(row);
+            row.querySelector('input').focus();
+        }
+
+        function removePhoneRow(btn) {
+            var row = btn.parentElement;
+            var list = document.getElementById('phones-list');
+            if (list.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        async function saveContact() {
+            var name = document.getElementById('modal-name').value.trim();
+            var phoneInputs = document.querySelectorAll('#phones-list input');
+            var phones = [];
+            phoneInputs.forEach(function (inp) {
+                var v = inp.value.trim();
+                if (v) phones.push(v);
+            });
+
+            if (!name) {
+                api.showToast('Name is required', 'error');
+                return;
+            }
+            if (phones.length === 0) {
+                api.showToast('At least one phone number is required', 'error');
+                return;
+            }
+
+            var saveBtn = document.getElementById('modal-save');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'SAVING...';
+
+            try {
+                if (editingContactId) {
+                    // Edit existing contact
+                    await api.sendCommand(deviceId, 'contact_edit', {
+                        contactId: editingContactId,
+                        name: name,
+                        phones: phones
+                    });
+                    api.showToast('Contact updated ✓', 'success');
+                } else {
+                    // Add new contact
+                    await api.sendCommand(deviceId, 'contact_add', {
+                        name: name,
+                        phones: phones
+                    });
+                    api.showToast('Contact added ✓', 'success');
+                }
+
+                closeModal();
+                // Refresh list
+                allContacts = [];
+                hasMore = true;
+                loadPage(1);
+            } catch (e) {
+                api.showToast('Failed: ' + e.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'SAVE';
+            }
+        }
+
+        // ========== DELETE ==========
+
+        function openDeleteModal(contactId, name) {
+            deletingContactId = contactId;
+            deletingContactName = name;
+            document.getElementById('delete-info').innerHTML =
+                'Delete <strong>' + escHtml(name) + '</strong>?<br><span style="font-size:0.72rem;opacity:0.6;">This action cannot be undone.</span>';
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            deletingContactId = null;
+        }
+
+        async function confirmDelete() {
+            if (!deletingContactId) return;
+
+            var btn = document.getElementById('delete-confirm');
+            btn.disabled = true;
+            btn.textContent = 'DELETING...';
+
+            try {
+                await api.sendCommand(deviceId, 'contact_delete', {
+                    contactId: deletingContactId
+                });
+                api.showToast('Contact deleted ✓', 'success');
+                closeDeleteModal();
+                // Refresh list
+                allContacts = [];
+                hasMore = true;
+                loadPage(1);
+            } catch (e) {
+                api.showToast('Delete failed: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'DELETE';
+            }
+        }
+
+        // ========== CALL & EXPORT ==========
 
         async function callContact(number) {
             try {
@@ -260,6 +752,22 @@
                 api.showToast(error.message, 'error');
             }
         }
+
+        // Close modals on Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeDeleteModal();
+            }
+        });
+
+        // Close modals on backdrop click
+        document.getElementById('contact-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        document.getElementById('delete-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeDeleteModal();
+        });
 
         // Auto-load first page on open
         loadPage(1);

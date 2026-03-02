@@ -113,6 +113,39 @@
             max-height: calc(100vh - 140px);
         }
 
+        /* ── LOCK OVERLAY ── */
+        .sui-lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 20;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .sui-lock-overlay.active {
+            display: flex;
+        }
+
+        .sui-lock-badge {
+            margin-top: 12px;
+            padding: 4px 14px;
+            background: rgba(255, 0, 0, 0.7);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
         .phone-screen {
             position: relative;
             width: 100%;
@@ -278,8 +311,28 @@
         }
 
         .sui-btn-secondary:hover {
-            color: var(--text-primary);
-            border-color: var(--accent-dim);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .sui-btn-lock {
+            background: rgba(255, 82, 82, 0.1);
+            border-color: rgba(255, 82, 82, 0.25);
+            color: #ff5252;
+        }
+
+        .sui-btn-lock:hover {
+            background: rgba(255, 82, 82, 0.2);
+        }
+
+        .sui-btn-lock.locked {
+            background: rgba(0, 230, 118, 0.1);
+            border-color: rgba(0, 230, 118, 0.25);
+            color: #00e676;
+        }
+
+        .sui-btn-lock.locked:hover {
+            background: rgba(0, 230, 118, 0.2);
         }
 
         .sui-divider {
@@ -574,6 +627,7 @@
                 <button class="sui-btn sui-btn-primary" id="btn-auto" onclick="toggleAutoRefresh()">⏸ AUTO</button>
                 <button class="sui-btn sui-btn-secondary" onclick="saveScreenshot()" title="Save screenshot">💾
                     SAVE</button>
+                <button class="sui-btn sui-btn-lock" id="btn-lock" onclick="toggleLock()">🔒 LOCK</button>
                 <span class="info" id="ss-status"><span class="live">●</span> READY</span>
             </div>
             <div class="phone-frame" id="phone-frame">
@@ -587,6 +641,8 @@
                     <img id="ss-display" style="display:none;" draggable="false" />
                     <!-- Node overlays rendered here -->
                     <div class="node-overlay" id="node-overlay"></div>
+                    <div class="sui-lock-overlay" id="sui-lock-overlay"><span class="sui-lock-badge">🔒 Locked</span>
+                    </div>
                 </div>
             </div>
             <!-- Bottom nav on phone side -->
@@ -750,6 +806,23 @@
                 // Update screen resolution from device
                 if (data.screenWidth) screenW = data.screenWidth;
                 if (data.screenHeight) screenH = data.screenHeight;
+
+                // Sync lock button state from device
+                if (data.touchLocked !== undefined) {
+                    const lockBtn = document.getElementById('btn-lock');
+                    const lockOv = document.getElementById('sui-lock-overlay');
+                    if (lockBtn) {
+                        if (data.touchLocked) {
+                            lockBtn.classList.add('locked');
+                            lockBtn.innerHTML = '🔓 UNLOCK';
+                            lockOv?.classList.add('active');
+                        } else {
+                            lockBtn.classList.remove('locked');
+                            lockBtn.innerHTML = '🔒 LOCK';
+                            lockOv?.classList.remove('active');
+                        }
+                    }
+                }
 
                 document.getElementById('node-count').textContent = allNodes.length;
                 document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
@@ -955,6 +1028,31 @@
             a.download = `screenshot_${ts}.jpg`;
             a.click();
             api.showToast('Screenshot saved ✓', 'success');
+        }
+
+        // ── Toggle touch lock ──
+        async function toggleLock() {
+            const btn = document.getElementById('btn-lock');
+            if (!btn) return;
+            const isLocked = btn.classList.contains('locked');
+            const lockOv = document.getElementById('sui-lock-overlay');
+            try {
+                if (isLocked) {
+                    await api.sendCommand(deviceId, 'touch_unlock');
+                    btn.classList.remove('locked');
+                    btn.innerHTML = '🔒 LOCK';
+                    lockOv?.classList.remove('active');
+                    api.showToast('Touch unlocked', 'success');
+                } else {
+                    await api.sendCommand(deviceId, 'touch_lock');
+                    btn.classList.add('locked');
+                    btn.innerHTML = '🔓 UNLOCK';
+                    lockOv?.classList.add('active');
+                    api.showToast('Touch locked', 'success');
+                }
+            } catch (e) {
+                api.showToast('Lock failed: ' + e.message, 'error');
+            }
         }
 
         // ── Keyboard shortcuts ──

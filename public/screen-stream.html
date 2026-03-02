@@ -197,6 +197,39 @@
         }
 
         /* ===== COOLDOWN OVERLAY ===== */
+        /* ===== DASHBOARD LOCK OVERLAY ===== */
+        .lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            border-radius: 4px;
+        }
+
+        .lock-overlay.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .lock-badge {
+            margin-top: 12px;
+            padding: 4px 14px;
+            background: rgba(255, 0, 0, 0.7);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
         .cooldown-overlay {
             position: absolute;
             top: 0;
@@ -881,6 +914,7 @@
                         <span class="cursor-coords" id="cursor-coords"></span>
                     </div>
                 </div>
+                <div class="lock-overlay" id="lock-overlay"><span class="lock-badge">🔒 Locked</span></div>
                 <div class="cooldown-overlay" id="cooldown-overlay"></div>
             </div>
             <div class="touch-hint visible" id="touch-hint">D-Pad scrolls &#x2022; Select confirms focused item &#x2022;
@@ -1025,8 +1059,25 @@
 
         // Throttle
         let actionInProgress = false;
+        let waitingForConsent = false;
+        let isTouchLocked = false;
         const COOLDOWN_MS = 400;
+        const lockOverlay = document.getElementById('lock-overlay');
         let cooldownTimer = null;
+
+        // Wrap api.sendCommand to sync dashboard lock overlay
+        const _origSendCommand = api.sendCommand.bind(api);
+        api.sendCommand = async function (devId, action, ...args) {
+            const result = await _origSendCommand(devId, action, ...args);
+            if (action === 'touch_lock') {
+                isTouchLocked = true;
+                lockOverlay.classList.add('active');
+            } else if (action === 'touch_unlock') {
+                isTouchLocked = false;
+                lockOverlay.classList.remove('active');
+            }
+            return result;
+        };
 
 
         if (!deviceId) window.location.href = 'index.html';
@@ -1225,20 +1276,8 @@
                         showActionIndicator(`\u{2328} ${value}`);
                         break;
                     case 'tap':
-                        // Try accessibility_tap first, fallback to shell input tap
-                        try {
-                            await sendCommand('accessibility_tap', value, 5000);
-                            showActionIndicator(`\u{1F446} Tap (${value.x}, ${value.y})`);
-                        } catch (tapError) {
-                            console.warn(`%c[sendAction] accessibility_tap failed: ${tapError.message}, trying shell fallback...`, 'color: orange');
-                            try {
-                                await sendCommand('shell_exec', { command: `input tap ${value.x} ${value.y}` }, 5000);
-                                showActionIndicator(`\u{1F446} Tap (${value.x}, ${value.y}) [shell]`);
-                            } catch (shellError) {
-                                console.error(`%c[sendAction] Shell fallback also failed:`, 'color: red', shellError.message);
-                                throw shellError;
-                            }
-                        }
+                        await sendCommand('accessibility_tap', value, 5000);
+                        showActionIndicator(`\u{1F446} Tap (${value.x}, ${value.y})`);
                         break;
                     case 'swipe_coords':
                         await sendCommand('accessibility_swipe', value);
@@ -1362,6 +1401,17 @@
                         imgDisplay.src = `data:image/jpeg;base64,${msg.data}`;
                         isStreaming = true;
 
+                        // Auto-detect: frames arrived while consent was pending → user granted it manually
+                        if (waitingForConsent) {
+                            waitingForConsent = false;
+                            console.log('[Stream] Frames arrived during consent — auto-closing SmartUI');
+                            if (typeof SmartUI !== 'undefined') SmartUI.close?.();
+                            api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
+                            btnStop.disabled = false;
+                            btnStart.textContent = '\u25B6 START';
+                            api.showToast('Stream started!', 'success');
+                        }
+
                         // Auto-detect resolution from first frame if not already set
                         if (!resolutionDetected) {
                             imgDisplay.onload = function () {
@@ -1395,16 +1445,6 @@
                         }
                     } else if (msg.type === 'error') {
                         api.showToast(`Device Error: ${msg.error}`, 'error');
-                        if (msg.error === 'waiting_for_consent') {
-                            // Show SmartUI popup so user can click "Start now" on the consent dialog
-                            SmartUI.show(deviceId, {
-                                title: 'Grant Screen Permission',
-                                onDone: () => {
-                                    api.showToast('Permission granted! Retrying...', 'success');
-                                    setTimeout(() => startStream(), 2000);
-                                }
-                            });
-                        }
                     }
                 } catch (e) {
                     console.error('[WS] Parse error:', e);
@@ -1423,43 +1463,24 @@
         async function startStream() {
             try {
                 btnStart.disabled = true;
-                btnStart.textContent = '\u23F3 Waking...';
-
-                // Step 1: Wake the device screen first (in case it's asleep)
-                // Safe to call even when already awake — it's a no-op in that case
-                try {
-                    await api.sendCommand(deviceId, 'power_wakeup');
-                } catch (e) {
-                    console.warn('[Stream] Wake failed (ignoring):', e.message);
-                }
-
-                // Step 2: Wait for screen to fully light up (800ms)
-                await new Promise(r => setTimeout(r, 800));
-
                 btnStart.textContent = '\u23F3 Starting...';
 
-                // Step 3: Now start the stream
+                // Try screen_stream_start directly first
                 const result = await api.sendCommand(deviceId, 'screen_stream_start');
                 const data = result.data || result;
 
                 if (data.deviceResolution || data.resolution) {
-                    // Use DEVICE resolution for cursor/tap coords (accessibility uses full screen coords)
                     const resStr = data.deviceResolution || data.resolution;
                     const [w, h] = resStr.split('x').map(Number);
                     originalResolution = { width: w, height: h };
                     resolutionDetected = true;
-                    // Reset cursor to center
                     cursorX = w / 2;
                     cursorY = h / 2;
-                    const source = data.deviceResolution ? 'device' : 'stream';
-                    updateResolutionDisplay(w, h, source);
-                    console.log(`%c[Resolution] Using device resolution: ${w}x${h}`, 'color: lime; font-weight: bold');
-                    if (data.deviceResolution && data.resolution) {
-                        console.log(`[Resolution] Stream: ${data.resolution}, Device: ${data.deviceResolution}`);
-                    }
+                    updateResolutionDisplay(w, h, data.deviceResolution ? 'device' : 'stream');
                 }
 
                 if (data.status === 'started' || result.success) {
+                    // Stream started — consent already granted
                     isStreaming = true;
                     btnStop.disabled = false;
                     btnStart.textContent = '\u25B6 START';
@@ -1472,17 +1493,21 @@
                 btnStart.textContent = '\u25B6 START';
 
                 if (e.message && e.message.includes('device_locked')) {
-                    api.showToast('Device is locked/asleep — unlock it first to start casting', 'error');
+                    api.showToast('Device is locked \uD83D\uDD12 — unlock it first', 'error');
+
                 } else if (e.message && e.message.includes('waiting_for_consent')) {
-                    // Show Smart UI tree so user can confirm casting permission
-                    api.showToast('Permission dialog opened — use Smart UI to confirm', 'warning');
+                    // Consent dialog showing — SmartUI handles lock/unlock automatically
+                    waitingForConsent = true;
+                    api.sendCommand(deviceId, 'touch_lock').catch(() => { });
+                    await new Promise(r => setTimeout(r, 500));
+
                     SmartUI.show(deviceId, {
-                        title: 'Grant Screen Permission',
-                        onDone: () => {
-                            api.showToast('Permission granted! Starting stream...', 'success');
-                            setTimeout(() => startStream(), 2000);
+                        title: 'GRANT SCREEN PERMISSION',
+                        onClose: () => {
+                            waitingForConsent = false;
                         }
                     });
+
                 } else {
                     api.showToast(e.message, 'error');
                 }

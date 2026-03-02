@@ -93,10 +93,8 @@ class SocketRegistry {
         // Persist to Supabase (fire & forget)
         upsertDevice(deviceId, deviceMetadata);
 
-        // Flush any scheduled commands for this device (with delay for device to fully init)
-        setTimeout(() => {
-            commandDispatcher.flushScheduled(deviceId);
-        }, 5000);
+        // Scheduled commands will flush when the device sends 'device_unlocked' event
+        // (NOT on register — device may connect while still locked)
     }
 
     /**

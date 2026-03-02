@@ -772,11 +772,13 @@
                 const data = result.data || result;
 
                 if (data.settingsOpened) {
-                    // Settings opened but couldn't auto-toggle — show SmartUI
+                    // Settings opened but couldn't auto-toggle — use confirmed action flow
                     btn.textContent = 'Enable GPS';
                     btn.classList.remove('loading');
-                    SmartUI.show(deviceId, {
-                        title: 'Enable GPS',
+                    api.confirmedAction(deviceId, 'enable_gps', {}, 'Enable GPS', {
+                        skipHome: true, // Already on settings screen
+                        skipLock: false,
+                        actionDelay: 500,
                         onDone: () => {
                             document.getElementById('gps-overlay').classList.remove('show');
                             gpsEnabled = true;
@@ -785,7 +787,7 @@
                             setTimeout(() => fetchLocation(), 1500);
                         },
                         onClose: () => fetchLocation()
-                    });
+                    }).catch(() => { });
                 } else {
                     gpsEnabled = true;
                     gpsBtn.classList.add('active');
@@ -821,15 +823,17 @@
                     const result = await api.sendCommand(deviceId, 'enable_gps', {});
                     const data = result.data || result;
                     if (data.settingsOpened) {
-                        SmartUI.show(deviceId, {
-                            title: 'Enable GPS',
+                        api.confirmedAction(deviceId, 'enable_gps', {}, 'Enable GPS', {
+                            skipHome: true,
+                            skipLock: false,
+                            actionDelay: 500,
                             onDone: () => {
                                 gpsEnabled = true;
                                 gpsBtn.classList.add('active');
                                 showToast('GPS enabled ✓', false, true);
                                 setTimeout(() => fetchLocation(), 1500);
                             }
-                        });
+                        }).catch(() => { });
                     } else {
                         gpsEnabled = true;
                         gpsBtn.classList.add('active');
