@@ -3,42 +3,273 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Command History - Remote Access</title>
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        .history-controls {
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .count-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back,
+        .btn-ref {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover,
+        .btn-ref:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: rgba(255, 51, 51, 0.15);
+        }
+
+        .btn-danger:hover {
+            color: var(--danger);
+            background: rgba(255, 51, 51, 0.06);
+            border-color: rgba(255, 51, 51, 0.25);
+        }
+
+        /* ── STATS ── */
+        .stats-row {
             display: flex;
             gap: 10px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
-            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 20%, var(--accent) 50%, transparent 80%);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 12px rgba(0, 255, 65, 0.03);
+            transform: translateY(-1px);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .stat-total .stat-value {
+            color: var(--text-primary);
+        }
+
+        .stat-success .stat-value {
+            color: var(--accent);
+        }
+
+        .stat-failed .stat-value {
+            color: var(--danger);
+        }
+
+        .stat-timeout .stat-value {
+            color: var(--warning);
+        }
+
+        /* ── FILTERS ── */
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
             align-items: center;
         }
 
-        .history-controls select,
-        .history-controls input {
-            padding: 8px 12px;
+        .filters select,
+        .filters input {
+            padding: 9px 14px;
             background: var(--bg-card);
             border: 1px solid var(--border);
             color: var(--text-primary);
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-family: inherit;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 400;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
-        .history-controls select {
+        .filters select:focus,
+        .filters input:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .filters select {
             min-width: 140px;
         }
 
-        .history-controls input[type="text"] {
+        .filters input[type="text"] {
             flex: 1;
             min-width: 180px;
         }
 
+        .filters input::placeholder {
+            color: var(--text-muted);
+            font-style: normal;
+        }
+
+        /* ── TABLE ── */
         .log-table-wrap {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 8px;
             overflow: auto;
             max-height: 72vh;
         }
@@ -46,7 +277,7 @@
         .log-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 650px;
         }
 
         .log-table th,
@@ -54,14 +285,16 @@
             text-align: left;
             padding: 10px 12px;
             border-bottom: 1px solid var(--border);
-            font-size: 0.82rem;
+            font-size: 0.78rem;
         }
 
         .log-table th {
+            font-family: var(--font-display);
             color: var(--accent);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            font-size: 0.6rem;
+            font-weight: 600;
             background: var(--bg-panel);
             position: sticky;
             top: 0;
@@ -70,6 +303,8 @@
 
         .log-table td {
             color: var(--text-primary);
+            font-family: var(--font-display);
+            font-weight: 400;
         }
 
         .log-table tbody tr {
@@ -81,60 +316,67 @@
         }
 
         .log-table tbody tr:hover {
-            background: rgba(0, 255, 65, 0.05);
+            background: rgba(0, 255, 65, 0.04);
         }
 
+        /* Badges */
         .status-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
         .status-success {
-            background: rgba(0, 255, 65, 0.15);
-            color: #00ff41;
-            border: 1px solid rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
         }
 
         .status-failed {
-            background: rgba(255, 60, 60, 0.15);
-            color: #ff4444;
-            border: 1px solid rgba(255, 60, 60, 0.3);
+            background: rgba(255, 51, 51, 0.08);
+            color: var(--danger);
+            border: 1px solid rgba(255, 51, 51, 0.2);
         }
 
         .status-timeout {
-            background: rgba(255, 180, 0, 0.15);
-            color: #ffb400;
-            border: 1px solid rgba(255, 180, 0, 0.3);
+            background: rgba(255, 170, 0, 0.08);
+            color: var(--warning);
+            border: 1px solid rgba(255, 170, 0, 0.2);
         }
 
         .action-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            font-family: 'Courier New', monospace;
-            background: rgba(0, 200, 255, 0.1);
-            color: #00c8ff;
-            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            font-weight: 500;
+            background: rgba(0, 170, 255, 0.06);
+            color: #0af;
+            border: 1px solid rgba(0, 170, 255, 0.15);
         }
 
         .duration-cell {
-            font-family: 'Courier New', monospace;
+            font-family: var(--font-display);
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-size: 0.72rem;
+            font-weight: 400;
         }
 
         .duration-slow {
-            color: #ffb400;
+            color: var(--warning);
         }
 
         .duration-timeout {
-            color: #ff4444;
+            color: var(--danger);
         }
 
         .response-preview {
@@ -142,8 +384,9 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-family: 'Courier New', monospace;
-            font-size: 0.75rem;
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            font-weight: 400;
             color: var(--text-muted);
             cursor: pointer;
         }
@@ -153,133 +396,277 @@
             word-break: break-all;
             background: var(--bg-panel);
             padding: 4px 6px;
-            border-radius: 3px;
+            border-radius: 4px;
         }
 
         .time-cell {
             white-space: nowrap;
-            font-size: 0.78rem;
+            font-size: 0.7rem;
+            font-weight: 400;
             color: var(--text-muted);
         }
 
-        .live-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #00ff41;
-            margin-right: 6px;
-            animation: pulse 1.5s ease-in-out infinite;
+        /* ── EMPTY ── */
+        .empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
         }
 
-        @keyframes pulse {
+        .empty .e-icon {
+            margin: 0 auto 14px;
+            opacity: 0.3;
+        }
+
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 400;
+        }
+
+        .pulse-load {
+            animation: pLoad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
 
             0%,
             100% {
-                opacity: 1;
+                opacity: 0.3;
             }
 
             50% {
-                opacity: 0.3;
+                opacity: 1;
             }
         }
 
-        .stats-row {
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
             display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 12px 18px;
-            flex: 1;
-            min-width: 120px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--accent);
-            font-family: 'Courier New', monospace;
-        }
-
-        .stat-label {
-            font-size: 0.72rem;
-            text-transform: uppercase;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
             letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 400;
             color: var(--text-muted);
-            margin-top: 4px;
+            line-height: 1.6;
         }
 
-        .stat-success .stat-value {
-            color: #00ff41;
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
         }
 
-        .stat-failed .stat-value {
-            color: #ff4444;
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
         }
 
-        .stat-timeout .stat-value {
-            color: #ffb400;
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
         }
 
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .header-row {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .filters {
                 flex-direction: column;
-                gap: 12px;
-                align-items: flex-start;
             }
 
-            .header-row .btn {
-                width: 100%;
-                text-align: center;
-            }
-
-            .history-controls {
-                flex-direction: column;
-            }
-
-            .history-controls select,
-            .history-controls input {
+            .filters select,
+            .filters input {
                 width: 100%;
             }
 
             .stats-row {
-                gap: 8px;
+                gap: 6px;
             }
 
             .stat-card {
                 padding: 10px;
-                min-width: 80px;
+                min-width: 70px;
             }
 
             .stat-value {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
+            }
+
+            .stat-label {
+                font-size: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span,
+            .btn-ref span {
+                display: none;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 6px 6px;
+                font-size: 0.65rem;
+            }
+
+            .log-table th {
+                font-size: 0.5rem;
+            }
+
+            /* Hide response column on small screens */
+            .log-table th:nth-child(5),
+            .log-table td:nth-child(5) {
+                display: none;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
-        <div class="header-row">
-            <h1><span class="live-dot"></span>Command History <span class="count-badge" id="count"
-                    style="display:none">0</span></h1>
-            <div style="display:flex;gap:8px">
-                <button class="btn btn-secondary" onclick="clearHistory()">&#x1F5D1; CLEAR</button>
-                <button class="btn btn-primary" onclick="loadHistory()">&#x21BB; REFRESH</button>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon">
+                    <i data-lucide="history" style="width:20px;height:20px;"></i>
+                </div>
+                <div>
+                    <div class="pg-title"><span>Command</span> History <span class="count-badge" id="count"
+                            style="display:none">0</span></div>
+                    <div class="pg-sub">// execution log</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <button class="btn-ref btn-danger" onclick="clearHistory()">
+                    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                    <span>Clear</span>
+                </button>
+                <button class="btn-ref" onclick="loadHistory()">
+                    <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
+                    <span>Refresh</span>
+                </button>
+                <a href="index.html" class="btn-back">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                    <span>Dashboard</span>
+                </a>
             </div>
         </div>
 
-        <!-- Stats -->
+        <!-- STATS -->
         <div class="stats-row" id="stats-row">
-            <div class="stat-card stat-success">
+            <div class="stat-card stat-total">
                 <div class="stat-value" id="stat-total">-</div>
                 <div class="stat-label">Total</div>
             </div>
@@ -301,46 +688,54 @@
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="history-controls">
+        <!-- FILTERS -->
+        <div class="filters">
             <select id="filter-action" onchange="applyFilters()">
                 <option value="">All Actions</option>
             </select>
             <select id="filter-status" onchange="applyFilters()">
                 <option value="">All Status</option>
-                <option value="success">&#x2714; Success</option>
-                <option value="failed">&#x2716; Failed</option>
-                <option value="timeout">&#x231B; Timeout</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+                <option value="timeout">Timeout</option>
             </select>
-            <input type="text" id="search-input" placeholder="Search commands..." oninput="applyFilters()" />
+            <input type="text" id="search-input" placeholder="Search commands..." oninput="applyFilters()">
         </div>
 
-        <!-- Table -->
+        <!-- TABLE -->
         <div id="history-container">
-            <div style="text-align:center;padding:40px;color:var(--text-muted)">Loading command history...</div>
+            <div class="empty">
+                <div class="e-icon pulse-load">
+                    <i data-lucide="history" style="width:48px;height:48px;"></i>
+                </div>
+                <h2>Loading Command History</h2>
+                <p>Querying execution logs...</p>
+            </div>
         </div>
-    </div>
 
-    <!-- Disclaimer -->
-    <div class="container">
-        <div class="disclaimer">
-            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4>
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+                Disclaimer
+            </h4>
             <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-                manage their own devices. Installing or using this application on a device without the owner's explicit
-                consent is illegal and unethical. The developers assume no liability for misuse. By using this
-                application, you agree that you are solely responsible for how it is used.</p>
+                manage their own devices. Installing or using this on a device without the owner's explicit
+                consent is illegal and unethical.</p>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p class="footer-created">Created by</p>
-        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
     </footer>
 
     <script src="/js/api.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         let allHistory = [];
         let filteredHistory = [];
@@ -363,8 +758,17 @@
                 }
             } catch (e) {
                 document.getElementById('history-container').innerHTML =
-                    '<div class="empty-state"><h2>&#x26A0; Failed to load history</h2><p>' + e.message + '</p>' +
-                    '<button class="btn btn-primary" style="margin-top:16px" onclick="loadHistory()">RETRY</button></div>';
+                    `<div class="empty">
+                        <div class="e-icon"><i data-lucide="alert-circle" style="width:48px;height:48px;color:var(--danger);"></i></div>
+                        <h2>Failed to load history</h2>
+                        <p>${escapeHtml(e.message)}</p>
+                        <p style="margin-top:14px;">
+                            <button class="btn-ref" onclick="loadHistory()" style="display:inline-flex;">
+                                <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Retry
+                            </button>
+                        </p>
+                    </div>`;
+                lucide.createIcons();
             }
         }
 
@@ -425,11 +829,23 @@
             countBadge.textContent = allHistory.length;
         }
 
+        function getStatusIcon(status) {
+            if (status === 'success') return 'check-circle';
+            if (status === 'timeout') return 'clock';
+            return 'x-circle';
+        }
+
         function renderTable() {
             const container = document.getElementById('history-container');
 
             if (filteredHistory.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h2>No Commands Recorded</h2><p>Commands will appear here as you use features on the dashboard.</p></div>';
+                container.innerHTML =
+                    `<div class="empty">
+                        <div class="e-icon"><i data-lucide="terminal" style="width:48px;height:48px;"></i></div>
+                        <h2>No Commands Recorded</h2>
+                        <p>Commands will appear here as you use features on the dashboard.</p>
+                    </div>`;
+                lucide.createIcons();
                 return;
             }
 
@@ -446,7 +862,7 @@
             filteredHistory.forEach(h => {
                 const time = formatTime(h.timestamp);
                 const statusClass = h.status === 'success' ? 'status-success' : h.status === 'timeout' ? 'status-timeout' : 'status-failed';
-                const statusIcon = h.status === 'success' ? '&#x2714;' : h.status === 'timeout' ? '&#x231B;' : '&#x2716;';
+                const statusIcon = getStatusIcon(h.status);
 
                 let durationClass = 'duration-cell';
                 if (h.durationMs > 5000) durationClass += ' duration-timeout';
@@ -457,28 +873,25 @@
 
                 html += '<tr>' +
                     '<td class="time-cell">' + time + '</td>' +
-                    '<td><span class="action-badge">' + h.action + '</span></td>' +
-                    '<td><span class="status-badge ' + statusClass + '">' + statusIcon + ' ' + h.status + '</span></td>' +
+                    '<td><span class="action-badge"><i data-lucide="terminal" style="width:10px;height:10px;"></i> ' + h.action + '</span></td>' +
+                    '<td><span class="status-badge ' + statusClass + '"><i data-lucide="' + statusIcon + '" style="width:10px;height:10px;"></i> ' + h.status + '</span></td>' +
                     '<td class="' + durationClass + '">' + (h.durationMs > 0 ? h.durationMs + 'ms' : '-') + '</td>' +
                     '<td><span class="response-preview" title="' + escapeHtml(response) + '">' + escapeHtml(responseTrunc) + '</span></td>' +
-                    (!deviceId ? '<td style="font-family:monospace;font-size:0.75rem">' + (h.deviceId ? h.deviceId.substring(0, 8) + '...' : '-') + '</td>' : '') +
+                    (!deviceId ? '<td style="font-size:0.68rem;color:var(--text-muted);">' + (h.deviceId ? h.deviceId.substring(0, 8) + '...' : '-') + '</td>' : '') +
                     '</tr>';
             });
 
             html += '</tbody></table></div>';
             container.innerHTML = html;
+            lucide.createIcons();
         }
 
         function formatTime(ts) {
             if (!ts) return '-';
             const d = new Date(ts);
             const now = new Date();
-            const today = now.toDateString();
-            const dateStr = d.toDateString();
-
             const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            if (dateStr === today) return time;
+            if (d.toDateString() === now.toDateString()) return time;
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + time;
         }
 

@@ -872,7 +872,7 @@
 
                 renderAppList();
             } catch (e) {
-                listEl.innerHTML = '<div class="modal-loading" style="color:#ff4444;">Failed to load apps: ' + e.message + '</div>';
+                listEl.innerHTML = '<div class="modal-loading" style="color:#ff4444;">Failed to load apps: ' + escapeHtml(e.message) + '</div>';
             }
         }
 

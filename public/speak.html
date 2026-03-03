@@ -666,14 +666,26 @@
             renderHistory();
         }
 
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
         function renderHistory() {
             const list = document.getElementById('history-list');
-            list.innerHTML = history.map(h => `
-                <div class="history-item" onclick="replayText('${h.text.replace(/'/g, "\\'")}')">
-                    <span class="history-text">${h.text}</span>
-                    <span class="history-time">${h.time}</span>
+            list.innerHTML = history.map((h, idx) => `
+                <div class="history-item" data-idx="${idx}">
+                    <span class="history-text">${escHtml(h.text)}</span>
+                    <span class="history-time">${escHtml(h.time)}</span>
                 </div>
             `).join('');
+            list.querySelectorAll('.history-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const i = parseInt(el.dataset.idx);
+                    if (history[i]) replayText(history[i].text);
+                });
+            });
         }
 
         function replayText(text) {
@@ -822,10 +834,15 @@
                     updateVisualizer(inputData);
                 };
 
-                // Pipeline: mic \u2192 gain \u2192 scriptNode \u2192 silent output
+                // Pipeline: mic \u2192 gain \u2192 scriptNode \u2192 silent output (NOT speakers!)
+                // ScriptProcessor requires a connected output to fire onaudioprocess,
+                // but we must NOT route mic audio to speakers or it causes echo.
+                const silentGain = audioContext.createGain();
+                silentGain.gain.value = 0; // mute — prevents echo
                 source.connect(gainNode);
                 gainNode.connect(scriptNode);
-                scriptNode.connect(audioContext.destination);
+                scriptNode.connect(silentGain);
+                silentGain.connect(audioContext.destination);
 
                 isTalking = true;
                 talkBtn.classList.add('active');
@@ -1112,6 +1129,18 @@
         function stopAudioFile() {
             if (playbackAbort) playbackAbort.abort();
         }
+
+        // Volume slider — controls actual device media stream volume
+        let volDebounce = null;
+        document.getElementById('volume').addEventListener('input', function () {
+            const level = parseInt(this.value);
+            clearTimeout(volDebounce);
+            volDebounce = setTimeout(async () => {
+                try {
+                    await api.sendCommand(deviceId, 'set_device_volume', { level, stream: 'music' });
+                } catch (e) { }
+            }, 150);
+        });
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {

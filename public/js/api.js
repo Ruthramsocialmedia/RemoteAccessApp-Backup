@@ -291,5 +291,19 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+/**
+ * HTML escape utility — prevents XSS when inserting dynamic strings into innerHTML.
+ * Usage: element.innerHTML = `<div>${escHtml(userInput)}</div>`;
+ */
+window.escHtml = function (str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
 // Global API instance
 window.api = new RemoteAPI();

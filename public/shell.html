@@ -701,7 +701,7 @@
 
             if (type === 'command') {
                 const ts = new Date().toLocaleTimeString();
-                line.innerHTML = `<span class="timestamp">[${ts}]</span> ${text}`;
+                line.innerHTML = `<span class="timestamp">[${escHtml(ts)}]</span> ${escHtml(text)}`;
             } else {
                 line.textContent = text;
             }
@@ -800,7 +800,7 @@
                 allApps = appData.data || [];
                 renderApps(allApps);
             } catch (error) {
-                appList.innerHTML = `<div class="app-loading">Error: ${error.message}</div>`;
+                appList.innerHTML = `<div class="app-loading">Error: ${escHtml(error.message)}</div>`;
             }
         }
 
@@ -815,12 +815,12 @@
                 sorted.map(app => `
                     <div class="app-item">
                         <div class="app-info">
-                            <div class="app-name">${app.name}</div>
-                            <div class="app-package">${app.package} v${app.version}</div>
+                            <div class="app-name">${escHtml(app.name)}</div>
+                            <div class="app-package">${escHtml(app.package)} v${escHtml(app.version)}</div>
                         </div>
                         <div class="app-actions">
-                            <button class="app-btn" onclick="launchApp('${app.package}')">Launch</button>
-                            <button class="app-btn uninstall" onclick="uninstallApp('${app.package}', '${app.name.replace(/'/g, "\\'")}')">Uninstall</button>
+                            <button class="app-btn" onclick="launchApp('${escHtml(app.package)}')">Launch</button>
+                            <button class="app-btn uninstall" onclick="uninstallApp('${escHtml(app.package)}', '${escHtml(app.name).replace(/'/g, "\\'")}')">Uninstall</button>
                         </div>
                     </div>
                 `).join('');

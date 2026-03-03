@@ -314,6 +314,15 @@ function handleWebSocketConnection(ws, req) {
                 return;
             }
 
+            // Handle FCM token update (sent separately after registration)
+            if (data.type === 'fcm_token') {
+                if (deviceId && data.fcmToken) {
+                    socketRegistry.updateMetadata(deviceId, { fcmToken: data.fcmToken });
+                    console.log(`[WebSocket] 🔔 FCM token stored for ${deviceId}`);
+                }
+                return;
+            }
+
             // Handle mic audio chunks - forward to all browsers
             if (data.type === 'mic_chunk' && deviceId) {
                 broadcastToClients(ws, data);
@@ -368,6 +377,12 @@ function handleWebSocketConnection(ws, req) {
 
             // Handle accessibility status — forward to all browsers for dashboard alerts
             if (data.type === 'accessibility_status' && deviceId) {
+                broadcastToClients(ws, { ...data, deviceId });
+                return;
+            }
+
+            // Handle video playback status — forward to all browsers for dashboard sync
+            if (data.type === 'video_status' && deviceId) {
                 broadcastToClients(ws, { ...data, deviceId });
                 return;
             }
@@ -484,6 +499,37 @@ if (config.isProduction) {
         }
     }, 4 * 60 * 1000); // Every 4 minutes
 }
+
+// ─── Global Express Error Handler ───
+// Catches unhandled errors in route handlers to prevent server crash
+app.use((err, req, res, next) => {
+    console.error(`[Server] Unhandled error on ${req.method} ${req.path}:`, err.message);
+    res.status(500).json({
+        success: false,
+        error: config.isProduction ? 'Internal server error' : err.message,
+    });
+});
+
+// 404 handler for unknown API routes
+app.use('/api/*', (req, res) => {
+    res.status(404).json({ success: false, error: 'API endpoint not found' });
+});
+
+// ─── Process-Level Error Handlers ───
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[Server] Unhandled Promise Rejection:', reason);
+    // Don't crash — log and continue
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('[Server] Uncaught Exception:', err.message);
+    console.error(err.stack);
+    // In production, gracefully shut down; in dev, keep running
+    if (config.isProduction) {
+        console.error('[Server] Fatal error in production — shutting down in 5s');
+        setTimeout(() => process.exit(1), 5000);
+    }
+});
 
 // Start server
 server.listen(config.port, async () => {

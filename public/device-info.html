@@ -3,54 +3,519 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Device Info - Remote Access</title>
   <link rel="stylesheet" href="/css/hacker-theme.css">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      padding: 0;
+      min-height: 100vh;
+      font-family: var(--font-display) !important;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* ── HEADER ── */
+    .pg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pg-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+      opacity: 0.4;
+    }
+
+    .pg-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pg-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+      border: 1px solid rgba(0, 255, 65, 0.25);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+    }
+
+    .pg-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e8e8e8;
+    }
+
+    .pg-title span {
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    }
+
+    .pg-sub {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-top: 1px;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      color: var(--accent);
+      border-color: rgba(0, 255, 65, 0.25);
+      background: rgba(0, 255, 65, 0.04);
+    }
+
+    /* ── REFRESH BAR ── */
+    .refresh-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.65rem;
+    }
+
+    .refresh-bar .ts {
+      font-family: var(--font-display);
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .refresh-bar .btn-ref {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .refresh-bar .btn-ref:hover {
+      color: var(--accent);
+      border-color: rgba(0, 255, 65, 0.25);
+    }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.25s;
+      position: relative;
+    }
+
+    .info-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 20%, var(--accent) 50%, transparent 80%);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .info-card:hover {
+      border-color: rgba(0, 255, 65, 0.15);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 12px rgba(0, 255, 65, 0.03);
+      transform: translateY(-1px);
+    }
+
+    .info-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .card-header .ic {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.03));
+      border: 1px solid rgba(0, 255, 65, 0.12);
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .card-header h3 {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+      font-size: 0.8rem;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row .lbl {
+      font-family: var(--font-display);
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .info-row .val {
+      font-family: var(--font-display);
+      font-weight: 400;
+      color: var(--text-primary);
+    }
+
+    /* Progress bar */
+    .prog-wrap {
+      padding: 4px 18px 14px;
+    }
+
+    .prog {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-dark);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── EMPTY / ERROR ── */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+    }
+
+    .empty .e-icon {
+      margin: 0 auto 14px;
+      opacity: 0.3;
+    }
+
+    .empty h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .empty p {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+    }
+
+    .pulse-load {
+      animation: pLoad 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pLoad {
+
+      0%,
+      100% {
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* ── DISCLAIMER ── */
+    .disc {
+      margin-top: 28px;
+      padding: 16px 20px;
+      background: rgba(255, 170, 0, 0.03);
+      border: 1px solid rgba(255, 170, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .disc h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--warning);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .disc p {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .ft {
+      text-align: center;
+      padding: 32px 16px;
+      margin-top: 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ft .ft-label {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .ft .ft-brand {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: lowercase;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+      transition: all 0.4s ease;
+    }
+
+    .ft .ft-brand:hover {
+      filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+      animation: brandShine 1.5s ease infinite;
+    }
+
+    @keyframes brandShine {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .ft .ft-copy {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .wrap {
+        padding: 10px;
+      }
+
+      .pg-header {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pg-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .pg-title {
+        font-size: 0.9rem;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .pg-header-left {
+        gap: 10px;
+      }
+
+      .pg-sub {
+        display: none;
+      }
+
+      .btn-back span {
+        display: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <div class="container">
-    <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
-    <header>
-      <h1>Device Information</h1>
-      <p>// system diagnostics</p>
-    </header>
+  <div class="wrap">
 
-
-
-    <div id="device-info" class="info-grid">
-      <p class="loading">Querying device...</p>
+    <!-- HEADER -->
+    <div class="pg-header">
+      <div class="pg-header-left">
+        <div class="pg-icon">
+          <i data-lucide="info" style="width:20px;height:20px;"></i>
+        </div>
+        <div>
+          <div class="pg-title"><span>Device</span> Information</div>
+          <div class="pg-sub">// system diagnostics</div>
+        </div>
+      </div>
+      <a href="index.html" class="btn-back">
+        <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+        <span>Dashboard</span>
+      </a>
     </div>
 
-    <p class="timestamp" id="last-refreshed" style="text-align:center;margin-top:12px;"></p>
+    <!-- REFRESH BAR -->
+    <div class="refresh-bar">
+      <span class="ts" id="last-ts">querying device...</span>
+      <button class="btn-ref" onclick="loadDeviceInfo()">
+        <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i>
+        Refresh
+      </button>
+    </div>
+
+    <!-- INFO CARDS -->
+    <div id="device-info" class="info-grid">
+      <div class="empty">
+        <div class="e-icon pulse-load">
+          <i data-lucide="cpu" style="width:48px;height:48px;"></i>
+        </div>
+        <h2>Loading Device Info</h2>
+        <p>Querying device diagnostics...</p>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disc">
+      <h4>
+        <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+        Disclaimer
+      </h4>
+      <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+        manage their own devices. Installing or using this on a device without the owner's explicit
+        consent is illegal and unethical.</p>
+    </div>
   </div>
+
+  <!-- FOOTER -->
+  <footer class="ft">
+    <div class="ft-label">crafted by</div>
+    <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+    <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+  </footer>
 
   <script src="/js/api.js"></script>
   <script src="/js/call-notification.js"></script>
   <script>
+    lucide.createIcons();
+
     const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+    if (!deviceId) window.location.href = 'index.html';
 
-    if (!deviceId) {
-      window.location.href = 'index.html';
-    }
-
-
-
-    async function loadDeviceInfo() {
-      try {
-        const response = await api.getDeviceInfo(deviceId);
-        if (response.success) {
-          renderDeviceInfo(response.device);
-          document.getElementById('last-refreshed').textContent =
-            `last updated: ${new Date().toLocaleTimeString()}`;
-        } else {
-          throw new Error(response.error || 'Failed to get device info');
-        }
-      } catch (error) {
-        document.getElementById('device-info').innerHTML = `
-          <p style="color: var(--danger);">Error: ${error.message}</p>
-        `;
-      }
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
     }
 
     function getBatteryColor(level) {
@@ -59,128 +524,131 @@
       return 'var(--danger)';
     }
 
+    async function loadDeviceInfo() {
+      try {
+        const response = await api.getDeviceInfo(deviceId);
+        if (response.success) {
+          renderDeviceInfo(response.device);
+          document.getElementById('last-ts').textContent =
+            `last updated: ${new Date().toLocaleTimeString()}`;
+        } else {
+          throw new Error(response.error || 'Failed to get device info');
+        }
+      } catch (error) {
+        document.getElementById('device-info').innerHTML = `
+          <div class="empty" style="grid-column:1/-1;">
+            <div class="e-icon"><i data-lucide="alert-circle" style="width:48px;height:48px;color:var(--danger);"></i></div>
+            <h2>Error</h2>
+            <p>${escHtml(error.message)}</p>
+            <p style="margin-top:14px;"><button class="btn btn-primary" onclick="loadDeviceInfo()" style="padding:8px 20px;font-size:0.75rem;">RETRY</button></p>
+          </div>`;
+        lucide.createIcons();
+      }
+    }
+
     function renderDeviceInfo(info) {
       const container = document.getElementById('device-info');
       const batteryLevel = parseInt(info.battery) || 0;
       const batteryColor = getBatteryColor(batteryLevel);
+      const storagePercent = ((info.storageUsed || 0) / (info.storageTotal || 1) * 100).toFixed(1);
+      const memTotal = info.memoryTotal || 0;
+      const memAvail = info.memoryAvailable || 0;
+      const memUsedPercent = memTotal > 0 ? ((memTotal - memAvail) / memTotal * 100).toFixed(1) : 0;
 
       container.innerHTML = `
         <div class="info-card">
-          <h3>&#x1F4F1; Device Details</h3>
-          <div class="info-item">
-            <span class="info-label">Model</span>
-            <span class="info-value">${info.model || 'Unknown'}</span>
+          <div class="card-header">
+            <div class="ic"><i data-lucide="smartphone" style="width:16px;height:16px;"></i></div>
+            <h3>Device</h3>
           </div>
-          <div class="info-item">
-            <span class="info-label">Manufacturer</span>
-            <span class="info-value">${info.manufacturer || 'Unknown'}</span>
+          <div class="info-row"><span class="lbl">Model</span><span class="val">${escHtml(info.model || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Manufacturer</span><span class="val">${escHtml(info.manufacturer || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Device ID</span><span class="val">${escHtml(deviceId.substring(0, 12))}...</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="settings" style="width:16px;height:16px;"></i></div>
+            <h3>System</h3>
           </div>
-          <div class="info-item">
-            <span class="info-label">Device ID</span>
-            <span class="info-value">${deviceId.substring(0, 12)}...</span>
+          <div class="info-row"><span class="lbl">Android</span><span class="val">${escHtml(info.androidVersion || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">SDK Level</span><span class="val">${escHtml(String(info.sdkLevel || 'N/A'))}</span></div>
+          <div class="info-row"><span class="lbl">Security Patch</span><span class="val">${escHtml(info.securityPatch || 'N/A')}</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic" style="background:linear-gradient(135deg,${batteryColor}18,${batteryColor}08);border-color:${batteryColor}30;">
+              <i data-lucide="${batteryLevel > 50 ? 'battery-full' : batteryLevel > 20 ? 'battery-medium' : 'battery-low'}" style="width:16px;height:16px;color:${batteryColor};"></i>
+            </div>
+            <h3>Battery</h3>
+          </div>
+          <div class="info-row">
+            <span class="lbl">Level</span>
+            <span class="val" style="color:${batteryColor}">${info.battery || '0'}%</span>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${batteryLevel}%;background:linear-gradient(90deg,${batteryColor}aa,${batteryColor});box-shadow:0 0 6px ${batteryColor}40;"></div>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="lbl">Charging</span>
+            <span class="val">${info.isCharging ? '<i data-lucide="zap" style="width:12px;height:12px;color:var(--warning);vertical-align:middle;"></i> Yes' : 'No'}</span>
           </div>
         </div>
 
         <div class="info-card">
-          <h3>&#x2699;&#xFE0F; System Info</h3>
-          <div class="info-item">
-            <span class="info-label">Android Version</span>
-            <span class="info-value">${info.androidVersion || 'N/A'}</span>
+          <div class="card-header">
+            <div class="ic"><i data-lucide="wifi" style="width:16px;height:16px;"></i></div>
+            <h3>Network</h3>
           </div>
-          <div class="info-item">
-            <span class="info-label">SDK Level</span>
-            <span class="info-value">${info.sdkLevel || 'N/A'}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Security Patch</span>
-            <span class="info-value">${info.securityPatch || 'N/A'}</span>
+          <div class="info-row"><span class="lbl">Type</span><span class="val">${escHtml(info.networkType || 'Unknown')}</span></div>
+          <div class="info-row">
+            <span class="lbl">Status</span>
+            <span class="val">${info.isConnected
+          ? '<span style="color:var(--accent);">● Connected</span>'
+          : '<span style="color:var(--danger);">○ Disconnected</span>'}</span>
           </div>
         </div>
 
         <div class="info-card">
-          <h3>&#x1F50B; Battery</h3>
-          <div class="info-item">
-            <span class="info-label">Level</span>
-            <span class="info-value" style="color:${batteryColor}">${info.battery || '0'}%</span>
+          <div class="card-header">
+            <div class="ic"><i data-lucide="hard-drive" style="width:16px;height:16px;"></i></div>
+            <h3>Storage</h3>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${batteryLevel}%; background: linear-gradient(90deg, ${batteryColor}aa, ${batteryColor})"></div>
-          </div>
-          <div class="info-item" style="margin-top: 10px;">
-            <span class="info-label">Charging</span>
-            <span class="info-value">${info.isCharging ? '⚡ Yes' : 'No'}</span>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <h3>&#x1F4E1; Network</h3>
-          <div class="info-item">
-            <span class="info-label">Type</span>
-            <span class="info-value">${info.networkType || 'Unknown'}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Status</span>
-            <span class="info-value">${info.isConnected ? '● Connected' : '○ Disconnected'}</span>
+          <div class="info-row"><span class="lbl">Total</span><span class="val">${api.formatFileSize(info.storageTotal || 0)}</span></div>
+          <div class="info-row"><span class="lbl">Used</span><span class="val">${api.formatFileSize(info.storageUsed || 0)}</span></div>
+          <div class="info-row"><span class="lbl">Free</span><span class="val">${api.formatFileSize(info.storageFree || 0)}</span></div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${storagePercent}%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));box-shadow:0 0 6px var(--accent-glow);"></div>
+            </div>
           </div>
         </div>
 
         <div class="info-card">
-          <h3>&#x1F4BE; Storage</h3>
-          <div class="info-item">
-            <span class="info-label">Total</span>
-            <span class="info-value">${api.formatFileSize(info.storageTotal || 0)}</span>
+          <div class="card-header">
+            <div class="ic"><i data-lucide="cpu" style="width:16px;height:16px;"></i></div>
+            <h3>Memory</h3>
           </div>
-          <div class="info-item">
-            <span class="info-label">Used</span>
-            <span class="info-value">${api.formatFileSize(info.storageUsed || 0)}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Free</span>
-            <span class="info-value">${api.formatFileSize(info.storageFree || 0)}</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${((info.storageUsed || 0) / (info.storageTotal || 1) * 100)}%"></div>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <h3>&#x1F9E0; Memory</h3>
-          <div class="info-item">
-            <span class="info-label">Total RAM</span>
-            <span class="info-value">${api.formatFileSize(info.memoryTotal || 0)}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Available</span>
-            <span class="info-value">${api.formatFileSize(info.memoryAvailable || 0)}</span>
+          <div class="info-row"><span class="lbl">Total RAM</span><span class="val">${api.formatFileSize(memTotal)}</span></div>
+          <div class="info-row"><span class="lbl">Available</span><span class="val">${api.formatFileSize(memAvail)}</span></div>
+          <div class="info-row"><span class="lbl">Usage</span><span class="val">${memUsedPercent}%</span></div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${memUsedPercent}%;background:linear-gradient(90deg,var(--info),#00ccff);box-shadow:0 0 6px rgba(0,170,255,0.3);"></div>
+            </div>
           </div>
         </div>
       `;
+
+      lucide.createIcons();
     }
 
-    // Initial load
     loadDeviceInfo();
-
-    // Auto-refresh every 10 seconds
     setInterval(loadDeviceInfo, 10000);
   </script>
-
-  <!-- Disclaimer -->
-  <div class="container">
-    <div class="disclaimer">
-      <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
-      <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-        manage their own devices. Installing or using this application on a device without the owner's explicit
-        consent is illegal and unethical. The developers assume no liability for misuse. By using this
-        application, you agree that you are solely responsible for how it is used.</p>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="site-footer">
-    <p class="footer-created">Created by</p>
-    <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-    <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
-  </footer>
 </body>
 
 </html>

@@ -3,190 +3,667 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>File Manager - Remote Access</title>
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding: 16px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        header::before {
-            display: none;
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .count-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tb-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tb-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .tb-btn.primary {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .tb-btn.primary:hover {
+            background: rgba(0, 255, 65, 0.14);
+        }
+
+        .tb-btn.muted {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .tb-sep {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .bc-link {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .bc-link:hover {
+            background: rgba(0, 255, 65, 0.08);
+            text-decoration: none;
+        }
+
+        .bc-sep {
+            color: var(--text-muted);
+            margin: 0 2px;
+            opacity: 0.5;
+        }
+
+        .bc-current {
+            color: var(--text-primary);
+            padding: 2px 4px;
+        }
+
+        /* ── FILE LIST ── */
+        .file-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         .file-item {
             display: grid;
-            grid-template-columns: 32px 1fr auto auto;
-            gap: 12px;
+            grid-template-columns: 36px 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+            transition: background 0.15s;
+            cursor: default;
+            font-size: 0.8rem;
         }
 
-        .btn-small {
-            padding: 4px 10px;
-            font-size: 0.75rem;
+        .file-item:last-child {
+            border-bottom: none;
         }
 
-        .breadcrumb-link {
+        .file-item:hover {
+            background: rgba(0, 255, 65, 0.02);
+        }
+
+        .file-item .f-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .file-item .f-icon.folder {
+            background: rgba(0, 255, 65, 0.06);
+            border-color: rgba(0, 255, 65, 0.12);
+            color: var(--accent);
+        }
+
+        .file-item .f-icon.parent {
+            background: rgba(0, 170, 255, 0.06);
+            border-color: rgba(0, 170, 255, 0.12);
+            color: var(--info);
+        }
+
+        .file-item .f-name {
+            font-family: var(--font-display);
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-item .f-name.link {
             color: var(--accent);
             cursor: pointer;
-            text-decoration: none;
         }
 
-        .breadcrumb-link:hover {
+        .file-item .f-name.link:hover {
             text-decoration: underline;
         }
 
-        .breadcrumb-separator {
+        .file-item .f-size {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
             color: var(--text-muted);
-            margin: 0 4px;
+            white-space: nowrap;
+            text-align: right;
         }
 
-        /* No SD Card message */
-        .no-sdcard-container {
+        .file-item .f-acts {
+            display: flex;
+            gap: 4px;
+        }
+
+        .f-act-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .f-act-btn:hover {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .f-act-btn.danger:hover {
+            background: rgba(255, 51, 51, 0.1);
+            border-color: rgba(255, 51, 51, 0.25);
+            color: var(--danger);
+        }
+
+        /* ── EMPTY / MSG STATES ── */
+        .empty {
             text-align: center;
-            padding: 40px 20px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-
-        .no-sdcard-container .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .no-sdcard-container h2 {
-            color: var(--warning);
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        .no-sdcard-container p {
+            padding: 60px 24px;
             color: var(--text-muted);
-            font-size: 0.85rem;
         }
 
-        /* Recycle Bin not enabled message */
-        .no-trash-container {
+        .empty .e-icon {
+            margin: 0 auto 14px;
+            opacity: 0.3;
+        }
+
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        .pulse-load {
+            animation: pLoad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
             text-align: center;
-            padding: 40px 20px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-top: 16px;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
         }
 
-        .no-trash-container .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .no-trash-container h2 {
-            color: var(--warning);
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        .no-trash-container p {
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .toolbar {
+                gap: 6px;
+            }
+
+            .tb-btn {
+                padding: 6px 10px;
+                font-size: 0.58rem;
+            }
+
+            .file-item {
+                grid-template-columns: 32px 1fr auto;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+
+            .file-item .f-size {
+                display: none;
+            }
+
+            .f-act-btn {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back .lbl {
+                display: none;
+            }
+
+            .tb-sep {
+                display: none;
+            }
+
+            .file-item .f-icon {
+                width: 30px;
+                height: 30px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>File Manager <span class="count-badge" id="file-count" style="display:none">0</span></h1>
-            <a href="index.html" class="btn btn-secondary">&lt;-- Back</a>
-        </header>
+    <div class="wrap">
 
-        <div class="toolbar">
-            <button class="btn btn-primary" id="btn-upload" style="display:none">UPLOAD FILE</button>
-            <button class="btn btn-primary" id="btn-newfolder" style="display:none">NEW FOLDER</button>
-            <button class="btn btn-secondary" id="btn-home">INTERNAL</button>
-            <span id="external-storage-btns"></span>
-            <button class="btn btn-secondary" id="btn-trash">&#x1F5D1; RECYCLE BIN</button>
-            <button class="btn btn-secondary" id="btn-refresh">REFRESH</button>
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon">
+                    <i data-lucide="folder" style="width:20px;height:20px;"></i>
+                </div>
+                <div>
+                    <div class="pg-title">
+                        <span>File</span> Manager
+                        <span class="count-badge" id="file-count" style="display:none">0</span>
+                    </div>
+                    <div class="pg-sub">// remote file system</div>
+                </div>
+            </div>
+            <a href="index.html" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span class="lbl">Dashboard</span>
+            </a>
         </div>
 
-        <input type="file" id="file-input" />
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <button class="tb-btn primary" id="btn-upload" style="display:none">
+                <i data-lucide="upload" style="width:13px;height:13px;"></i> Upload
+            </button>
+            <button class="tb-btn primary" id="btn-newfolder" style="display:none">
+                <i data-lucide="folder-plus" style="width:13px;height:13px;"></i> New Folder
+            </button>
+            <span class="tb-sep"></span>
+            <button class="tb-btn" id="btn-home">
+                <i data-lucide="hard-drive" style="width:13px;height:13px;"></i> Internal
+            </button>
+            <span id="external-storage-btns"></span>
+            <button class="tb-btn" id="btn-trash">
+                <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Recycle Bin
+            </button>
+            <span class="tb-sep"></span>
+            <button class="tb-btn" id="btn-refresh">
+                <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Refresh
+            </button>
+        </div>
 
+        <!-- BREADCRUMB -->
         <div class="breadcrumb" id="breadcrumb"></div>
 
+        <!-- FILE LIST -->
         <div class="file-list" id="file-list">
-            <div class="loading">Scanning files...</div>
+            <div class="empty">
+                <div class="e-icon pulse-load">
+                    <i data-lucide="folder-search" style="width:48px;height:48px;"></i>
+                </div>
+                <h2>Scanning Files</h2>
+                <p>Loading file system...</p>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4>
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+                Disclaimer
+            </h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this on a device without the owner's explicit
+                consent is illegal and unethical.</p>
         </div>
     </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
 
     <script src="/js/api.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         let currentPath = '/storage';
 
-        if (!deviceId) {
-            window.location.href = 'index.html';
+        if (!deviceId) window.location.href = 'index.html';
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
         }
 
-        // Get file icon based on extension
+        // Lucide icon name by file extension
         function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
-            const iconMap = {
-                // Documents
-                'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📃', 'rtf': '📃',
-                // Images
-                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'bmp': '🖼️', 'svg': '🖼️', 'webp': '🖼️',
-                // Videos
-                'mp4': '🎬', 'avi': '🎬', 'mkv': '🎬', 'mov': '🎬', 'wmv': '🎬', 'flv': '🎬', 'webm': '🎬',
-                // Audio
-                'mp3': '🎵', 'wav': '🎵', 'flac': '🎵', 'aac': '🎵', 'ogg': '🎵', 'm4a': '🎵',
-                // Archives
-                'zip': '📦', 'rar': '📦', '7z': '📦', 'tar': '📦', 'gz': '📦',
-                // Code
-                'js': '💻', 'html': '💻', 'css': '💻', 'json': '💻', 'xml': '💻', 'java': '💻', 'py': '💻', 'kt': '💻',
-                // APK
-                'apk': '📱'
+            const map = {
+                'pdf': 'file-text', 'doc': 'file-text', 'docx': 'file-text', 'txt': 'file-text', 'rtf': 'file-text',
+                'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'bmp': 'image', 'svg': 'image', 'webp': 'image',
+                'mp4': 'film', 'avi': 'film', 'mkv': 'film', 'mov': 'film', 'wmv': 'film', 'flv': 'film', 'webm': 'film',
+                'mp3': 'music', 'wav': 'music', 'flac': 'music', 'aac': 'music', 'ogg': 'music', 'm4a': 'music',
+                'zip': 'archive', 'rar': 'archive', '7z': 'archive', 'tar': 'archive', 'gz': 'archive',
+                'js': 'file-code', 'html': 'file-code', 'css': 'file-code', 'json': 'file-code', 'xml': 'file-code',
+                'java': 'file-code', 'py': 'file-code', 'kt': 'file-code',
+                'apk': 'smartphone'
             };
-            return iconMap[ext] || '📄';
+            return map[ext] || 'file';
         }
 
-        // Render clickable breadcrumb
+        // Breadcrumb
         function renderBreadcrumb(path) {
-            const breadcrumb = document.getElementById('breadcrumb');
+            const el = document.getElementById('breadcrumb');
             const parts = path.split('/').filter(p => p);
 
-            let html = '<span class="breadcrumb-link" onclick="loadFiles(\'/\')">HOME</span>';
-            let currentPath = '';
+            let html = '<span class="bc-link" onclick="loadFiles(\'/\')">HOME</span>';
+            let cur = '';
 
-            parts.forEach((part, index) => {
-                currentPath += '/' + part;
-                const isLast = index === parts.length - 1;
-
-                html += '<span class="breadcrumb-separator">/</span>';
-
-                if (isLast) {
-                    html += `<span>${part}</span>`;
+            parts.forEach((part, i) => {
+                cur += '/' + part;
+                html += '<span class="bc-sep">/</span>';
+                if (i === parts.length - 1) {
+                    html += `<span class="bc-current">${escHtml(part)}</span>`;
                 } else {
-                    const pathToNavigate = currentPath;
-                    html += `<span class="breadcrumb-link" onclick="loadFiles('${pathToNavigate}')">${part}</span>`;
+                    html += `<span class="bc-link" onclick="loadFiles('${cur}')">${escHtml(part)}</span>`;
                 }
             });
 
-            breadcrumb.innerHTML = html;
+            el.innerHTML = html;
         }
 
-        // Show/hide upload & new folder buttons based on path
         function updateToolbarVisibility() {
             const inStorage = currentPath.startsWith('/storage/emulated/0');
             document.getElementById('btn-upload').style.display = inStorage ? '' : 'none';
@@ -216,117 +693,95 @@
             const countEl = document.getElementById('file-count');
             let html = '';
 
-            // Update count badge
             countEl.style.display = 'inline-block';
             countEl.textContent = files.length + ' items';
 
-            // Add Parent Directory item if not at root
+            // Parent directory
             if (currentPath !== '/storage/emulated/0' && currentPath !== '/storage/emulated/0/') {
                 const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
                 html += `
                     <div class="file-item" onclick="loadFiles('${parentPath}')" style="cursor:pointer">
-                        <div class="file-icon">⬆️</div>
-                        <div class="file-name" style="color:var(--accent)">.. (Parent Directory)</div>
-                        <div class="file-size"></div>
-                        <div class="file-actions"></div>
-                    </div>
-                `;
+                        <div class="f-icon parent"><i data-lucide="corner-left-up" style="width:16px;height:16px;"></i></div>
+                        <div class="f-name link">.. (Parent Directory)</div>
+                        <div class="f-size"></div>
+                        <div class="f-acts"></div>
+                    </div>`;
             }
 
             if (files.length === 0) {
                 countEl.textContent = 'empty';
                 if (!html) html = `
-                    <div class="empty-state">
+                    <div class="empty">
+                        <div class="e-icon"><i data-lucide="folder-open" style="width:48px;height:48px;"></i></div>
                         <h2>Empty Folder</h2>
                         <p>No files or subdirectories found.</p>
                     </div>`;
             } else {
                 html += files.map(file => {
                     const isFolder = file.type === 'folder' || file.type === 'directory';
-                    const icon = isFolder ? '📁' : getFileIcon(file.name);
+                    const iconName = isFolder ? 'folder' : getFileIcon(file.name);
                     const filePath = `${currentPath}/${file.name}`;
-
-                    // For folders: make name clickable
-                    const nameHtml = isFolder
-                        ? `<span class="folder-link" onclick="loadFiles('${filePath}')">${file.name}</span>`
-                        : `<span>${file.name}</span>`;
+                    const nameClass = isFolder ? 'f-name link' : 'f-name';
+                    const nameClick = isFolder ? `onclick="loadFiles('${filePath}')"` : '';
 
                     return `
-                        <div class="file-item" data-path="${filePath}" data-type="${file.type}">
-                          <div class="file-icon">${icon}</div>
-                          <div class="file-name">${nameHtml}</div>
-                          <div class="file-size">${file.type === 'file' ? api.formatFileSize(file.size) : ''}</div>
-                          <div class="file-actions">
-                            <button class="btn btn-small btn-secondary" title="Download" onclick="downloadFile('${file.name}')">DL</button>
-                            <button class="btn btn-small btn-secondary" title="Rename" onclick="renameFile('${file.name}')">REN</button>
-                            <button class="btn btn-small btn-danger" title="Delete" onclick="deleteFile('${file.name}')">DEL</button>
-                          </div>
-                        </div>
-                    `;
+                        <div class="file-item" data-path="${escHtml(filePath)}" data-type="${file.type}">
+                            <div class="f-icon ${isFolder ? 'folder' : ''}"><i data-lucide="${iconName}" style="width:16px;height:16px;"></i></div>
+                            <div class="${nameClass}" ${nameClick}>${escHtml(file.name)}</div>
+                            <div class="f-size">${file.type === 'file' ? api.formatFileSize(file.size) : ''}</div>
+                            <div class="f-acts">
+                                <button class="f-act-btn" title="Download" onclick="downloadFile('${escHtml(file.name)}')"><i data-lucide="download" style="width:13px;height:13px;"></i></button>
+                                <button class="f-act-btn" title="Rename" onclick="renameFile('${escHtml(file.name)}')"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>
+                                <button class="f-act-btn danger" title="Delete" onclick="deleteFile('${escHtml(file.name)}')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>
+                            </div>
+                        </div>`;
                 }).join('');
             }
 
             container.innerHTML = html;
+            lucide.createIcons();
         }
 
-        // ===== DETECT EXTERNAL STORAGE =====
+        // ===== EXTERNAL STORAGE =====
         async function detectExternalStorage() {
             const container = document.getElementById('external-storage-btns');
             const volumes = [];
 
-            // === PRIMARY: Use storage_info command (reliable, uses Android API) ===
             try {
                 const storageRes = await api.sendCommand(deviceId, 'storage_info', {});
                 if (storageRes.success && storageRes.data && storageRes.data.volumes) {
-                    const vols = storageRes.data.volumes;
-                    for (const v of vols) {
-                        let icon = '💾';
+                    for (const v of storageRes.data.volumes) {
+                        let iconName = 'hard-drive';
                         let label = v.name;
-                        if (v.type === 'usb') {
-                            icon = '🔌';
-                            label = 'USB: ' + v.name;
-                        } else if (v.type === 'sdcard') {
-                            icon = '💾';
-                            label = 'SD CARD';
-                        } else {
-                            label = v.name.length > 10 ? 'EXT: ' + v.name.substring(0, 8) + '..' : v.name;
-                        }
-                        volumes.push({ path: v.path, label, icon });
+                        if (v.type === 'usb') { iconName = 'usb'; label = 'USB: ' + v.name; }
+                        else if (v.type === 'sdcard') { iconName = 'disc'; label = 'SD Card'; }
+                        else { label = v.name.length > 10 ? 'EXT: ' + v.name.substring(0, 8) + '..' : v.name; }
+                        volumes.push({ path: v.path, label, iconName });
                     }
                 }
             } catch (e) {
                 console.log('storage_info not available, falling back to /storage scan');
             }
 
-            // === FALLBACK: Scan /storage directory (for older clients) ===
             if (volumes.length === 0) {
                 try {
                     const response = await api.sendCommand(deviceId, 'files_list', { path: '/storage' });
                     if (response.success && response.data) {
-                        const files = response.data.files || [];
-                        files.forEach(f => {
+                        (response.data.files || []).forEach(f => {
                             if ((f.type === 'folder' || f.type === 'directory') &&
                                 f.name !== 'emulated' && f.name !== 'self') {
                                 let label = f.name;
-                                let icon = '💾';
-                                const nameLower = f.name.toLowerCase();
-                                if (nameLower.includes('usb') || nameLower.includes('otg')) {
-                                    icon = '🔌';
-                                    label = 'USB: ' + f.name;
-                                } else if (nameLower.match(/^[a-f0-9]{4}-[a-f0-9]{4}$/i)) {
-                                    icon = '💾';
-                                    label = 'SD CARD';
-                                } else {
-                                    icon = '💾';
-                                    label = f.name.length > 10 ? 'EXT: ' + f.name.substring(0, 8) + '..' : f.name;
-                                }
-                                volumes.push({ path: '/storage/' + f.name, label, icon });
+                                let iconName = 'hard-drive';
+                                const lower = f.name.toLowerCase();
+                                if (lower.includes('usb') || lower.includes('otg')) { iconName = 'usb'; label = 'USB: ' + f.name; }
+                                else if (lower.match(/^[a-f0-9]{4}-[a-f0-9]{4}$/i)) { iconName = 'disc'; label = 'SD Card'; }
+                                else { label = f.name.length > 10 ? 'EXT: ' + f.name.substring(0, 8) + '..' : f.name; }
+                                volumes.push({ path: '/storage/' + f.name, label, iconName });
                             }
                         });
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) { }
 
-                // Also check /mnt/media_rw for mounted USB/OTG (silent — no error toast)
                 try {
                     const mntRes = await fetch(`${api.baseURL}/api/command/${deviceId}`, {
                         method: 'POST',
@@ -336,59 +791,55 @@
                     });
                     const mntResp = await mntRes.json();
                     if (mntRes.ok && mntResp.success && mntResp.data) {
-                        const mntFiles = mntResp.data.files || [];
-                        mntFiles.forEach(f => {
-                            if ((f.type === 'folder' || f.type === 'directory')) {
-                                const already = volumes.some(v => v.path.endsWith('/' + f.name));
-                                if (!already) {
-                                    volumes.push({ path: '/mnt/media_rw/' + f.name, label: 'MNT: ' + f.name, icon: '🔌' });
+                        (mntResp.data.files || []).forEach(f => {
+                            if (f.type === 'folder' || f.type === 'directory') {
+                                if (!volumes.some(v => v.path.endsWith('/' + f.name))) {
+                                    volumes.push({ path: '/mnt/media_rw/' + f.name, label: 'MNT: ' + f.name, iconName: 'usb' });
                                 }
                             }
                         });
                     }
-                } catch (e) { /* /mnt/media_rw may not exist — silently ignore */ }
+                } catch (e) { }
             }
 
-            // Render buttons
             if (volumes.length === 0) {
-                container.innerHTML = '<button class="btn btn-secondary" style="opacity:0.5" onclick="showNoExtStorage()">NO EXT STORAGE</button>';
+                container.innerHTML = `<button class="tb-btn muted" onclick="showNoExtStorage()"><i data-lucide="hard-drive-download" style="width:13px;height:13px;"></i> No Ext Storage</button>`;
             } else {
                 container.innerHTML = volumes.map(v =>
-                    `<button class="btn btn-secondary" onclick="loadFiles('${v.path}')" title="${v.path}">${v.icon} ${v.label}</button>`
+                    `<button class="tb-btn" onclick="loadFiles('${v.path}')" title="${escHtml(v.path)}"><i data-lucide="${v.iconName}" style="width:13px;height:13px;"></i> ${escHtml(v.label)}</button>`
                 ).join('');
             }
+            lucide.createIcons();
         }
 
         function showNoExtStorage() {
             const container = document.getElementById('file-list');
-            const countEl = document.getElementById('file-count');
-            countEl.style.display = 'none';
+            document.getElementById('file-count').style.display = 'none';
             document.getElementById('breadcrumb').innerHTML = '';
             document.getElementById('btn-upload').style.display = 'none';
             document.getElementById('btn-newfolder').style.display = 'none';
             container.innerHTML = `
-                <div class="no-sdcard-container">
-                    <span class="icon">💾</span>
+                <div class="empty">
+                    <div class="e-icon"><i data-lucide="hard-drive-download" style="width:48px;height:48px;"></i></div>
                     <h2>No External Storage Detected</h2>
-                    <p>No SD cards or USB/OTG devices are connected to this device.</p>
-                </div>
-            `;
+                    <p>No SD cards or USB/OTG devices are connected.</p>
+                </div>`;
+            lucide.createIcons();
         }
 
-        // Initialize
+        // Init
         loadFiles();
         detectExternalStorage();
 
         // Event Listeners
         document.getElementById('btn-refresh').addEventListener('click', () => {
             loadFiles(currentPath);
-            detectExternalStorage(); // Re-scan for new USB/OTG devices
+            detectExternalStorage();
         });
 
         document.getElementById('btn-home').addEventListener('click', () => loadFiles('/storage/emulated/0'));
 
         document.getElementById('btn-trash').addEventListener('click', async () => {
-            // Known Android trash/recycle bin paths
             const trashPaths = [
                 '/storage/emulated/0/.Trash',
                 '/storage/emulated/0/.trash',
@@ -398,44 +849,38 @@
             ];
 
             try {
-                let trashFound = false;
-
-                // Use raw fetch to silently check paths (api.sendCommand auto-shows error toasts)
-                for (const trashPath of trashPaths) {
+                let found = false;
+                for (const tp of trashPaths) {
                     try {
                         const res = await fetch(`${api.baseURL}/api/command/${deviceId}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'same-origin',
-                            body: JSON.stringify({ action: 'files_list', payload: { path: trashPath } })
+                            body: JSON.stringify({ action: 'files_list', payload: { path: tp } })
                         });
                         const response = await res.json();
                         if (res.ok && response.success && response.data && response.data.files && response.data.files.length > 0) {
-                            loadFiles(trashPath);
-                            trashFound = true;
+                            loadFiles(tp);
+                            found = true;
                             break;
                         }
-                    } catch (e) {
-                        // Path doesn't exist, try next
-                    }
+                    } catch (e) { }
                 }
 
-                if (!trashFound) {
-                    // Show "not enabled" message
+                if (!found) {
                     const container = document.getElementById('file-list');
-                    const countEl = document.getElementById('file-count');
-                    countEl.style.display = 'none';
+                    document.getElementById('file-count').style.display = 'none';
                     document.getElementById('breadcrumb').innerHTML = '';
                     document.getElementById('btn-upload').style.display = 'none';
                     document.getElementById('btn-newfolder').style.display = 'none';
                     container.innerHTML = `
-                        <div class="no-trash-container">
-                            <span class="icon">&#x1F5D1;</span>
+                        <div class="empty">
+                            <div class="e-icon"><i data-lucide="trash-2" style="width:48px;height:48px;"></i></div>
                             <h2>Recycle Bin Not Enabled</h2>
-                            <p>This device does not have a recycle bin/trash folder enabled.</p>
-                            <p style="margin-top:8px; font-size:0.8rem; color:var(--text-muted);">On Android 11+, some file managers create a .Trash folder. Deleted files may be permanently removed without going to trash.</p>
-                        </div>
-                    `;
+                            <p>This device does not have a trash folder enabled.</p>
+                            <p style="margin-top:8px; font-size:0.65rem;">On Android 11+, some file managers create a .Trash folder. Deleted files may be permanently removed.</p>
+                        </div>`;
+                    lucide.createIcons();
                 }
             } catch (error) {
                 api.showToast('Failed to check Recycle Bin: ' + error.message, 'error');
@@ -445,26 +890,17 @@
         document.getElementById('btn-newfolder').addEventListener('click', async () => {
             const folderName = prompt('Enter folder name:');
             if (!folderName) return;
-
-            if (!/^[a-zA-Z0-9_\-\s]+$/.test(folderName)) {
-                api.showToast('Invalid folder name', 'error');
-                return;
-            }
+            if (!/^[a-zA-Z0-9_\-\s]+$/.test(folderName)) { api.showToast('Invalid folder name', 'error'); return; }
 
             try {
-                const response = await api.sendCommand(deviceId, 'file_mkdir', {
-                    path: `${currentPath}/${folderName}`
-                });
-
+                const response = await api.sendCommand(deviceId, 'file_mkdir', { path: `${currentPath}/${folderName}` });
                 if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
                     api.showToast('Folder created!', 'success');
                     loadFiles(currentPath);
                 } else {
                     throw new Error(response.error || response.data?.error || 'Failed to create folder');
                 }
-            } catch (error) {
-                api.showToast(error.message, 'error');
-            }
+            } catch (error) { api.showToast(error.message, 'error'); }
         });
 
         document.getElementById('btn-upload').addEventListener('click', () => {
@@ -473,91 +909,48 @@
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
-                // Max 20MB check
-                if (file.size > 20 * 1024 * 1024) {
-                    api.showToast('File too large (max 20MB)', 'error');
-                    return;
-                }
-
+                if (file.size > 20 * 1024 * 1024) { api.showToast('File too large (max 20MB)', 'error'); return; }
                 try {
                     api.showToast('Uploading...', 'info');
                     await api.uploadFile(deviceId, file, `${currentPath}/${file.name}`);
                     loadFiles(currentPath);
-                } catch (error) {
-                    // Start matched in api.js
-                }
+                } catch (error) { }
             };
             input.click();
         });
 
-        // Helper functions
         async function deleteFile(filename) {
             if (!confirm(`Delete ${filename}?`)) return;
             try {
-                const response = await api.sendCommand(deviceId, 'file_delete', {
-                    path: `${currentPath}/${filename}`
-                });
-
+                const response = await api.sendCommand(deviceId, 'file_delete', { path: `${currentPath}/${filename}` });
                 if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
                     api.showToast('Deleted successfully', 'success');
                     loadFiles(currentPath);
-                } else {
-                    throw new Error(response.error || response.data?.error || 'Failed to delete');
-                }
-            } catch (error) {
-                api.showToast(error.message, 'error');
-            }
+                } else { throw new Error(response.error || response.data?.error || 'Failed to delete'); }
+            } catch (error) { api.showToast(error.message, 'error'); }
         }
 
         async function renameFile(oldName) {
             const newName = prompt('Enter new name:', oldName);
             if (!newName || newName === oldName) return;
-
-            if (!/^[a-zA-Z0-9_\-\s.]+$/.test(newName)) {
-                api.showToast('Invalid filename', 'error');
-                return;
-            }
+            if (!/^[a-zA-Z0-9_\-\s.]+$/.test(newName)) { api.showToast('Invalid filename', 'error'); return; }
 
             try {
                 const response = await api.sendCommand(deviceId, 'file_rename', {
                     oldPath: `${currentPath}/${oldName}`,
                     newPath: `${currentPath}/${newName}`
                 });
-
                 if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
                     api.showToast('Renamed successfully', 'success');
                     loadFiles(currentPath);
-                } else {
-                    throw new Error(response.error || response.data?.error || 'Failed to rename');
-                }
-            } catch (error) {
-                api.showToast(error.message, 'error');
-            }
+                } else { throw new Error(response.error || response.data?.error || 'Failed to rename'); }
+            } catch (error) { api.showToast(error.message, 'error'); }
         }
 
         function downloadFile(filename) {
             api.downloadFile(deviceId, `${currentPath}/${filename}`);
         }
     </script>
-
-    <!-- Disclaimer -->
-    <div class="container">
-        <div class="disclaimer">
-            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
-            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-                manage their own devices. Installing or using this application on a device without the owner's explicit
-                consent is illegal and unethical. The developers assume no liability for misuse. By using this
-                application, you agree that you are solely responsible for how it is used.</p>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p class="footer-created">Created by</p>
-        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
-    </footer>
 </body>
 
 </html>

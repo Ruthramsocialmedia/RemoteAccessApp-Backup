@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
     '/auth/check',
     '/health',
     '/api/device-upload-temp',
+    '/api/download-temp',
 ];
 
 /**

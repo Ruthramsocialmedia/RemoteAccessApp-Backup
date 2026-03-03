@@ -836,7 +836,7 @@
                     <div class="sui-empty">
                         <div class="icon">❌</div>
                         <h3>Failed to read UI</h3>
-                        <p>${err.message || 'Is Accessibility Service enabled?'}</p>
+                        <p>${esc(err.message || 'Is Accessibility Service enabled?')}</p>
                     </div>`;
                 frame.classList.remove('loading');
             }
@@ -880,12 +880,12 @@
             content.innerHTML = nodes.map(n => `
                 <div class="sui-node ${n.click || n.check ? '' : 'not-clickable'}"
                      onclick="clickNode(${n.i}, this)"
-                     title="${n.cls} | ${n.id || ''} | ${n.bounds}">
+                     title="${esc(n.cls)} | ${esc(n.id || '')} | ${esc(n.bounds || '')}">
                     <span class="sui-node-icon">${getIcon(n)}</span>
                     <div class="sui-node-body">
                         <div class="sui-node-label">${esc(getLabel(n))}</div>
                         <div class="sui-node-meta">
-                            <span class="sui-node-class">${n.cls}</span>
+                            <span class="sui-node-class">${esc(n.cls)}</span>
                             ${getTags(n)}
                         </div>
                     </div>
@@ -973,7 +973,7 @@
                     throw new Error(result.error || 'No image');
                 }
             } catch (err) {
-                statusEl.innerHTML = '<span style="color:var(--danger)">●</span> ' + (err.message || 'Failed');
+                statusEl.innerHTML = '<span style="color:var(--danger)">●</span> ' + esc(err.message || 'Failed');
             } finally {
                 document.getElementById('phone-frame').classList.remove('loading');
             }

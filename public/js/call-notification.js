@@ -12,6 +12,7 @@
  */
 (function () {
     var STORAGE_KEY = 'cn_call_state';
+    var DISMISS_KEY = 'cn_dismissed_state';
     var BC_NAME = 'call_notify_channel';
 
     var deviceId = new URLSearchParams(window.location.search).get('deviceId');
@@ -24,6 +25,9 @@
     var initialized = false;
     var dismissedForState = null;
     var bc = null; // BroadcastChannel for cross-tab sync
+
+    // Load dismiss state from sessionStorage (survives page navigation)
+    try { dismissedForState = sessionStorage.getItem(DISMISS_KEY) || null; } catch (e) { }
 
     // ---- Inject CSS ----
     var style = document.createElement('style');
@@ -118,6 +122,12 @@
             if (e.data && e.data.type === 'call_state_update') {
                 // Another tab got a WS push — apply it here without re-broadcasting
                 _applyLocal(e.data.state, e.data.number, e.data.name);
+            }
+            if (e.data && e.data.type === 'call_dismissed') {
+                // Another tab dismissed — apply here too
+                dismissedForState = e.data.stateKey;
+                try { sessionStorage.setItem(DISMISS_KEY, dismissedForState); } catch (e) { }
+                updateOverlay();
             }
         };
     } catch (e) { bc = null; } // Safari < 15.4 fallback — WS still works
@@ -260,9 +270,11 @@
         callerNumber = newNumber;
         callerName = newName;
 
-        // Reset dismiss guard if this is a new call
-        if (newState !== oldState || newNumber !== callerNumber) {
+        // Reset dismiss guard if this is a genuinely new call (different state or number)
+        var newKey = newState + ':' + (newNumber || '') + ':' + (newName || '');
+        if (newState !== oldState && dismissedForState !== newKey) {
             dismissedForState = null;
+            try { sessionStorage.removeItem(DISMISS_KEY); } catch (e) { }
         }
 
         // IDLE = call ended → clear localStorage so it doesn't resurrect
@@ -338,7 +350,11 @@
         if (typeof api !== 'undefined') api.showToast('Answer the call on your mobile device', 'info');
         var stateKey = callState + ':' + (callerNumber || '') + ':' + (callerName || '');
         dismissedForState = stateKey;
+        try { sessionStorage.setItem(DISMISS_KEY, stateKey); } catch (e) { }
         overlay.classList.remove('visible');
+        if (bc) {
+            try { bc.postMessage({ type: 'call_dismissed', stateKey: stateKey }); } catch (e) { }
+        }
     };
 
     window._cnAnswer = function () {
@@ -378,7 +394,12 @@
     window._cnDismiss = function () {
         var stateKey = callState + ':' + (callerNumber || '') + ':' + (callerName || '');
         dismissedForState = stateKey;
+        try { sessionStorage.setItem(DISMISS_KEY, stateKey); } catch (e) { }
         overlay.classList.remove('visible');
+        // Broadcast dismiss to other tabs
+        if (bc) {
+            try { bc.postMessage({ type: 'call_dismissed', stateKey: stateKey }); } catch (e) { }
+        }
     };
 
     // ---- Start ----
