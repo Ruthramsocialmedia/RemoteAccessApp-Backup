@@ -3,47 +3,176 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Microphone - Remote Access</title>
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        header {
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 16px;
+            justify-content: space-between;
+            padding: 16px 22px;
             background: var(--bg-panel);
-            border-radius: 4px;
             border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
         }
 
-        header::before {
-            display: none;
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
         }
 
-        .status-indicator {
-            text-align: center;
-            padding: 24px;
-            margin-bottom: 24px;
-            background: var(--bg-panel);
-            border-radius: 4px;
-            border: 2px solid var(--border);
-            transition: all 0.4s ease;
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
 
-        .status-indicator.active {
-            border-color: var(--success);
-            box-shadow: 0 0 20px var(--success-glow, rgba(0, 255, 0, 0.15));
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
         }
 
-        .status-indicator.recording {
-            border-color: var(--danger);
-            box-shadow: 0 0 20px var(--danger-glow, rgba(255, 0, 0, 0.15));
-            animation: pulse 1.5s ease-in-out infinite;
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
         }
 
-        @keyframes pulse {
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── MIC CONTENT ── */
+        .mic-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .status-bar .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .status-bar.active {
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .status-bar.active .status-dot {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        .status-bar.recording {
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+            box-shadow: 0 0 14px rgba(255, 51, 51, 0.08);
+        }
+
+        .status-bar.recording .status-dot {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+            animation: livePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
 
             0%,
             100% {
@@ -51,45 +180,117 @@
             }
 
             50% {
-                opacity: 0.7;
+                opacity: 0.3;
             }
         }
 
-        .status-indicator h2 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-        }
-
-        .status-indicator p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .control-panel {
-            background: var(--bg-panel);
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 16px;
+        /* ── CONTROL PANEL ── */
+        .ctrl-panel {
+            background: var(--bg-card);
             border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
         }
 
-        .control-panel h2 {
-            font-size: 1rem;
-            margin-bottom: 12px;
+        .ctrl-panel-title {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .controls {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        /* ===== Sound Wave Canvas ===== */
+        .ctrl-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px 18px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+            min-height: 44px;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ctrl-btn.btn-preview {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .ctrl-btn.btn-preview:hover {
+            background: rgba(0, 255, 65, 0.12);
+            border-color: rgba(0, 255, 65, 0.35);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .ctrl-btn.btn-stop-preview {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .ctrl-btn.btn-stop-preview:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+        }
+
+        .ctrl-btn.btn-record {
+            background: rgba(255, 51, 51, 0.08);
+            border-color: rgba(255, 51, 51, 0.2);
+            color: var(--danger);
+        }
+
+        .ctrl-btn.btn-record:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.14);
+            border-color: rgba(255, 51, 51, 0.35);
+            box-shadow: 0 0 12px rgba(255, 51, 51, 0.06);
+        }
+
+        .ctrl-btn.btn-record:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn.btn-stop-record {
+            background: rgba(255, 51, 51, 0.12);
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+        }
+
+        .ctrl-btn.btn-stop-record:hover {
+            background: rgba(255, 51, 51, 0.18);
+            box-shadow: 0 0 14px rgba(255, 51, 51, 0.08);
+        }
+
+        /* ── WAVEFORM ── */
         .waveform-container {
             margin-top: 16px;
-            height: 120px;
-            background: var(--bg-input, #1a1a2e);
-            border-radius: 8px;
+            height: 130px;
+            background: var(--bg-dark);
+            border-radius: 10px;
             border: 1px solid var(--border);
             overflow: hidden;
             position: relative;
@@ -103,25 +304,47 @@
 
         .waveform-placeholder {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
+            gap: 10px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== Recording Overlay on Waveform ===== */
+        .waveform-placeholder .ph-icon {
+            opacity: 0.2;
+            animation: pLoad 2s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+
+            0%,
+            100% {
+                opacity: 0.15;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ── REC OVERLAY ── */
         .rec-overlay {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 10px;
+            right: 10px;
             display: none;
             align-items: center;
-            gap: 6px;
-            background: rgba(255, 0, 0, 0.15);
-            border: 1px solid rgba(255, 0, 0, 0.4);
-            border-radius: 6px;
-            padding: 4px 10px;
+            gap: 8px;
+            background: rgba(255, 51, 51, 0.1);
+            border: 1px solid rgba(255, 51, 51, 0.3);
+            border-radius: 8px;
+            padding: 5px 12px;
             z-index: 2;
         }
 
@@ -134,17 +357,18 @@
             height: 8px;
             border-radius: 50%;
             background: var(--danger);
-            animation: pulse 1s ease-in-out infinite;
+            animation: livePulse 1s ease-in-out infinite;
         }
 
         .rec-time {
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
             color: var(--danger);
-            font-weight: bold;
+            font-weight: 600;
+            letter-spacing: 1px;
         }
 
-        /* ===== Volume ===== */
+        /* ── VOLUME ── */
         .volume-control {
             margin-top: 16px;
             display: flex;
@@ -152,120 +376,419 @@
             gap: 12px;
         }
 
-        .volume-control input[type="range"] {
-            flex: 1;
-            accent-color: var(--primary);
+        .volume-control label {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .volume-control label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            min-width: 60px;
+        .volume-control input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+
+        .volume-control .vol-val {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-primary);
+            min-width: 36px;
+            text-align: right;
         }
 
         .buffer-info {
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ===== RESPONSIVE ===== */
-        @media (max-width: 480px) {
-            header h1 {
+        /* ── Tablets Portrait ── */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 12px;
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* ── Phablets ── */
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 14px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .ctrl-panel {
+                padding: 14px 16px;
+            }
+
+            .ctrl-btn {
+                padding: 9px 14px;
+                font-size: 0.65rem;
+            }
+
+            .waveform-container {
+                height: 110px;
+            }
+
+            .disc {
+                margin-top: 20px;
+                padding: 12px 14px;
+            }
+
+            .disc h4 {
+                font-size: 0.6rem;
+            }
+
+            .disc p {
+                font-size: 0.55rem;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
                 font-size: 1rem;
+            }
+        }
+
+        /* ── Regular Phones ── */
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
             }
 
             .controls {
                 flex-direction: column;
             }
 
-            .controls .btn {
+            .ctrl-btn {
                 width: 100%;
-                text-align: center;
+                justify-content: center;
             }
 
-            .status-indicator {
-                padding: 20px;
+            .waveform-container {
+                height: 100px;
             }
 
             .volume-control {
                 flex-wrap: wrap;
+            }
+
+            .disc {
+                margin-top: 16px;
+            }
+
+            .ft {
+                padding: 20px 10px;
+                margin-top: 16px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
+        }
+
+        /* ── Small Phones ── */
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .ctrl-panel {
+                padding: 12px 14px;
+            }
+
+            .ctrl-panel-title {
+                font-size: 0.58rem;
+            }
+
+            .ctrl-btn {
+                padding: 8px 12px;
+                font-size: 0.6rem;
+                min-height: 40px;
+            }
+
+            .status-bar {
+                padding: 10px 14px;
+                font-size: 0.6rem;
+            }
+
+            .waveform-container {
+                height: 90px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .disc h4 {
+                font-size: 0.5rem;
+            }
+
+            .disc p {
+                font-size: 0.48rem;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>Microphone Control</h1>
-            <a href="index.html" class="btn btn-secondary">&lt;-- Back</a>
-        </header>
+    <div class="wrap">
 
-        <div class="status-indicator" id="status">
-            <h2>&#x26AA; Idle</h2>
-            <p>No active microphone session</p>
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="mic" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Mic</span> Stream</div>
+                    <div class="pg-sub">// remote audio capture</div>
+                </div>
+            </div>
+            <a href="index.html" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Dashboard</span>
+            </a>
         </div>
 
-        <div class="control-panel">
-            <h2>Audio Preview & Recording</h2>
-            <div class="controls">
-                <!-- Preview Controls -->
-                <button class="btn btn-primary" id="btn-start-preview">START PREVIEW</button>
-                <button class="btn btn-secondary" id="btn-stop-preview" style="display:none;">STOP PREVIEW</button>
+        <!-- MIC CONTENT (centered, compact) -->
+        <div class="mic-content">
 
-                <!-- Recording Controls (only available during preview) -->
-                <button class="btn btn-danger" id="btn-start-record" disabled>● RECORD</button>
-                <button class="btn btn-danger" id="btn-stop-record" style="display:none;">■ STOP RECORDING</button>
+            <!-- STATUS BAR -->
+            <div class="status-bar" id="status">
+                <span class="status-dot"></span>
+                <i data-lucide="mic-off" style="width:14px;height:14px;"></i>
+                Idle — No active session
             </div>
 
-            <!-- Sound Wave Visualizer -->
-            <div class="waveform-container" id="waveform-container">
-                <div class="waveform-placeholder" id="waveform-placeholder">
-                    Click "START PREVIEW" to hear device audio
+            <!-- CONTROL PANEL -->
+            <div class="ctrl-panel">
+                <div class="ctrl-panel-title">
+                    <i data-lucide="settings-2" style="width:13px;height:13px;opacity:0.5;"></i>
+                    Audio Preview & Recording
                 </div>
-                <canvas id="waveform-canvas" style="display:none;"></canvas>
-                <!-- Recording timer overlay -->
-                <div class="rec-overlay" id="rec-overlay">
-                    <span class="rec-dot"></span>
-                    <span class="rec-time" id="rec-time">00:00</span>
+                <div class="controls">
+                    <button class="ctrl-btn btn-preview" id="btn-start-preview">
+                        <i data-lucide="play" style="width:14px;height:14px;"></i> Start Preview
+                    </button>
+                    <button class="ctrl-btn btn-stop-preview" id="btn-stop-preview" style="display:none;">
+                        <i data-lucide="square" style="width:14px;height:14px;"></i> Stop Preview
+                    </button>
+                    <button class="ctrl-btn btn-record" id="btn-start-record" disabled>
+                        <i data-lucide="circle" style="width:14px;height:14px;"></i> Record
+                    </button>
+                    <button class="ctrl-btn btn-stop-record" id="btn-stop-record" style="display:none;">
+                        <i data-lucide="square" style="width:14px;height:14px;"></i> Stop Recording
+                    </button>
                 </div>
+
+                <!-- WAVEFORM -->
+                <div class="waveform-container" id="waveform-container">
+                    <div class="waveform-placeholder" id="waveform-placeholder">
+                        <i data-lucide="audio-waveform" class="ph-icon" style="width:36px;height:36px;"></i>
+                        Start preview to hear device audio
+                    </div>
+                    <canvas id="waveform-canvas" style="display:none;"></canvas>
+                    <div class="rec-overlay" id="rec-overlay">
+                        <span class="rec-dot"></span>
+                        <span class="rec-time" id="rec-time">00:00</span>
+                    </div>
+                </div>
+
+                <!-- VOLUME -->
+                <div class="volume-control">
+                    <label><i data-lucide="volume-2" style="width:14px;height:14px;"></i> Vol</label>
+                    <input type="range" id="volume" min="0" max="200" value="100">
+                    <span class="vol-val" id="volume-label">100%</span>
+                </div>
+                <div class="buffer-info" id="buffer-info"></div>
             </div>
 
-            <div class="volume-control">
-                <label>Volume:</label>
-                <input type="range" id="volume" min="0" max="200" value="100">
-                <span id="volume-label">100%</span>
-            </div>
-            <div class="buffer-info" id="buffer-info"></div>
+        </div> <!-- /mic-content -->
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
         </div>
     </div>
 
-    <!-- Disclaimer -->
-    <div class="container">
-        <div class="disclaimer">
-            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
-            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-                manage
-                their own devices. Installing or using this application on a device without the owner's explicit consent
-                is
-                illegal and unethical. The developers assume no liability for misuse. By using this application, you
-                agree that
-                you are solely responsible for how it is used.</p>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p class="footer-created">Created by</p>
-        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
     </footer>
 
     <script src="/js/api.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         // ===== Configuration =====
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         const SAMPLE_RATE = 44100;
@@ -487,7 +1010,7 @@
                 analyserNode.getByteFrequencyData(dataArray);
 
                 // Background
-                ctx.fillStyle = 'rgba(10, 10, 30, 0.85)';
+                ctx.fillStyle = 'rgba(10, 14, 23, 0.9)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 // Draw waveform bars
@@ -547,7 +1070,8 @@
             const placeholder = document.getElementById('waveform-placeholder');
             canvas.style.display = 'none';
             placeholder.style.display = 'flex';
-            placeholder.textContent = 'Click "START PREVIEW" to hear device audio';
+            placeholder.innerHTML = '<i data-lucide="audio-waveform" class="ph-icon" style="width:36px;height:36px;"></i> Start preview to hear device audio';
+            lucide.createIcons();
         }
 
         // ===== Buffer Info =====
@@ -570,36 +1094,39 @@
             currentState = state;
             const statusEl = document.getElementById('status');
 
-            const show = (el) => { el.style.display = 'inline-block'; el.disabled = false; el.style.opacity = '1'; };
+            const show = (el) => { el.style.display = 'inline-flex'; el.disabled = false; el.style.opacity = '1'; };
             const hide = (el) => el.style.display = 'none';
-            const disable = (el) => { el.style.display = 'inline-block'; el.disabled = true; el.style.opacity = '0.5'; };
+            const disable = (el) => { el.style.display = 'inline-flex'; el.disabled = true; el.style.opacity = '0.5'; };
 
             switch (state) {
                 case STATES.IDLE:
-                    statusEl.className = 'status-indicator';
-                    statusEl.innerHTML = '<h2>&#x26AA; Idle</h2><p>No active microphone session</p>';
+                    statusEl.className = 'status-bar';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic-off" style="width:14px;height:14px;"></i> Idle — No active session';
                     show(btnStartPreview);
                     hide(btnStopPreview);
                     disable(btnStartRecord);
                     hide(btnStopRecord);
+                    lucide.createIcons();
                     break;
 
                 case STATES.PREVIEWING:
-                    statusEl.className = 'status-indicator active';
-                    statusEl.innerHTML = '<h2>&#x1F7E2; Live Listening</h2><p>Audio is being streamed from device</p>';
+                    statusEl.className = 'status-bar active';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic" style="width:14px;height:14px;"></i> Live Listening — Streaming audio';
                     hide(btnStartPreview);
                     show(btnStopPreview);
                     show(btnStartRecord);
                     hide(btnStopRecord);
+                    lucide.createIcons();
                     break;
 
                 case STATES.RECORDING:
-                    statusEl.className = 'status-indicator recording';
-                    statusEl.innerHTML = '<h2>&#x1F534; Recording</h2><p>Live listening + recording to device file</p>';
+                    statusEl.className = 'status-bar recording';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic" style="width:14px;height:14px;"></i> Recording — Live + saving to file';
                     hide(btnStartPreview);
                     hide(btnStopPreview);
                     hide(btnStartRecord);
                     show(btnStopRecord);
+                    lucide.createIcons();
                     break;
             }
         }

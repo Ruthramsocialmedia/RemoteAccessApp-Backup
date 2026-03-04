@@ -14,6 +14,10 @@
       --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       padding: 0;
       min-height: 100vh;
@@ -23,7 +27,7 @@
     .wrap {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 20px 24px;
+      padding: 22px 26px;
       animation: fadeInUp 0.4s ease-out;
     }
 
@@ -36,7 +40,7 @@
       background: var(--bg-panel);
       border: 1px solid var(--border);
       border-radius: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       position: relative;
       overflow: hidden;
     }
@@ -197,7 +201,6 @@
       align-items: center;
       gap: 10px;
       padding: 14px 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     .card-header .ic {
@@ -220,6 +223,8 @@
       color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 1px;
+      margin: 0;
+      line-height: 1;
     }
 
     .info-row {
@@ -245,9 +250,18 @@
       font-family: var(--font-display);
       font-weight: 400;
       color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      line-height: 1;
     }
 
-    /* Progress bar */
+    .info-row .val svg {
+      display: block;
+    }
+
+    /* ── PROGRESS BAR ── */
     .prog-wrap {
       padding: 4px 18px 14px;
     }
@@ -278,6 +292,9 @@
     }
 
     .empty .e-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 0 auto 14px;
       opacity: 0.3;
     }
@@ -293,6 +310,7 @@
     .empty p {
       font-family: var(--font-display);
       font-size: 0.75rem;
+      font-weight: 400;
     }
 
     .pulse-load {
@@ -403,13 +421,14 @@
     }
 
     /* ===== RESPONSIVE ===== */
+    /* ── Tablets Portrait ── */
     @media (max-width: 768px) {
       .wrap {
-        padding: 10px;
+        padding: 12px;
       }
 
       .pg-header {
-        padding: 12px 16px;
+        padding: 14px 16px;
         flex-wrap: wrap;
         gap: 10px;
       }
@@ -420,7 +439,7 @@
       }
 
       .pg-title {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
       }
 
       .info-grid {
@@ -429,6 +448,57 @@
       }
     }
 
+    /* ── Phablets ── */
+    @media (max-width: 600px) {
+      .wrap {
+        padding: 10px;
+      }
+
+      .pg-header {
+        padding: 12px 14px;
+      }
+
+      .pg-title {
+        font-size: 0.9rem;
+      }
+
+      .card-header h3 {
+        font-size: 0.65rem;
+      }
+
+      .info-row {
+        font-size: 0.72rem;
+        padding: 9px 14px;
+      }
+
+      .card-header {
+        padding: 12px 14px;
+      }
+
+      .disc {
+        margin-top: 20px;
+        padding: 12px 14px;
+      }
+
+      .disc h4 {
+        font-size: 0.52rem;
+      }
+
+      .disc p {
+        font-size: 0.5rem;
+      }
+
+      .ft {
+        padding: 24px 12px;
+        margin-top: 20px;
+      }
+
+      .ft .ft-brand {
+        font-size: 1rem;
+      }
+    }
+
+    /* ── Regular Phones ── */
     @media (max-width: 480px) {
       .pg-header-left {
         gap: 10px;
@@ -440,6 +510,111 @@
 
       .btn-back span {
         display: none;
+      }
+
+      .pg-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      .card-header .ic {
+        width: 28px;
+        height: 28px;
+      }
+
+      .card-header h3 {
+        font-size: 0.62rem;
+        line-height: 28px;
+      }
+
+      .info-row {
+        padding: 8px 14px;
+        font-size: 0.7rem;
+      }
+
+      .refresh-bar {
+        padding: 8px 14px;
+      }
+
+      .disc {
+        margin-top: 16px;
+      }
+
+      .ft {
+        padding: 20px 10px;
+        margin-top: 16px;
+      }
+
+      .ft .ft-brand {
+        font-size: 0.9rem;
+      }
+
+      .ft .ft-copy {
+        font-size: 0.42rem;
+      }
+    }
+
+    /* ── Small Phones ── */
+    @media (max-width: 380px) {
+      .wrap {
+        padding: 8px;
+      }
+
+      .pg-header {
+        padding: 10px 12px;
+      }
+
+      .pg-icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      .pg-title {
+        font-size: 0.85rem;
+      }
+
+      .btn-back {
+        padding: 6px 10px;
+        font-size: 0.6rem;
+      }
+
+      .info-row {
+        padding: 7px 12px;
+        font-size: 0.65rem;
+      }
+
+      .card-header {
+        padding: 10px 12px;
+      }
+
+      .card-header .ic {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+      }
+
+      .card-header h3 {
+        font-size: 0.58rem;
+        line-height: 26px;
+      }
+
+      .disc {
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+
+      .disc h4 {
+        font-size: 0.48rem;
+        gap: 4px;
+      }
+
+      .disc p {
+        font-size: 0.45rem;
+      }
+
+      .ft .ft-brand {
+        font-size: 0.85rem;
+        letter-spacing: 2px;
       }
     }
   </style>
@@ -519,9 +694,9 @@
     }
 
     function getBatteryColor(level) {
-      if (level > 50) return 'var(--accent)';
-      if (level > 20) return 'var(--warning)';
-      return 'var(--danger)';
+      if (level > 50) return '#00ff41';
+      if (level > 20) return '#ffaa00';
+      return '#ff3333';
     }
 
     async function loadDeviceInfo() {
@@ -579,13 +754,13 @@
         <div class="info-card">
           <div class="card-header">
             <div class="ic" style="background:linear-gradient(135deg,${batteryColor}18,${batteryColor}08);border-color:${batteryColor}30;">
-              <i data-lucide="${batteryLevel > 50 ? 'battery-full' : batteryLevel > 20 ? 'battery-medium' : 'battery-low'}" style="width:16px;height:16px;color:${batteryColor};"></i>
+              <i data-lucide="battery" style="width:16px;height:16px;color:${batteryColor};"></i>
             </div>
             <h3>Battery</h3>
           </div>
           <div class="info-row">
             <span class="lbl">Level</span>
-            <span class="val" style="color:${batteryColor}">${info.battery || '0'}%</span>
+            <span class="val" style="color:${batteryColor};font-weight:700;font-size:1rem;">${batteryLevel}%</span>
           </div>
           <div class="prog-wrap">
             <div class="prog">

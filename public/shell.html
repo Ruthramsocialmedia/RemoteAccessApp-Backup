@@ -5,9 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shell Terminal - Remote Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
         /* ===== LAYOUT ===== */
         body {
             height: 100vh;
@@ -15,6 +21,7 @@
             display: flex;
             padding: 0;
             margin: 0;
+            font-family: var(--font-display);
         }
 
         body::before {
@@ -54,13 +61,30 @@
             top: 0;
             background: var(--bg-panel);
             z-index: 5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header .s-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.03));
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            border-radius: 7px;
+            color: #00ff41;
+            flex-shrink: 0;
         }
 
         .sidebar-header h2 {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: var(--accent);
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             margin: 0;
+            font-weight: 700;
         }
 
         .category {
@@ -69,24 +93,31 @@
         }
 
         .category-title {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: var(--text-muted);
             margin-bottom: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .cmd-btn {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 7px;
             width: 100%;
             padding: 8px 10px;
             margin-bottom: 4px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.75rem;
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            font-weight: 500;
             cursor: pointer;
             text-align: left;
             transition: all 0.15s;
@@ -102,24 +133,24 @@
         }
 
         .cmd-btn.primary {
-            border-color: rgba(0, 255, 65, 0.2);
+            border-color: rgba(0, 255, 65, 0.15);
             color: var(--accent);
         }
 
         .cmd-btn.primary:hover {
-            background: rgba(0, 255, 65, 0.12);
-            box-shadow: 0 0 10px var(--accent-glow);
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 8px var(--accent-glow);
         }
 
         .cmd-btn.danger {
-            border-color: rgba(255, 51, 51, 0.25);
+            border-color: rgba(255, 51, 51, 0.15);
             color: var(--danger);
         }
 
         .cmd-btn.danger:hover {
-            background: rgba(255, 51, 51, 0.12);
-            border-color: rgba(255, 51, 51, 0.5);
-            box-shadow: 0 0 10px var(--danger-glow);
+            background: rgba(255, 51, 51, 0.08);
+            border-color: rgba(255, 51, 51, 0.35);
+            box-shadow: 0 0 8px var(--danger-glow);
         }
 
         /* ===== APP PANEL ===== */
@@ -158,33 +189,41 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border);
         }
 
         .app-panel-header h2 {
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: var(--accent);
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
         }
 
         .app-panel-close {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.3);
             cursor: pointer;
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 5px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
         }
 
         .app-panel-close:hover {
-            color: var(--danger);
-            border-color: var(--danger);
+            color: #ff5252;
+            background: rgba(255, 51, 51, 0.08);
+            border-color: rgba(255, 51, 51, 0.2);
         }
 
         .app-search-box {
-            padding: 12px 20px;
+            padding: 12px 18px;
             border-bottom: 1px solid var(--border);
         }
 
@@ -195,8 +234,8 @@
             border: 1px solid var(--border);
             color: var(--text-primary);
             border-radius: 6px;
-            font-family: var(--font);
-            font-size: 0.85rem;
+            font-family: var(--font-display);
+            font-size: 0.78rem;
             box-sizing: border-box;
         }
 
@@ -215,6 +254,7 @@
             text-align: center;
             color: var(--text-secondary);
             padding: 40px 0;
+            font-size: 0.75rem;
         }
 
         .app-item {
@@ -229,7 +269,7 @@
         }
 
         .app-item:hover {
-            border-color: rgba(0, 255, 65, 0.3);
+            border-color: rgba(0, 255, 65, 0.2);
         }
 
         .app-info {
@@ -239,7 +279,7 @@
 
         .app-name {
             color: var(--text-primary);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
@@ -248,7 +288,7 @@
 
         .app-package {
             color: var(--text-secondary);
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -265,10 +305,12 @@
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-secondary);
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 0.75rem;
-            font-family: var(--font);
+            font-size: 0.62rem;
+            font-family: var(--font-display);
+            font-weight: 500;
+            transition: all 0.15s;
         }
 
         .app-btn:hover {
@@ -285,7 +327,7 @@
             text-align: center;
             padding: 8px;
             color: var(--text-secondary);
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             border-bottom: 1px solid var(--border);
         }
 
@@ -313,41 +355,70 @@
             display: none;
         }
 
-        header h1 {
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-            margin: 0;
-            color: var(--text-primary);
-        }
-
         .header-left {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
+        .hdr-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.03));
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            border-radius: 8px;
+            color: #00ff41;
+            flex-shrink: 0;
+        }
+
+        .hdr-text h1 {
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            margin: 0;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .hdr-text p {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin: 1px 0 0 0;
+            letter-spacing: 0.3px;
+        }
+
         .btn-toggle {
-            padding: 4px 10px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             color: var(--text-primary);
             cursor: pointer;
-            font-size: 0.9rem;
-            font-family: inherit;
             transition: all 0.15s;
+            padding: 0;
+            flex-shrink: 0;
         }
 
         .btn-toggle:hover {
             border-color: var(--accent);
+            color: var(--accent);
         }
 
         .back-link {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
+            font-size: 0.65rem;
+            letter-spacing: 0.3px;
             transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .back-link:hover {
@@ -361,12 +432,12 @@
             overflow-x: hidden;
             padding: 12px 16px;
             background: #000;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             line-height: 1.6;
         }
 
         .terminal-container::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         .terminal-container::-webkit-scrollbar-track {
@@ -374,8 +445,8 @@
         }
 
         .terminal-container::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
+            background: rgba(0, 255, 65, 0.15);
+            border-radius: 2px;
         }
 
         /* ===== OUTPUT LINES ===== */
@@ -384,7 +455,8 @@
             white-space: pre-wrap;
             word-break: break-all;
             padding: 1px 0;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 0.72rem;
         }
 
         .command-line {
@@ -392,13 +464,15 @@
             font-weight: bold;
             padding: 4px 0 2px 0;
             margin-top: 4px;
-            border-top: 1px solid rgba(0, 255, 65, 0.08);
+            border-top: 1px solid rgba(0, 255, 65, 0.06);
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 0.72rem;
         }
 
         .command-line .timestamp {
             color: var(--text-muted);
             font-weight: normal;
-            font-size: 0.7rem;
+            font-size: 0.62rem;
             margin-right: 6px;
         }
 
@@ -408,7 +482,7 @@
 
         .info-line {
             color: var(--text-secondary);
-            font-style: italic;
+            font-style: normal;
         }
 
         /* ===== INPUT AREA ===== */
@@ -427,6 +501,7 @@
             font-weight: bold;
             font-size: 1rem;
             flex-shrink: 0;
+            font-family: 'Courier New', monospace;
         }
 
         .input-area input {
@@ -436,8 +511,8 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.85rem;
+            font-family: var(--font-display);
+            font-size: 0.78rem;
             min-width: 0;
         }
 
@@ -453,23 +528,26 @@
 
         .btn-exec {
             padding: 10px 18px;
-            background: rgba(0, 255, 65, 0.12);
-            border: 1px solid rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid rgba(0, 255, 65, 0.2);
             border-radius: 6px;
             color: var(--accent);
             cursor: pointer;
-            font-family: inherit;
-            font-size: 0.8rem;
-            font-weight: bold;
-            letter-spacing: 1px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             transition: all 0.15s;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .btn-exec:hover {
-            background: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.18);
             border-color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .btn-exec:active {
@@ -517,7 +595,7 @@
             }
 
             .terminal-container {
-                font-size: 0.75rem;
+                font-size: 0.72rem;
                 padding: 10px 12px;
             }
 
@@ -528,39 +606,44 @@
 
             .input-area input {
                 padding: 9px 10px;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
 
             .btn-exec {
                 padding: 9px 14px;
-                font-size: 0.75rem;
+                font-size: 0.65rem;
             }
         }
 
         /* ===== RESPONSIVE: SMALL MOBILE ===== */
         @media (max-width: 480px) {
-            header h1 {
-                font-size: 0.8rem;
+            .hdr-text h1 {
+                font-size: 0.75rem;
+            }
+
+            .hdr-icon {
+                width: 28px;
+                height: 28px;
             }
 
             .terminal-container {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
                 padding: 8px 10px;
             }
 
             .output-line,
             .command-line {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
 
             .input-area input {
                 padding: 8px;
-                font-size: 0.75rem;
+                font-size: 0.72rem;
             }
 
             .btn-exec {
                 padding: 8px 12px;
-                font-size: 0.7rem;
+                font-size: 0.62rem;
                 letter-spacing: 0;
             }
         }
@@ -575,67 +658,85 @@
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <h2>⚡ QUICK CMDS</h2>
+            <div class="s-icon"><i data-lucide="zap" style="width:14px;height:14px;"></i></div>
+            <h2>QUICK CMDS</h2>
         </div>
 
         <!-- Category: Accessibility -->
         <div class="category">
-            <div class="category-title">Accessibility (No Root)</div>
-            <button class="cmd-btn primary" onclick="populate('acc click &quot;Allow&quot;')">Accept Permission</button>
-            <button class="cmd-btn primary" onclick="populate('acc click &quot;While using the app&quot;')">While Using
-                App</button>
-            <button class="cmd-btn primary" onclick="populate('acc click &quot;Start now&quot;')">Start Casting</button>
-            <button class="cmd-btn" onclick="populate('acc click &quot;TEXT_HERE&quot;')">Custom Click...</button>
+            <div class="category-title"><i data-lucide="accessibility" style="width:11px;height:11px;"></i>
+                Accessibility (No Root)</div>
+            <button class="cmd-btn primary" onclick="populate('acc click &quot;Allow&quot;')"><i
+                    data-lucide="check-circle" style="width:12px;height:12px;"></i> Accept Permission</button>
+            <button class="cmd-btn primary" onclick="populate('acc click &quot;While using the app&quot;')"><i
+                    data-lucide="shield-check" style="width:12px;height:12px;"></i> While Using App</button>
+            <button class="cmd-btn primary" onclick="populate('acc click &quot;Start now&quot;')"><i data-lucide="cast"
+                    style="width:12px;height:12px;"></i> Start Casting</button>
+            <button class="cmd-btn" onclick="populate('acc click &quot;TEXT_HERE&quot;')"><i
+                    data-lucide="mouse-pointer-click" style="width:12px;height:12px;"></i> Custom Click...</button>
         </div>
 
         <!-- Category: Files -->
         <div class="category">
-            <div class="category-title">File Operations</div>
-            <button class="cmd-btn" onclick="run('ls -la /sdcard')">List /sdcard</button>
-            <button class="cmd-btn" onclick="run('pwd')">Current Dir</button>
-            <button class="cmd-btn" onclick="populate('cat /sdcard/')">Read File...</button>
-            <button class="cmd-btn" onclick="populate('mkdir /sdcard/')">Make Dir...</button>
+            <div class="category-title"><i data-lucide="folder" style="width:11px;height:11px;"></i> File Operations
+            </div>
+            <button class="cmd-btn" onclick="run('ls -la /sdcard')"><i data-lucide="list"
+                    style="width:12px;height:12px;"></i> List /sdcard</button>
+            <button class="cmd-btn" onclick="run('pwd')"><i data-lucide="map-pin" style="width:12px;height:12px;"></i>
+                Current Dir</button>
+            <button class="cmd-btn" onclick="populate('cat /sdcard/')"><i data-lucide="file-text"
+                    style="width:12px;height:12px;"></i> Read File...</button>
+            <button class="cmd-btn" onclick="populate('mkdir /sdcard/')"><i data-lucide="folder-plus"
+                    style="width:12px;height:12px;"></i> Make Dir...</button>
         </div>
 
         <!-- Category: System -->
         <div class="category">
-            <div class="category-title">System Diagnostics</div>
-            <button class="cmd-btn" onclick="run('getprop ro.product.model && getprop ro.build.version.release')">Device
-                Info</button>
-            <button class="cmd-btn" onclick="run('df -h')">Disk Usage</button>
-            <button class="cmd-btn" onclick="run('ps -A')">Process List</button>
-            <button class="cmd-btn" onclick="run('top -n 1')">CPU Usage</button>
+            <div class="category-title"><i data-lucide="cpu" style="width:11px;height:11px;"></i> System Diagnostics
+            </div>
+            <button class="cmd-btn" onclick="run('getprop ro.product.model && getprop ro.build.version.release')"><i
+                    data-lucide="smartphone" style="width:12px;height:12px;"></i> Device Info</button>
+            <button class="cmd-btn" onclick="run('df -h')"><i data-lucide="hard-drive"
+                    style="width:12px;height:12px;"></i> Disk Usage</button>
+            <button class="cmd-btn" onclick="run('ps -A')"><i data-lucide="activity"
+                    style="width:12px;height:12px;"></i> Process List</button>
+            <button class="cmd-btn" onclick="run('top -n 1')"><i data-lucide="gauge"
+                    style="width:12px;height:12px;"></i> CPU Usage</button>
         </div>
 
         <!-- Category: Network -->
         <div class="category">
-            <div class="category-title">Network</div>
-            <button class="cmd-btn" onclick="run('ip addr')">IP Address</button>
-            <button class="cmd-btn" onclick="run('ping -c 3 google.com')">Ping Google</button>
-            <button class="cmd-btn" onclick="run('cat /proc/net/tcp')">Open Ports</button>
+            <div class="category-title"><i data-lucide="wifi" style="width:11px;height:11px;"></i> Network</div>
+            <button class="cmd-btn" onclick="run('ip addr')"><i data-lucide="globe" style="width:12px;height:12px;"></i>
+                IP Address</button>
+            <button class="cmd-btn" onclick="run('ping -c 3 google.com')"><i data-lucide="radio"
+                    style="width:12px;height:12px;"></i> Ping Google</button>
+            <button class="cmd-btn" onclick="run('cat /proc/net/tcp')"><i data-lucide="network"
+                    style="width:12px;height:12px;"></i> Open Ports</button>
         </div>
 
         <!-- Category: Power Control -->
         <div class="category">
-            <div class="category-title">Power Control</div>
-            <button class="cmd-btn primary" onclick="sendPowerCommand('power_sleep')">💤 Sleep (Screen
-                Off)</button>
-            <button class="cmd-btn primary" onclick="sendPowerCommand('power_wakeup')">☀️ Wake Up</button>
-            <button class="cmd-btn danger" onclick="sendPowerCommand('power_lock')">🔒 Lock Screen</button>
-            <button class="cmd-btn danger" onclick="confirmPower('power_reboot', '🔄 Restart device?')">🔄
-                Restart</button>
-            <button class="cmd-btn danger" onclick="confirmPower('power_off', '⏻ Power off device?')">⏻
-                Power
-                Off</button>
+            <div class="category-title"><i data-lucide="power" style="width:11px;height:11px;"></i> Power Control</div>
+            <button class="cmd-btn primary" onclick="sendPowerCommand('power_sleep')"><i data-lucide="moon"
+                    style="width:12px;height:12px;"></i> Sleep (Screen Off)</button>
+            <button class="cmd-btn primary" onclick="sendPowerCommand('power_wakeup')"><i data-lucide="sun"
+                    style="width:12px;height:12px;"></i> Wake Up</button>
+            <button class="cmd-btn danger" onclick="sendPowerCommand('power_lock')"><i data-lucide="lock"
+                    style="width:12px;height:12px;"></i> Lock Screen</button>
+            <button class="cmd-btn danger" onclick="confirmPower('power_reboot', 'Restart device?')"><i
+                    data-lucide="refresh-cw" style="width:12px;height:12px;"></i> Restart</button>
+            <button class="cmd-btn danger" onclick="confirmPower('power_off', 'Power off device?')"><i
+                    data-lucide="power-off" style="width:12px;height:12px;"></i> Power Off</button>
         </div>
 
         <!-- Tools -->
         <div class="category">
-            <div class="category-title">Tools</div>
-            <button class="cmd-btn primary" id="btn-apps">📦 App Manager</button>
-            <button class="cmd-btn" id="btn-clear">🧹 Clear Terminal</button>
-            <button class="cmd-btn" onclick="window.open('/SHELL_COMMANDS_REFERENCE.pdf', '_blank')">📖 Command
-                Reference</button>
+            <div class="category-title"><i data-lucide="wrench" style="width:11px;height:11px;"></i> Tools</div>
+            <button class="cmd-btn primary" id="btn-apps"><i data-lucide="package" style="width:12px;height:12px;"></i>
+                App Manager</button>
+            <button class="cmd-btn" id="btn-clear"><i data-lucide="trash-2" style="width:12px;height:12px;"></i> Clear
+                Terminal</button>
         </div>
     </aside>
 
@@ -643,8 +744,9 @@
     <div class="app-panel-overlay" id="app-panel-overlay"></div>
     <div class="app-panel" id="app-panel">
         <div class="app-panel-header">
-            <h2>📦 App Manager</h2>
-            <button class="app-panel-close" id="btn-close-apps">✕</button>
+            <h2><i data-lucide="package" style="width:16px;height:16px;"></i> App Manager</h2>
+            <button class="app-panel-close" id="btn-close-apps"><i data-lucide="x"
+                    style="width:16px;height:16px;"></i></button>
         </div>
         <div class="app-search-box">
             <input type="text" id="app-search" placeholder="Search apps..." autocomplete="off">
@@ -658,10 +760,16 @@
     <div class="main-content">
         <header>
             <div class="header-left">
-                <button class="btn-toggle" id="btn-sidebar" title="Toggle Sidebar">☰</button>
-                <h1>REMOTE SHELL</h1>
+                <button class="btn-toggle" id="btn-sidebar" title="Toggle Sidebar"><i data-lucide="panel-left"
+                        style="width:16px;height:16px;"></i></button>
+                <div class="hdr-icon"><i data-lucide="terminal" style="width:16px;height:16px;"></i></div>
+                <div class="hdr-text">
+                    <h1>Remote Shell</h1>
+                    <p>Execute commands on device</p>
+                </div>
             </div>
-            <a href="index.html" class="back-link">← Dashboard</a>
+            <a href="index.html" class="back-link"><i data-lucide="arrow-left" style="width:13px;height:13px;"></i>
+                Dashboard</a>
         </header>
 
         <div class="terminal-container" id="terminal">
@@ -671,7 +779,8 @@
         <div class="input-area">
             <span class="prompt">$</span>
             <input type="text" id="command-input" placeholder="Enter command..." autofocus autocomplete="off" />
-            <button class="btn-exec" id="btn-execute">EXEC</button>
+            <button class="btn-exec" id="btn-execute"><i data-lucide="play" style="width:13px;height:13px;"></i>
+                Exec</button>
         </div>
     </div>
 
@@ -679,6 +788,8 @@
     <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         const terminal = document.getElementById('terminal');
         const commandInput = document.getElementById('command-input');
@@ -713,7 +824,6 @@
         async function executeCommand(command) {
             if (!command || !command.trim()) return;
 
-            // Add to history
             commandHistory.push(command);
             historyIndex = commandHistory.length;
 
@@ -721,7 +831,6 @@
 
             try {
                 const response = await api.sendCommand(deviceId, 'shell_exec', { command });
-                // Server wraps in { success, data: { status, stdout, stderr, error, exitCode } }
                 const result = response.data || response;
 
                 if (result.status === 'timeout') {
@@ -758,7 +867,7 @@
         // --- Power Control ---
 
         async function sendPowerCommand(action) {
-            addOutput(`⚡ ${action}`, 'command');
+            addOutput(`[power] ${action}`, 'command');
             closeSidebar();
             try {
                 const result = await api.sendCommand(deviceId, action, {});
@@ -795,7 +904,6 @@
             appList.innerHTML = '<div class="app-loading">Loading apps...</div>';
             try {
                 const result = await api.sendCommand(deviceId, 'apps_list', {});
-                // result = { success, data: { status, data: [...apps], count } }
                 const appData = result.data || result;
                 allApps = appData.data || [];
                 renderApps(allApps);
@@ -820,7 +928,7 @@
                         </div>
                         <div class="app-actions">
                             <button class="app-btn" onclick="launchApp('${escHtml(app.package)}')">Launch</button>
-                            <button class="app-btn uninstall" onclick="uninstallApp('${escHtml(app.package)}', '${escHtml(app.name).replace(/'/g, "\\'")}')">Uninstall</button>
+                            <button class="app-btn uninstall" onclick="uninstallApp('${escHtml(app.package)}', '${escHtml(app.name).replace(/'/g, "\\\'")}')">Uninstall</button>
                         </div>
                     </div>
                 `).join('');
@@ -841,7 +949,6 @@
                 addOutput(`Uninstalling: ${pkg}`, 'command');
                 const result = await api.sendCommand(deviceId, 'app_uninstall', { package: pkg });
                 addOutput(result.message || 'Uninstall dialog triggered', 'info');
-                // Show SmartUI popup after 2s to let the dialog appear
                 setTimeout(() => {
                     SmartUI.show(deviceId, {
                         title: `Confirm Uninstall: ${name}`,
@@ -879,11 +986,9 @@
         }
 
         function toggleSidebar() {
-            // On desktop, use display toggle; on mobile, use slide
             if (window.innerWidth <= 768) {
                 sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
             } else {
-                // Desktop: toggle visibility
                 if (sidebar.style.display === 'none') {
                     sidebar.style.display = 'flex';
                 } else {
@@ -934,9 +1039,9 @@
         });
 
         // Initial connection message
-        addOutput('=== Remote Shell Terminal ===', 'info');
+        addOutput('Remote Shell Terminal', 'info');
         addOutput(`Connected to: ${deviceId}`, 'info');
-        addOutput('Type commands or use ☰ Quick Menu.', 'info');
+        addOutput('Type commands or use the sidebar quick menu.', 'info');
         addOutput('');
 
     </script>

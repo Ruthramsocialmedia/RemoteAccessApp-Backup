@@ -119,36 +119,97 @@ class RemoteAPI {
             container = document.createElement('div');
             container.id = 'toast-container';
             container.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 10000;
-      `;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column-reverse;
+                gap: 8px;
+                pointer-events: none;
+            `;
             document.body.appendChild(container);
         }
 
-        // Create toast element
+        const colors = {
+            success: { accent: '#00ff41', bg: 'rgba(0, 255, 65, 0.06)', border: 'rgba(0, 255, 65, 0.2)', glow: 'rgba(0, 255, 65, 0.08)' },
+            error: { accent: '#ff3333', bg: 'rgba(255, 51, 51, 0.06)', border: 'rgba(255, 51, 51, 0.2)', glow: 'rgba(255, 51, 51, 0.08)' },
+            info: { accent: '#00aaff', bg: 'rgba(0, 170, 255, 0.06)', border: 'rgba(0, 170, 255, 0.2)', glow: 'rgba(0, 170, 255, 0.08)' },
+            warning: { accent: '#ffaa00', bg: 'rgba(255, 170, 0, 0.06)', border: 'rgba(255, 170, 0, 0.2)', glow: 'rgba(255, 170, 0, 0.08)' }
+        };
+        const c = colors[type] || colors.info;
+
+        const icons = {
+            success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+            info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+        };
+
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
         toast.style.cssText = `
-      background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: slideIn 0.3s ease;
-      max-width: 300px;
-    `;
-        toast.textContent = message;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            min-width: 200px;
+            max-width: 360px;
+            background: rgba(10, 14, 23, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid ${c.border};
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 16px ${c.glow};
+            animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: auto;
+        `;
+
+        const iconEl = document.createElement('div');
+        iconEl.style.cssText = `flex-shrink: 0; color: ${c.accent}; display: flex; align-items: center;`;
+        iconEl.innerHTML = icons[type] || icons.info;
+
+        const textEl = document.createElement('div');
+        textEl.style.cssText = `
+            font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.3;
+            flex: 1;
+        `;
+        textEl.textContent = message;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.style.cssText = `
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s;
+        `;
+        closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        closeBtn.onmouseenter = () => closeBtn.style.color = 'rgba(255,255,255,0.7)';
+        closeBtn.onmouseleave = () => closeBtn.style.color = 'rgba(255,255,255,0.3)';
+
+        const dismiss = () => {
+            toast.style.animation = 'toastSlideOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            setTimeout(() => toast.remove(), 250);
+        };
+
+        closeBtn.addEventListener('click', dismiss);
+        toast.appendChild(iconEl);
+        toast.appendChild(textEl);
+        toast.appendChild(closeBtn);
 
         container.appendChild(toast);
 
-        // Remove after 3 seconds
+        // Auto-dismiss after 5s
         setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+            if (toast.parentNode) dismiss();
+        }, 5000);
     }
 
     /**
@@ -195,7 +256,7 @@ class RemoteAPI {
                 const isScreenOn = stateData.isScreenOn !== undefined ? stateData.isScreenOn : true;
 
                 if (isScreenLocked) {
-                    this.showToast('Device is locked 🔒 — unlock it first', 'error');
+                    this.showToast('Device is locked — unlock it first', 'error');
                     throw new Error('device_locked');
                 }
 
@@ -264,29 +325,24 @@ class RemoteAPI {
     }
 }
 
-// Add animations
+// Add toast animations
 const style = document.createElement('style');
 style.textContent = `
-  @keyframes slideIn {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
-  
+  @keyframes toastSlideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
   @keyframes slideOut {
-    from {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    to {
-      transform: translateY(20px);
-      opacity: 0;
-    }
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
   }
 `;
 document.head.appendChild(style);

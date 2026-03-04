@@ -3,92 +3,172 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Remote Speak - Remote Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Share Tech Mono', monospace;
-            background: #0a0e17;
-            color: #d0d0d0;
+            font-family: var(--font-display) !important;
             min-height: 100vh;
             margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
         }
 
-        .app-layout {
-            max-width: 520px;
+        .wrap {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 20px 24px;
             width: 100%;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+            animation: fadeInUp 0.4s ease-out;
         }
 
-        .top-bar {
+        /* ── HEADER ── */
+        .pg-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .top-bar h1 {
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
             font-size: 1.1rem;
-            color: #00ff41;
-            margin: 0;
+            font-weight: 700;
+            color: #e8e8e8;
         }
 
-        .back-btn {
-            color: #666;
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
             text-decoration: none;
-            font-size: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 6px 14px;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
         }
 
-        .back-btn:hover {
-            color: #00ff41;
-            border-color: rgba(0, 255, 65, 0.3);
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
         }
 
-        /* ===== CARDS ===== */
+        /* ── CONTENT ── */
+        .speak-content {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* ── CARD ── */
         .card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(0, 255, 65, 0.12);
-            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
             padding: 20px;
             margin-bottom: 16px;
         }
 
-        .card label {
-            display: block;
-            font-size: 11px;
-            color: #00ff41;
+        .card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
         }
 
-        /* ===== WALKIE-TALKIE SECTION ===== */
+        .card-label .cl-icon {
+            opacity: 0.5;
+        }
+
+        /* ── WALKIE-TALKIE ── */
         .walkie-card {
             text-align: center;
-            padding: 30px 20px;
+            padding: 28px 20px;
         }
 
         .walkie-status {
-            font-size: 13px;
-            color: #666;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
             margin-bottom: 20px;
             min-height: 20px;
             transition: color 0.3s;
+            letter-spacing: 0.3px;
         }
 
         .walkie-status.active {
@@ -96,23 +176,22 @@
         }
 
         .walkie-status.connecting {
-            color: #ffaa00;
+            color: var(--warning);
         }
 
         .talk-btn {
-            width: 120px;
-            height: 120px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            background: rgba(255, 60, 120, 0.08);
-            border: 3px solid rgba(255, 60, 120, 0.25);
+            background: rgba(255, 60, 120, 0.06);
+            border: 2px solid rgba(255, 60, 120, 0.2);
             color: #ff3c78;
-            font-size: 36px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 16px;
-            transition: all 0.2s ease;
+            margin: 0 auto 14px;
+            transition: all 0.2s;
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
@@ -120,17 +199,17 @@
         }
 
         .talk-btn:hover {
-            background: rgba(255, 60, 120, 0.15);
-            border-color: rgba(255, 60, 120, 0.5);
-            transform: scale(1.05);
+            background: rgba(255, 60, 120, 0.12);
+            border-color: rgba(255, 60, 120, 0.4);
+            transform: scale(1.04);
         }
 
         .talk-btn:active,
         .talk-btn.active {
-            background: rgba(255, 60, 120, 0.3);
+            background: rgba(255, 60, 120, 0.2);
             border-color: #ff3c78;
             transform: scale(0.95);
-            box-shadow: 0 0 30px rgba(255, 60, 120, 0.3);
+            box-shadow: 0 0 30px rgba(255, 60, 120, 0.2);
             animation: talkPulse 1s ease-in-out infinite;
         }
 
@@ -138,22 +217,24 @@
 
             0%,
             100% {
-                box-shadow: 0 0 20px rgba(255, 60, 120, 0.2);
+                box-shadow: 0 0 20px rgba(255, 60, 120, 0.15);
             }
 
             50% {
-                box-shadow: 0 0 40px rgba(255, 60, 120, 0.4);
+                box-shadow: 0 0 40px rgba(255, 60, 120, 0.3);
             }
         }
 
         .talk-label {
-            font-size: 11px;
-            color: #555;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        /* ===== VISUALIZER ===== */
+        /* ── VISUALIZER ── */
         .visualizer {
             display: flex;
             align-items: center;
@@ -171,160 +252,67 @@
         }
 
         .walkie-timer {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
             color: #ff3c78;
             min-height: 18px;
             margin-top: 8px;
+            letter-spacing: 1px;
         }
 
-        /* ===== TEXT-TO-SPEECH SECTION ===== */
-        .text-area {
-            width: 100%;
-            min-height: 80px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 255, 65, 0.15);
-            border-radius: 8px;
-            padding: 12px;
-            color: #d0d0d0;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
-            resize: vertical;
-        }
-
-        .text-area:focus {
-            outline: none;
-            border-color: rgba(0, 255, 65, 0.4);
-        }
-
-        .text-area::placeholder {
-            color: #444;
-        }
-
-        .char-count {
-            text-align: right;
-            font-size: 10px;
-            color: #444;
-            margin-top: 6px;
-        }
-
-        /* ===== CONTROLS ===== */
-        .slider-group {
-            margin-bottom: 12px;
-        }
-
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 6px;
-        }
-
-        .slider-val {
-            color: #00ff41;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            accent-color: #00ff41;
-            height: 4px;
-        }
-
-        /* ===== BUTTONS ===== */
-        .speak-btn {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid rgba(0, 200, 255, 0.25);
-            border-radius: 10px;
-            background: rgba(0, 200, 255, 0.06);
-            color: #00c8ff;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-        }
-
-        .speak-btn:hover {
-            background: rgba(0, 200, 255, 0.12);
-            transform: translateY(-1px);
-        }
-
-        .speak-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .speak-btn.speaking {
-            animation: speakPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes speakPulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 10px rgba(0, 200, 255, 0.15);
-            }
-
-            50% {
-                box-shadow: 0 0 25px rgba(0, 200, 255, 0.3);
-            }
-        }
-
-        /* ===== AUDIO FILE PLAYER ===== */
+        /* ── AUDIO FILE PLAYER ── */
         .audio-file-card {
-            border-color: rgba(255, 165, 0, 0.15);
+            border-color: rgba(255, 170, 0, 0.12);
         }
 
-        .audio-file-card label {
-            color: #ffaa00;
+        .audio-file-card .card-label {
+            color: var(--warning);
         }
 
         .file-drop-zone {
-            border: 2px dashed rgba(255, 165, 0, 0.2);
+            border: 2px dashed rgba(255, 170, 0, 0.15);
             border-radius: 10px;
             padding: 24px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 12px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
         }
 
         .file-drop-zone:hover,
         .file-drop-zone.dragover {
-            border-color: rgba(255, 165, 0, 0.5);
-            background: rgba(255, 165, 0, 0.04);
+            border-color: rgba(255, 170, 0, 0.4);
+            background: rgba(255, 170, 0, 0.03);
         }
 
-        .file-drop-zone .icon {
-            font-size: 28px;
+        .file-drop-zone .drop-icon {
             margin-bottom: 8px;
+            color: var(--warning);
+            opacity: 0.5;
         }
 
         .file-drop-zone .hint {
-            font-size: 11px;
-            color: #666;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
         .file-info {
             display: none;
-            padding: 10px;
-            background: rgba(255, 165, 0, 0.04);
-            border: 1px solid rgba(255, 165, 0, 0.12);
+            padding: 10px 14px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
             border-radius: 8px;
             margin-bottom: 12px;
-            font-size: 11px;
+            font-size: 0.65rem;
         }
 
         .file-info .name {
-            color: #ffaa00;
-            font-weight: bold;
+            color: var(--warning);
+            font-weight: 600;
             margin-bottom: 4px;
             white-space: nowrap;
             overflow: hidden;
@@ -332,12 +320,12 @@
         }
 
         .file-info .meta {
-            color: #666;
+            color: var(--text-muted);
         }
 
         .audio-progress {
             height: 4px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 2px;
             margin: 12px 0;
             overflow: hidden;
@@ -360,45 +348,174 @@
         .audio-btn {
             flex: 1;
             padding: 10px;
-            border: 2px solid rgba(255, 165, 0, 0.25);
+            border: 1px solid rgba(255, 170, 0, 0.2);
             border-radius: 8px;
-            background: rgba(255, 165, 0, 0.06);
-            color: #ffaa00;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 12px;
+            background: rgba(255, 170, 0, 0.05);
+            color: var(--warning);
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .audio-btn:hover {
-            background: rgba(255, 165, 0, 0.12);
+            background: rgba(255, 170, 0, 0.1);
         }
 
         .audio-btn:disabled {
-            opacity: 0.35;
+            opacity: 0.3;
             cursor: not-allowed;
         }
 
         .audio-btn.playing {
-            animation: speakPulse 1s ease-in-out infinite;
-            border-color: #ffaa00;
+            animation: audioPulse 1s ease-in-out infinite;
+            border-color: var(--warning);
+        }
+
+        @keyframes audioPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(255, 170, 0, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+            }
         }
 
         .audio-btn.stop-btn {
-            border-color: rgba(255, 60, 60, 0.25);
-            background: rgba(255, 60, 60, 0.06);
-            color: #ff4444;
+            border-color: rgba(255, 60, 60, 0.2);
+            background: rgba(255, 60, 60, 0.05);
+            color: var(--danger);
         }
 
         .audio-status {
-            font-size: 10px;
-            color: #666;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
             text-align: center;
             margin-top: 8px;
             min-height: 14px;
+            letter-spacing: 0.3px;
         }
 
-        /* ===== QUICK PHRASES ===== */
+        /* ── TTS ── */
+        .text-area {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .text-area::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            text-align: right;
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── SLIDERS ── */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .slider-val {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+
+        /* ── SPEAK BTN ── */
+        .speak-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 200, 255, 0.05);
+            color: #00c8ff;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .speak-btn:hover {
+            background: rgba(0, 200, 255, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.06);
+        }
+
+        .speak-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speak-btn.speaking {
+            animation: speakPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes speakPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(0, 200, 255, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 22px rgba(0, 200, 255, 0.2);
+            }
+        }
+
+        /* ── QUICK PHRASES ── */
         .phrases-grid {
             display: flex;
             flex-wrap: wrap;
@@ -406,22 +523,24 @@
         }
 
         .phrase-chip {
-            padding: 6px 12px;
-            font-size: 11px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
             border-radius: 20px;
             cursor: pointer;
-            color: #888;
+            color: var(--text-muted);
             transition: all 0.2s;
         }
 
         .phrase-chip:hover {
-            border-color: rgba(0, 255, 65, 0.3);
-            color: #00ff41;
-            background: rgba(0, 255, 65, 0.05);
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            background: rgba(0, 255, 65, 0.04);
         }
 
-        /* ===== HISTORY ===== */
+        /* ── HISTORY ── */
         .history-list {
             max-height: 200px;
             overflow-y: auto;
@@ -432,13 +551,15 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             cursor: pointer;
-            font-size: 12px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            transition: background 0.15s;
         }
 
         .history-item:hover {
-            background: rgba(0, 255, 65, 0.04);
+            background: rgba(0, 255, 65, 0.03);
         }
 
         .history-text {
@@ -446,176 +567,423 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             max-width: 80%;
+            color: var(--text-secondary);
         }
 
         .history-time {
-            font-size: 10px;
-            color: #444;
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
             flex-shrink: 0;
         }
 
         .empty-history {
-            font-size: 11px;
-            color: #333;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
             text-align: center;
             padding: 20px;
         }
 
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 12px;
-            background: rgba(0, 255, 65, 0.15);
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            color: #00ff41;
-            transform: translateY(-20px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 999;
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 12px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
         }
 
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
         }
 
-        .toast.error {
-            background: rgba(255, 60, 60, 0.15);
-            border-color: rgba(255, 60, 60, 0.3);
-            color: #ff4444;
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 12px;
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 14px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .disc {
+                margin-top: 8px;
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
         @media (max-width: 480px) {
-            .app-layout {
-                padding: 14px;
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
             }
 
             .talk-btn {
-                width: 100px;
-                height: 100px;
-                font-size: 28px;
+                width: 90px;
+                height: 90px;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .phrase-chip {
+                font-size: 0.55rem;
+                padding: 5px 10px;
+            }
+
+            .ft {
+                padding: 20px 10px;
+                margin-top: 16px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .talk-btn {
+                width: 80px;
+                height: 80px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="app-layout">
-        <!-- Header -->
-        <div class="top-bar">
-            <h1>&#x1F50A; REMOTE SPEAK</h1>
-            <a href="index.html" class="back-btn">&#x2190; Dashboard</a>
-        </div>
+    <div class="wrap">
 
-        <!-- Walkie-Talkie Live Mic -->
-        <div class="card walkie-card">
-            <label>&#x1F399; Live Talk (Walkie-Talkie)</label>
-            <div class="walkie-status" id="walkie-status">Press and hold to talk</div>
-            <button class="talk-btn" id="talk-btn">&#x1F3A4;</button>
-            <div class="talk-label">HOLD TO TALK</div>
-            <div class="visualizer" id="visualizer"></div>
-            <div class="walkie-timer" id="walkie-timer"></div>
-        </div>
-
-        <!-- Audio File Player -->
-        <div class="card audio-file-card">
-            <label>&#x1F3B5; Play Audio File on Device</label>
-            <div class="file-drop-zone" id="file-drop-zone"
-                onclick="document.getElementById('audio-file-input').click()">
-                <div class="icon">&#x1F4C1;</div>
-                <div>Click to select audio file</div>
-                <div class="hint">MP3, WAV, OGG, M4A, FLAC — any format</div>
-            </div>
-            <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
-            <div class="file-info" id="file-info">
-                <div class="name" id="file-name"></div>
-                <div class="meta" id="file-meta"></div>
-            </div>
-            <div class="audio-progress" id="audio-progress">
-                <div class="audio-progress-bar" id="audio-progress-bar"></div>
-            </div>
-            <div class="audio-controls">
-                <button class="audio-btn" id="btn-play-audio" disabled onclick="playAudioFile()">&#x25B6; PLAY ON
-                    DEVICE</button>
-                <button class="audio-btn stop-btn" id="btn-stop-audio" disabled onclick="stopAudioFile()">&#x25A0;
-                    STOP</button>
-            </div>
-            <div class="audio-status" id="audio-status"></div>
-        </div>
-
-        <!-- Text-to-Speech -->
-        <div class="card">
-            <label>&#x1F4AC; Text to Speech</label>
-            <textarea class="text-area" id="speak-text" placeholder="Type something to speak on the device..."
-                maxlength="1000"></textarea>
-            <div class="char-count"><span id="char-count">0</span> / 1000</div>
-        </div>
-
-        <!-- Controls -->
-        <div class="card">
-            <div class="slider-group">
-                <div class="slider-label">
-                    <span>Volume</span>
-                    <span class="slider-val" id="vol-val">100%</span>
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="volume-2" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Remote</span> Speak</div>
+                    <div class="pg-sub">// audio & voice to device</div>
                 </div>
-                <input type="range" id="volume" min="0" max="100" value="100"
-                    oninput="document.getElementById('vol-val').textContent = this.value + '%'">
             </div>
-            <div class="slider-group">
-                <div class="slider-label">
-                    <span>Speed</span>
-                    <span class="slider-val" id="spd-val">1.0x</span>
-                </div>
-                <input type="range" id="speed" min="25" max="300" value="100"
-                    oninput="document.getElementById('spd-val').textContent = (this.value / 100).toFixed(1) + 'x'">
-            </div>
-            <div class="slider-group">
-                <div class="slider-label">
-                    <span>Pitch</span>
-                    <span class="slider-val" id="pit-val">1.0</span>
-                </div>
-                <input type="range" id="pitch" min="25" max="200" value="100"
-                    oninput="document.getElementById('pit-val').textContent = (this.value / 100).toFixed(1)">
-            </div>
+            <a href="index.html" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Dashboard</span>
+            </a>
         </div>
 
-        <!-- Speak Button -->
-        <button class="speak-btn" id="speak-btn" onclick="speak()">
-            <span>&#x1F50A;</span> SPEAK ON DEVICE
-        </button>
+        <div class="speak-content">
 
-        <!-- Quick Phrases -->
-        <div class="card">
-            <label>Quick Phrases</label>
-            <div class="phrases-grid">
-                <div class="phrase-chip" onclick="quickSpeak('Hello, can you hear me?')">Hello!</div>
-                <div class="phrase-chip" onclick="quickSpeak('Where are you right now?')">Where are you?</div>
-                <div class="phrase-chip" onclick="quickSpeak('Please call me back')">Call me back</div>
-                <div class="phrase-chip" onclick="quickSpeak('I am on my way')">On my way</div>
-                <div class="phrase-chip" onclick="quickSpeak('Dinner is ready')">Dinner ready</div>
-                <div class="phrase-chip" onclick="quickSpeak('Come home now')">Come home</div>
+            <!-- Walkie-Talkie Live Mic -->
+            <div class="card walkie-card">
+                <div class="card-label">
+                    <i data-lucide="radio" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Live Talk (Walkie-Talkie)
+                </div>
+                <div class="walkie-status" id="walkie-status">Press and hold to talk</div>
+                <button class="talk-btn" id="talk-btn">
+                    <i data-lucide="mic" style="width:32px;height:32px;"></i>
+                </button>
+                <div class="talk-label">Hold to Talk</div>
+                <div class="visualizer" id="visualizer"></div>
+                <div class="walkie-timer" id="walkie-timer"></div>
             </div>
-        </div>
 
-        <!-- History -->
-        <div class="card">
-            <label>History</label>
-            <div class="history-list" id="history-list">
-                <div class="empty-history">No messages yet</div>
+            <!-- Audio File Player -->
+            <div class="card audio-file-card">
+                <div class="card-label">
+                    <i data-lucide="music" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Play Audio File on Device
+                </div>
+                <div class="file-drop-zone" id="file-drop-zone"
+                    onclick="document.getElementById('audio-file-input').click()">
+                    <div class="drop-icon"><i data-lucide="upload" style="width:24px;height:24px;"></i></div>
+                    <div>Click to select audio file</div>
+                    <div class="hint">MP3, WAV, OGG, M4A, FLAC — any format</div>
+                </div>
+                <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
+                <div class="file-info" id="file-info">
+                    <div class="name" id="file-name"></div>
+                    <div class="meta" id="file-meta"></div>
+                </div>
+                <div class="audio-progress" id="audio-progress">
+                    <div class="audio-progress-bar" id="audio-progress-bar"></div>
+                </div>
+                <div class="audio-controls">
+                    <button class="audio-btn" id="btn-play-audio" disabled onclick="playAudioFile()">
+                        <i data-lucide="play" style="width:13px;height:13px;"></i> Play on Device
+                    </button>
+                    <button class="audio-btn stop-btn" id="btn-stop-audio" disabled onclick="stopAudioFile()">
+                        <i data-lucide="square" style="width:13px;height:13px;"></i> Stop
+                    </button>
+                </div>
+                <div class="audio-status" id="audio-status"></div>
             </div>
+
+            <!-- Text-to-Speech -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="message-square" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Text to Speech
+                </div>
+                <textarea class="text-area" id="speak-text" placeholder="Type something to speak on the device..."
+                    maxlength="1000"></textarea>
+                <div class="char-count"><span id="char-count">0</span> / 1000</div>
+            </div>
+
+            <!-- Controls -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="settings-2" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Voice Settings
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Volume</span>
+                        <span class="slider-val" id="vol-val">100%</span>
+                    </div>
+                    <input type="range" id="volume" min="0" max="100" value="100"
+                        oninput="document.getElementById('vol-val').textContent = this.value + '%'">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Speed</span>
+                        <span class="slider-val" id="spd-val">1.0x</span>
+                    </div>
+                    <input type="range" id="speed" min="25" max="300" value="100"
+                        oninput="document.getElementById('spd-val').textContent = (this.value / 100).toFixed(1) + 'x'">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Pitch</span>
+                        <span class="slider-val" id="pit-val">1.0</span>
+                    </div>
+                    <input type="range" id="pitch" min="25" max="200" value="100"
+                        oninput="document.getElementById('pit-val').textContent = (this.value / 100).toFixed(1)">
+                </div>
+            </div>
+
+            <!-- Speak Button -->
+            <button class="speak-btn" id="speak-btn" onclick="speak()">
+                <i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speak on Device
+            </button>
+
+            <!-- Quick Phrases -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="zap" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Quick Phrases
+                </div>
+                <div class="phrases-grid">
+                    <div class="phrase-chip" onclick="quickSpeak('Hello, can you hear me?')">Hello!</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Where are you right now?')">Where are you?</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Please call me back')">Call me back</div>
+                    <div class="phrase-chip" onclick="quickSpeak('I am on my way')">On my way</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Dinner is ready')">Dinner ready</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Come home now')">Come home</div>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="clock" class="cl-icon" style="width:13px;height:13px;"></i>
+                    History
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="empty-history">No messages yet</div>
+                </div>
+            </div>
+
+        </div> <!-- /speak-content -->
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
 
     <script src="/js/api.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         if (!deviceId) window.location.href = 'index.html';
 
@@ -629,12 +997,13 @@
 
         async function speak() {
             const text = document.getElementById('speak-text').value.trim();
-            if (!text) { showToast('Type something first', true); return; }
+            if (!text) { api.showToast('Type something first', 'error'); return; }
 
             const btn = document.getElementById('speak-btn');
             btn.disabled = true;
             btn.classList.add('speaking');
-            btn.innerHTML = '<span>&#x1F50A;</span> SPEAKING...';
+            btn.innerHTML = '<i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speaking...';
+            lucide.createIcons();
 
             try {
                 await api.sendCommand(deviceId, 'speak', {
@@ -643,14 +1012,15 @@
                     speed: parseInt(document.getElementById('speed').value) / 100,
                     pitch: parseInt(document.getElementById('pitch').value) / 100
                 });
-                showToast('Speaking on device \u{1F50A}');
+                api.showToast('Speaking on device', 'success');
                 addHistory(text);
             } catch (error) {
-                showToast('Error: ' + error.message, true);
+                api.showToast('Error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('speaking');
-                btn.innerHTML = '<span>&#x1F50A;</span> SPEAK ON DEVICE';
+                btn.innerHTML = '<i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speak on Device';
+                lucide.createIcons();
             }
         }
 
@@ -697,14 +1067,7 @@
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); speak(); }
         });
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.className = 'toast show' + (isError ? ' error' : '');
-            setTimeout(() => { toast.className = 'toast'; }, 3000);
-        }
-
-        // ========== WALKIE-TALKIE (LIVE MIC \u2192 PHONE SPEAKER) ==========
+        // ========== WALKIE-TALKIE (LIVE MIC → PHONE SPEAKER) ==========
 
         const SAMPLE_RATE = 16000; // target rate for phone
         const CHUNK_SIZE = 2048;
@@ -780,10 +1143,10 @@
             if (isTalking) return;
 
             try {
-                walkieStatus.textContent = '\u{1F504} Connecting...';
+                walkieStatus.textContent = 'Connecting...';
                 walkieStatus.className = 'walkie-status connecting';
 
-                // Get browser mic \u2014 let browser choose optimal sample rate
+                // Get browser mic
                 micStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         channelCount: 1,
@@ -801,14 +1164,14 @@
                 // Tell device to start audio playback
                 await api.sendCommand(deviceId, 'audio_play_start');
 
-                // Create audio context � use browser's native sample rate (don't force 16kHz)
+                // Create audio context
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 actualSampleRate = audioContext.sampleRate;
                 console.log(`[Walkie] AudioContext rate: ${actualSampleRate}Hz, target: ${SAMPLE_RATE}Hz`);
 
                 const source = audioContext.createMediaStreamSource(micStream);
 
-                // Gain node \u2014 boost mic volume
+                // Gain node — boost mic volume
                 const gainNode = audioContext.createGain();
                 gainNode.gain.value = MIC_GAIN;
 
@@ -834,9 +1197,7 @@
                     updateVisualizer(inputData);
                 };
 
-                // Pipeline: mic \u2192 gain \u2192 scriptNode \u2192 silent output (NOT speakers!)
-                // ScriptProcessor requires a connected output to fire onaudioprocess,
-                // but we must NOT route mic audio to speakers or it causes echo.
+                // Pipeline: mic → gain → scriptNode → silent output
                 const silentGain = audioContext.createGain();
                 silentGain.gain.value = 0; // mute — prevents echo
                 source.connect(gainNode);
@@ -846,7 +1207,7 @@
 
                 isTalking = true;
                 talkBtn.classList.add('active');
-                walkieStatus.textContent = '\u{1F534} LIVE \u2022 Speaking to device...';
+                walkieStatus.textContent = 'LIVE — Speaking to device...';
                 walkieStatus.className = 'walkie-status active';
 
                 // Start timer
@@ -859,7 +1220,7 @@
                 }, 1000);
 
             } catch (e) {
-                showToast('Mic error: ' + e.message, true);
+                api.showToast('Mic error: ' + e.message, 'error');
                 walkieStatus.textContent = 'Press and hold to talk';
                 walkieStatus.className = 'walkie-status';
                 stopTalk();
@@ -976,7 +1337,7 @@
             fileDropZone.classList.remove('dragover');
             const file = e.dataTransfer?.files?.[0];
             if (file && file.type.startsWith('audio/')) loadAudioFile(file);
-            else showToast('Please drop an audio file', true);
+            else api.showToast('Please drop an audio file', 'error');
         });
 
         fileInput.addEventListener('change', (e) => {
@@ -1003,12 +1364,13 @@
                 document.getElementById('file-name').textContent = file.name;
                 document.getElementById('file-meta').textContent = `${duration}s • ${sizeStr} • ${audioFileBuffer.sampleRate}Hz`;
                 fileInfo.style.display = 'block';
-                fileDropZone.innerHTML = '<div class="icon">\u2705</div><div>File loaded — click to change</div>';
+                fileDropZone.innerHTML = '<div class="drop-icon"><i data-lucide="check-circle" style="width:24px;height:24px;color:var(--accent);"></i></div><div>File loaded — click to change</div>';
+                lucide.createIcons();
 
                 btnPlayAudio.disabled = false;
                 audioStatusEl.textContent = 'Ready to play';
             } catch (e) {
-                showToast('Failed to decode audio: ' + e.message, true);
+                api.showToast('Failed to decode audio: ' + e.message, 'error');
                 audioStatusEl.textContent = 'Decode failed';
             }
         }
@@ -1110,7 +1472,7 @@
 
             } catch (e) {
                 if (!playbackAbort?.signal.aborted) {
-                    showToast('Playback error: ' + e.message, true);
+                    api.showToast('Playback error: ' + e.message, 'error');
                 }
             } finally {
                 // Stop device playback

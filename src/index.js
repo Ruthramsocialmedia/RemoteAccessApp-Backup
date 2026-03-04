@@ -10,6 +10,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 import config from './config.js';
 import adminRoutes from './routes/admin.js';
 import { socketRegistry } from './services/socketRegistry.js';
@@ -61,21 +62,76 @@ try {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS for all environments
+// ─── CORS (restricted to allowed origins) ───
+const ALLOWED_ORIGINS = [
+    'https://remoteaccessapp.onrender.com',
+    'https://remoteaccessapp-backup.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:3443',
+    'http://127.0.0.1:3000',
+];
+
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin;
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else if (!origin) {
+        // Same-origin requests (no Origin header) — allow (dashboard pages)
+        res.header('Access-Control-Allow-Origin', '*');
+    }
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Credentials', 'true');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
     next();
 });
 
+// ─── Security Headers ───
+app.use((req, res, next) => {
+    res.header('X-Content-Type-Options', 'nosniff');
+    res.header('X-Frame-Options', 'DENY');
+    res.header('X-XSS-Protection', '1; mode=block');
+    res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (config.isProduction) {
+        res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+    next();
+});
+
+// ─── Rate Limiting (login brute-force protection) ───
+const loginAttempts = new Map();
+function loginRateLimit(req, res, next) {
+    const ip = req.ip || req.socket.remoteAddress;
+    const now = Date.now();
+    let attempts = loginAttempts.get(ip) || [];
+    // Keep only attempts in last 60 seconds
+    attempts = attempts.filter(t => now - t < 60_000);
+    if (attempts.length >= 5) {
+        return res.status(429).json({
+            success: false,
+            error: 'Too many login attempts. Try again in 60 seconds.',
+        });
+    }
+    attempts.push(now);
+    loginAttempts.set(ip, attempts);
+    next();
+}
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, attempts] of loginAttempts) {
+        const recent = attempts.filter(t => now - t < 60_000);
+        if (recent.length === 0) loginAttempts.delete(ip);
+        else loginAttempts.set(ip, recent);
+    }
+}, 5 * 60 * 1000);
+
 // ─── Authentication Routes (public, no middleware) ───
 
-// Login endpoint
-app.post('/auth/login', (req, res) => {
+// Login endpoint (rate-limited)
+app.post('/auth/login', loginRateLimit, (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {

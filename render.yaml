@@ -11,4 +11,12 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      - key: ADMIN_USERNAME
+        sync: false # Set in Render Dashboard
+      - key: ADMIN_PASSWORD
+        sync: false # Set in Render Dashboard
+      - key: SUPABASE_URL
+        sync: false # Set in Render Dashboard
+      - key: SUPABASE_KEY
+        sync: false # Set in Render Dashboard
     healthCheckPath: /

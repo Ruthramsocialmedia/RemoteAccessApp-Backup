@@ -1,20 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Location Tracker - Remote Access</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link rel="stylesheet" href="/css/hacker-theme.css" />
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        /* ===== LAYOUT OVERRIDES ===== */
+        :root {
+            --font-display:
+                "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-mono:
+                "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        /* ===== LAYOUT ===== */
         body {
             overflow: hidden;
             padding: 0;
             margin: 0;
             height: 100vh;
+            font-family: var(--font-display) !important;
         }
 
         body::before {
@@ -28,7 +38,7 @@
             width: 100vw;
         }
 
-        /* ===== HEADER ===== */
+        /* ===== TOP BAR ===== */
         .top-bar {
             display: flex;
             align-items: center;
@@ -40,25 +50,45 @@
             z-index: 1000;
         }
 
-        .top-bar h1 {
-            font-size: 1rem;
-            color: var(--accent);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin: 0;
+        .top-bar-left {
             display: flex;
             align-items: center;
-            gap: 10px;
-            text-shadow: 0 0 10px var(--accent-glow);
+            gap: 12px;
         }
 
-        .top-bar h1 .dot {
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-glow);
-            animation: pulse-glow 2s ease-in-out infinite;
+        .top-bar .pg-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg,
+                    rgba(0, 255, 65, 0.12),
+                    rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .top-bar .pg-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .top-bar .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .top-bar .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
         }
 
         .top-bar-actions {
@@ -68,30 +98,29 @@
         }
 
         .btn-icon {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-card);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 8px;
             color: var(--text-secondary);
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             text-decoration: none;
         }
 
         .btn-icon:hover {
-            border-color: var(--accent-dim);
+            border-color: rgba(0, 255, 65, 0.25);
             color: var(--accent);
-            box-shadow: 0 0 8px var(--accent-glow);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.06);
         }
 
         .btn-icon.active {
-            background: rgba(0, 255, 65, 0.1);
-            border-color: var(--accent-dim);
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.25);
             color: var(--accent);
         }
 
@@ -111,24 +140,25 @@
             z-index: 1;
         }
 
-        /* Leaflet overrides — hacker theme */
+        /* Leaflet overrides */
         .leaflet-control-zoom a {
             background: var(--bg-panel) !important;
             color: var(--accent) !important;
             border-color: var(--border) !important;
+            border-radius: 6px !important;
         }
 
         .leaflet-control-zoom a:hover {
             background: var(--bg-card) !important;
-            box-shadow: 0 0 8px var(--accent-glow) !important;
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.06) !important;
         }
 
         .leaflet-popup-content-wrapper {
             background: var(--bg-panel) !important;
             color: var(--text-primary) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 4px !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
         }
 
         .leaflet-popup-tip {
@@ -157,7 +187,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 14px;
+            padding: 10px 14px;
             flex: 1;
             min-width: 65px;
             border-right: 1px solid var(--border);
@@ -165,7 +195,7 @@
         }
 
         .info-chip:hover {
-            background: rgba(0, 255, 65, 0.03);
+            background: rgba(0, 255, 65, 0.02);
         }
 
         .info-chip:last-child {
@@ -173,25 +203,29 @@
         }
 
         .info-chip .label {
-            font-size: 0.65rem;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .info-chip .value {
-            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 400;
             color: var(--text-primary);
             font-variant-numeric: tabular-nums;
         }
 
         .info-chip .value.accent {
             color: var(--accent);
-            text-shadow: 0 0 6px var(--accent-glow);
+            text-shadow: 0 0 6px rgba(0, 255, 65, 0.15);
         }
 
-        /* ===== FLOATING CONTROLS ===== */
+        /* ===== FAB CONTROLS ===== */
         .float-controls {
             position: absolute;
             bottom: 20px;
@@ -203,16 +237,15 @@
         }
 
         .fab {
-            width: 40px;
-            height: 40px;
-            border-radius: 4px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
             cursor: pointer;
             border: 1px solid;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
@@ -224,36 +257,38 @@
         }
 
         .fab:active {
-            transform: scale(0.95);
+            transform: scale(0.93);
         }
 
         .fab-refresh {
-            background: rgba(0, 255, 65, 0.1);
-            border-color: var(--accent-dim);
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.25);
             color: var(--accent);
         }
 
         .fab-refresh:hover {
-            background: rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        .fab-refresh .icon {
-            display: inline-block;
-            width: 1em;
-            height: 1em;
-            line-height: 1;
-            text-align: center;
-            transform-origin: center center;
-        }
-
-        .fab-refresh.loading .icon {
-            animation: spin-icon 0.8s linear infinite;
+            background: rgba(0, 255, 65, 0.14);
+            box-shadow: 0 0 14px rgba(0, 255, 65, 0.08);
         }
 
         .fab-refresh.loading {
             pointer-events: none;
-            opacity: 0.5;
+            opacity: 0.4;
+            padding: 0;
+            text-align: center;
+            font-size: inherit;
+            position: relative;
+        }
+
+        .fab-refresh.loading::before,
+        .fab-refresh.loading::after {
+            content: none;
+            display: none;
+            animation: none;
+        }
+
+        .fab-refresh.loading .fab-ic {
+            animation: spin-icon 0.8s linear infinite;
         }
 
         @keyframes spin-icon {
@@ -263,33 +298,33 @@
         }
 
         .fab-gps {
-            background: rgba(255, 170, 0, 0.08);
-            border-color: rgba(255, 170, 0, 0.3);
+            background: rgba(255, 170, 0, 0.06);
+            border-color: rgba(255, 170, 0, 0.2);
             color: var(--warning);
         }
 
         .fab-gps:hover {
-            background: rgba(255, 170, 0, 0.15);
-            box-shadow: 0 0 12px rgba(255, 170, 0, 0.2);
+            background: rgba(255, 170, 0, 0.12);
+            box-shadow: 0 0 12px rgba(255, 170, 0, 0.1);
         }
 
         .fab-gps.active {
-            background: rgba(0, 255, 65, 0.1);
-            border-color: var(--accent-dim);
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.25);
             color: var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.06);
         }
 
         .fab-auto {
-            background: rgba(0, 170, 255, 0.08);
-            border-color: rgba(0, 170, 255, 0.3);
+            background: rgba(0, 170, 255, 0.06);
+            border-color: rgba(0, 170, 255, 0.2);
             color: var(--info);
         }
 
         .fab-auto.active {
-            background: rgba(0, 170, 255, 0.15);
-            border-color: rgba(0, 170, 255, 0.5);
-            box-shadow: 0 0 12px rgba(0, 170, 255, 0.2);
+            background: rgba(0, 170, 255, 0.12);
+            border-color: rgba(0, 170, 255, 0.35);
+            box-shadow: 0 0 12px rgba(0, 170, 255, 0.1);
             animation: pulse-auto 2s ease-in-out infinite;
         }
 
@@ -297,22 +332,22 @@
 
             0%,
             100% {
-                box-shadow: 0 0 8px rgba(0, 170, 255, 0.15);
+                box-shadow: 0 0 8px rgba(0, 170, 255, 0.1);
             }
 
             50% {
-                box-shadow: 0 0 18px rgba(0, 170, 255, 0.3);
+                box-shadow: 0 0 18px rgba(0, 170, 255, 0.25);
             }
         }
 
         .fab-gmaps {
-            background: rgba(255, 170, 0, 0.08);
-            border-color: rgba(255, 170, 0, 0.2);
+            background: rgba(255, 170, 0, 0.06);
+            border-color: rgba(255, 170, 0, 0.15);
             color: #ff9800;
         }
 
         .fab-gmaps:hover {
-            background: rgba(255, 170, 0, 0.15);
+            background: rgba(255, 170, 0, 0.12);
         }
 
         .fab-gmaps.disabled {
@@ -328,37 +363,44 @@
             z-index: 500;
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 4px;
-            max-height: 220px;
-            max-width: 280px;
+            border-radius: 10px;
+            max-height: 240px;
+            max-width: 300px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
             display: none;
+            backdrop-filter: blur(12px);
         }
 
         .history-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border);
             background: var(--bg-card);
         }
 
         .history-header span {
-            font-size: 0.75rem;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
             color: var(--accent);
             letter-spacing: 1px;
             text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .history-close {
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 14px;
             transition: color 0.2s;
             background: none;
             border: none;
+            display: flex;
+            align-items: center;
         }
 
         .history-close:hover {
@@ -366,7 +408,7 @@
         }
 
         .history-list {
-            max-height: 175px;
+            max-height: 190px;
             overflow-y: auto;
             padding: 2px 0;
         }
@@ -375,27 +417,31 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
-            font-size: 0.75rem;
+            padding: 8px 14px;
+            font-size: 0.7rem;
             transition: background 0.15s;
             cursor: pointer;
-            border-bottom: 1px solid rgba(0, 255, 65, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
         }
 
         .h-item:hover {
-            background: rgba(0, 255, 65, 0.04);
+            background: rgba(0, 255, 65, 0.03);
         }
 
         .h-time {
+            font-family: var(--font-mono);
             color: var(--text-muted);
             flex-shrink: 0;
             margin-right: 12px;
             font-variant-numeric: tabular-nums;
+            font-size: 0.65rem;
         }
 
         .h-coords {
+            font-family: var(--font-mono);
             color: var(--text-secondary);
             font-variant-numeric: tabular-nums;
+            font-size: 0.65rem;
         }
 
         /* ===== INIT OVERLAY ===== */
@@ -406,7 +452,7 @@
             right: 0;
             bottom: 0;
             z-index: 100;
-            background: rgba(10, 14, 23, 0.9);
+            background: rgba(10, 14, 23, 0.92);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -431,19 +477,22 @@
         }
 
         .init-text {
-            font-size: 0.9rem;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 300;
             color: var(--text-primary);
             margin-bottom: 4px;
             letter-spacing: 1px;
         }
 
         .init-sub {
-            font-size: 0.75rem;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
             color: var(--text-muted);
             letter-spacing: 0.5px;
         }
 
-        /* ===== GPS ENABLE OVERLAY ===== */
+        /* ===== GPS OVERLAY ===== */
         .gps-overlay {
             position: absolute;
             top: 0;
@@ -451,7 +500,7 @@
             right: 0;
             bottom: 0;
             z-index: 200;
-            background: rgba(10, 14, 23, 0.92);
+            background: rgba(10, 14, 23, 0.94);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -464,43 +513,62 @@
         }
 
         .gps-overlay .gps-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: linear-gradient(135deg,
+                    rgba(0, 255, 65, 0.1),
+                    rgba(0, 255, 65, 0.03));
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.06);
         }
 
         .gps-overlay .gps-title {
-            font-size: 1.1rem;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
             color: var(--accent);
             margin-bottom: 8px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            text-shadow: 0 0 10px var(--accent-glow);
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.15);
         }
 
         .gps-overlay .gps-desc {
-            font-size: 0.8rem;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
             color: var(--text-secondary);
             margin-bottom: 24px;
-            max-width: 260px;
+            max-width: 280px;
             line-height: 1.6;
         }
 
         .gps-overlay .gps-btn {
             padding: 10px 24px;
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid var(--accent-dim);
-            border-radius: 4px;
+            background: rgba(0, 255, 65, 0.08);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 8px;
             color: var(--accent);
-            font-size: 0.85rem;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .gps-overlay .gps-btn:hover {
-            background: rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 15px var(--accent-glow);
+            background: rgba(0, 255, 65, 0.14);
+            box-shadow: 0 0 14px rgba(0, 255, 65, 0.08);
         }
 
         .gps-overlay .gps-btn.loading {
@@ -515,19 +583,21 @@
             right: 20px;
             transform: translateY(80px);
             z-index: 99999;
-            padding: 10px 20px;
+            padding: 10px 18px;
             background: var(--bg-panel);
             border: 1px solid var(--border);
             border-left: 3px solid var(--accent);
-            border-radius: 4px;
-            font-size: 0.8rem;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
             color: var(--text-primary);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
-            max-width: 300px;
+            max-width: 320px;
             text-align: left;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             white-space: nowrap;
         }
 
@@ -548,27 +618,59 @@
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 8px 16px;
+            }
+
+            .top-bar .pg-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .top-bar .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .info-chip {
+                padding: 8px 12px;
+            }
+
+            .info-chip .value {
+                font-size: 0.7rem;
+            }
+        }
+
         @media (max-width: 600px) {
             .top-bar {
                 padding: 8px 14px;
             }
 
-            .top-bar h1 {
+            .top-bar .pg-title {
                 font-size: 0.8rem;
+            }
+
+            .top-bar .pg-sub {
+                display: none;
             }
 
             .info-chip {
                 padding: 6px 10px;
             }
 
+            .info-chip .label {
+                font-size: 0.5rem;
+                letter-spacing: 1.5px;
+            }
+
             .info-chip .value {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
 
             .fab {
-                width: 36px;
-                height: 36px;
-                font-size: 14px;
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
             }
 
             .history-panel {
@@ -583,7 +685,53 @@
             }
         }
 
-        /* ===== ACCESSIBILITY ===== */
+        @media (max-width: 480px) {
+            .top-bar .pg-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+            }
+
+            .top-bar .pg-title {
+                font-size: 0.75rem;
+            }
+
+            .btn-icon {
+                width: 30px;
+                height: 30px;
+                border-radius: 6px;
+            }
+
+            .info-chip .label {
+                font-size: 0.45rem;
+            }
+
+            .info-chip .value {
+                font-size: 0.6rem;
+            }
+
+            .fab {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .top-bar {
+                padding: 6px 10px;
+            }
+
+            .info-chip {
+                padding: 5px 8px;
+                min-width: 50px;
+            }
+
+            .fab {
+                width: 34px;
+                height: 34px;
+            }
+        }
+
         .sr-only {
             position: absolute;
             width: 1px;
@@ -594,6 +742,18 @@
             clip: rect(0, 0, 0, 0);
             border: 0;
         }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 6px rgba(0, 255, 65, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 14px rgba(0, 255, 65, 0.3);
+            }
+        }
     </style>
 </head>
 
@@ -601,11 +761,22 @@
     <div class="app-layout" role="main">
         <!-- Top Bar -->
         <nav class="top-bar" role="navigation" aria-label="Location tracker controls">
-            <h1><span class="dot"></span> Location Tracker</h1>
+            <div class="top-bar-left">
+                <div class="pg-icon">
+                    <i data-lucide="map-pin" style="width: 16px; height: 16px"></i>
+                </div>
+                <div>
+                    <div class="pg-title"><span>Location</span> Tracker</div>
+                    <div class="pg-sub">// gps &amp; network</div>
+                </div>
+            </div>
             <div class="top-bar-actions">
-                <button class="btn-icon" id="btn-history" title="History"
-                    aria-label="Toggle location history panel">&#x1F553;</button>
-                <a href="index.html" class="btn-icon" title="Dashboard" aria-label="Go back to dashboard">&#x2190;</a>
+                <button class="btn-icon" id="btn-history" title="History" aria-label="Toggle location history panel">
+                    <i data-lucide="clock" style="width: 15px; height: 15px"></i>
+                </button>
+                <a href="index.html" class="btn-icon" title="Dashboard" aria-label="Go back to dashboard">
+                    <i data-lucide="arrow-left" style="width: 15px; height: 15px"></i>
+                </a>
             </div>
         </nav>
 
@@ -617,24 +788,33 @@
             <div class="init-overlay" id="init-overlay" role="status" aria-live="polite">
                 <div class="init-spinner" aria-hidden="true"></div>
                 <div class="init-text">Fetching device location...</div>
-                <div class="init-sub">GPS & network triangulation</div>
+                <div class="init-sub">GPS &amp; network triangulation</div>
             </div>
 
             <!-- GPS Enable Overlay -->
             <div class="gps-overlay" id="gps-overlay">
-                <div class="gps-icon">📍</div>
-                <div class="gps-title">Location Services Off</div>
-                <div class="gps-desc">The device's GPS is disabled. Enable it remotely to get accurate location data.
+                <div class="gps-icon">
+                    <i data-lucide="map-pin-off" style="width: 28px; height: 28px"></i>
                 </div>
-                <button class="gps-btn" id="btn-enable-gps" onclick="enableGPS()">Enable GPS</button>
+                <div class="gps-title">Location Services Off</div>
+                <div class="gps-desc">
+                    The device's GPS is disabled. Enable it remotely to get accurate
+                    location data.
+                </div>
+                <button class="gps-btn" id="btn-enable-gps" onclick="enableGPS()">
+                    <i data-lucide="navigation" style="width: 14px; height: 14px"></i>
+                    Enable GPS
+                </button>
             </div>
-
 
             <!-- History Panel -->
             <div class="history-panel" id="history-panel" role="complementary" aria-label="Location history">
                 <div class="history-header">
-                    <span>📍 History</span>
-                    <button class="history-close" id="history-close" aria-label="Close history panel">&#x2715;</button>
+                    <span><i data-lucide="map-pin" style="width: 12px; height: 12px"></i>
+                        History</span>
+                    <button class="history-close" id="history-close" aria-label="Close history panel">
+                        <i data-lucide="x" style="width: 14px; height: 14px"></i>
+                    </button>
                 </div>
                 <div class="history-list" id="history-list" role="list"></div>
             </div>
@@ -643,18 +823,18 @@
             <div class="float-controls">
                 <button class="fab fab-gmaps disabled" id="btn-gmaps" title="Open in Google Maps"
                     aria-label="Open current location in Google Maps">
-                    &#x1F30D;
+                    <i data-lucide="globe" style="width: 18px; height: 18px"></i>
                 </button>
                 <button class="fab fab-gps" id="btn-gps" title="Enable GPS" aria-label="Enable device GPS remotely">
-                    📡
+                    <i data-lucide="satellite" style="width: 18px; height: 18px"></i>
                 </button>
                 <button class="fab fab-auto" id="btn-auto" title="Auto-Track (10s)"
                     aria-label="Toggle auto-tracking every 10 seconds">
-                    &#x23F1;
+                    <i data-lucide="timer" class="fab-ic" style="width: 18px; height: 18px"></i>
                 </button>
                 <button class="fab fab-refresh" id="btn-refresh" title="Refresh Location"
                     aria-label="Get current device location">
-                    <span class="icon">&#x21bb;</span>
+                    <i data-lucide="refresh-cw" class="fab-ic" style="width: 18px; height: 18px"></i>
                 </button>
             </div>
         </div>
@@ -689,18 +869,21 @@
     </div>
 
     <span class="sr-only" id="sr-announce" aria-live="polite"></span>
-    <!-- Toast notification (outside layout for proper fixed positioning) -->
     <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
     <script src="/js/api.js"></script>
     <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
         // ===== INIT =====
-        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
-        if (!deviceId) window.location.href = 'index.html';
+        const deviceId = new URLSearchParams(window.location.search).get(
+            "deviceId",
+        );
+        if (!deviceId) window.location.href = "index.html";
 
-        let currentLat = null, currentLng = null;
+        let currentLat = null,
+            currentLng = null;
         let marker, accuracyCircle, pathLine;
         let locationHistory = [];
         let autoInterval = null;
@@ -708,27 +891,30 @@
         let gpsEnabled = false;
 
         // ===== MAP SETUP =====
-        const map = L.map('map', {
+        const map = L.map("map", {
             center: [20.5937, 78.9629],
             zoom: 5,
             zoomControl: true,
-            attributionControl: false
+            attributionControl: false,
         });
 
         // Dark map tiles (CARTO Dark Matter)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            subdomains: 'abcd'
-        }).addTo(map);
+        L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            {
+                maxZoom: 19,
+                subdomains: "abcd",
+            },
+        ).addTo(map);
 
         // Recalculate size after layout
         setTimeout(() => map.invalidateSize(), 100);
         setTimeout(() => map.invalidateSize(), 500);
-        window.addEventListener('resize', () => map.invalidateSize());
+        window.addEventListener("resize", () => map.invalidateSize());
 
         // Custom pulsing marker
         const pulseIcon = L.divIcon({
-            className: '',
+            className: "",
             html: `
                 <div style="position:relative;width:28px;height:28px;">
                     <div style="
@@ -757,137 +943,154 @@
                 </style>
             `,
             iconSize: [28, 28],
-            iconAnchor: [14, 14]
+            iconAnchor: [14, 14],
         });
 
         // ===== ENABLE GPS REMOTELY =====
         async function enableGPS() {
-            const btn = document.getElementById('btn-enable-gps');
-            const gpsBtn = document.getElementById('btn-gps');
-            btn.classList.add('loading');
-            btn.textContent = 'Enabling...';
+            const btn = document.getElementById("btn-enable-gps");
+            const gpsBtn = document.getElementById("btn-gps");
+            btn.classList.add("loading");
+            btn.textContent = "Enabling...";
 
             try {
-                const result = await api.sendCommand(deviceId, 'enable_gps', {});
+                const result = await api.sendCommand(deviceId, "enable_gps", {});
                 const data = result.data || result;
 
                 if (data.settingsOpened) {
                     // Settings opened but couldn't auto-toggle — use confirmed action flow
-                    btn.textContent = 'Enable GPS';
-                    btn.classList.remove('loading');
-                    api.confirmedAction(deviceId, 'enable_gps', {}, 'Enable GPS', {
-                        skipHome: true, // Already on settings screen
-                        skipLock: false,
-                        actionDelay: 500,
-                        onDone: () => {
-                            document.getElementById('gps-overlay').classList.remove('show');
-                            gpsEnabled = true;
-                            document.getElementById('btn-gps').classList.add('active');
-                            showToast('GPS enabled ✓', false, true);
-                            setTimeout(() => fetchLocation(), 1500);
-                        },
-                        onClose: () => fetchLocation()
-                    }).catch(() => { });
+                    btn.textContent = "Enable GPS";
+                    btn.classList.remove("loading");
+                    api
+                        .confirmedAction(deviceId, "enable_gps", {}, "Enable GPS", {
+                            skipHome: true, // Already on settings screen
+                            skipLock: false,
+                            actionDelay: 500,
+                            onDone: () => {
+                                document
+                                    .getElementById("gps-overlay")
+                                    .classList.remove("show");
+                                gpsEnabled = true;
+                                document.getElementById("btn-gps").classList.add("active");
+                                showToast("GPS enabled ✓", false, true);
+                                setTimeout(() => fetchLocation(), 1500);
+                            },
+                            onClose: () => fetchLocation(),
+                        })
+                        .catch(() => { });
                 } else {
                     gpsEnabled = true;
-                    gpsBtn.classList.add('active');
-                    gpsBtn.title = 'GPS Enabled';
-                    document.getElementById('gps-overlay').classList.remove('show');
-                    showToast('GPS enabled ✓', false, true);
-                    announce('GPS has been enabled on the device');
+                    gpsBtn.classList.add("active");
+                    gpsBtn.title = "GPS Enabled";
+                    document.getElementById("gps-overlay").classList.remove("show");
+                    showToast("GPS enabled ✓", false, true);
+                    announce("GPS has been enabled on the device");
                     fetchLocation();
                 }
             } catch (err) {
-                showToast('Failed to enable GPS: ' + err.message, true);
-                btn.textContent = 'Retry';
-                btn.classList.remove('loading');
+                showToast("Failed to enable GPS: " + err.message, true);
+                btn.textContent = "Retry";
+                btn.classList.remove("loading");
             }
         }
 
         // Toggle GPS from FAB button
         async function toggleGPS() {
-            const gpsBtn = document.getElementById('btn-gps');
+            const gpsBtn = document.getElementById("btn-gps");
 
             if (gpsEnabled) {
                 try {
-                    await api.sendCommand(deviceId, 'disable_gps', {});
+                    await api.sendCommand(deviceId, "disable_gps", {});
                     gpsEnabled = false;
-                    gpsBtn.classList.remove('active');
-                    gpsBtn.title = 'Enable GPS';
-                    showToast('GPS disabled');
+                    gpsBtn.classList.remove("active");
+                    gpsBtn.title = "Enable GPS";
+                    showToast("GPS disabled");
                 } catch (err) {
-                    showToast('Failed: ' + err.message, true);
+                    showToast("Failed: " + err.message, true);
                 }
             } else {
                 try {
-                    const result = await api.sendCommand(deviceId, 'enable_gps', {});
+                    const result = await api.sendCommand(deviceId, "enable_gps", {});
                     const data = result.data || result;
                     if (data.settingsOpened) {
-                        api.confirmedAction(deviceId, 'enable_gps', {}, 'Enable GPS', {
-                            skipHome: true,
-                            skipLock: false,
-                            actionDelay: 500,
-                            onDone: () => {
-                                gpsEnabled = true;
-                                gpsBtn.classList.add('active');
-                                showToast('GPS enabled ✓', false, true);
-                                setTimeout(() => fetchLocation(), 1500);
-                            }
-                        }).catch(() => { });
+                        api
+                            .confirmedAction(deviceId, "enable_gps", {}, "Enable GPS", {
+                                skipHome: true,
+                                skipLock: false,
+                                actionDelay: 500,
+                                onDone: () => {
+                                    gpsEnabled = true;
+                                    gpsBtn.classList.add("active");
+                                    showToast("GPS enabled ✓", false, true);
+                                    setTimeout(() => fetchLocation(), 1500);
+                                },
+                            })
+                            .catch(() => { });
                     } else {
                         gpsEnabled = true;
-                        gpsBtn.classList.add('active');
-                        gpsBtn.title = 'GPS Enabled';
-                        showToast('GPS enabled ✓', false, true);
+                        gpsBtn.classList.add("active");
+                        gpsBtn.title = "GPS Enabled";
+                        showToast("GPS enabled ✓", false, true);
                         fetchLocation();
                     }
                 } catch (err) {
-                    showToast('Failed: ' + err.message, true);
+                    showToast("Failed: " + err.message, true);
                 }
             }
         }
 
         // ===== FETCH LOCATION =====
         async function fetchLocation() {
-            const btn = document.getElementById('btn-refresh');
-            const overlay = document.getElementById('init-overlay');
+            const btn = document.getElementById("btn-refresh");
+            const overlay = document.getElementById("init-overlay");
 
-            btn.classList.add('loading');
+            btn.classList.add("loading");
 
             try {
-                const result = await api.sendCommand(deviceId, 'get_location', {});
+                const result = await api.sendCommand(deviceId, "get_location", {});
                 const loc = result.data || result;
 
                 if (loc.latitude !== undefined) {
                     updateMap(loc);
                     updateStats(loc);
                     addHistory(loc);
-                    overlay.classList.add('hidden');
-                    document.getElementById('gps-overlay').classList.remove('show');
+                    overlay.classList.add("hidden");
+                    document.getElementById("gps-overlay").classList.remove("show");
                     gpsEnabled = true;
-                    document.getElementById('btn-gps').classList.add('active');
-                    showToast(`Updated • ${loc.provider || 'GPS'} • ±${(loc.accuracy || 0).toFixed(0)}m`, false, true);
-                    announce(`Location updated. Latitude ${loc.latitude.toFixed(4)}, Longitude ${loc.longitude.toFixed(4)}`);
+                    document.getElementById("btn-gps").classList.add("active");
+                    showToast(
+                        `Updated • ${loc.provider || "GPS"} • ±${(loc.accuracy || 0).toFixed(0)}m`,
+                        false,
+                        true,
+                    );
+                    announce(
+                        `Location updated. Latitude ${loc.latitude.toFixed(4)}, Longitude ${loc.longitude.toFixed(4)}`,
+                    );
                 } else {
                     // Location service is off — show overlay and OFF status
-                    overlay.classList.add('hidden');
-                    document.getElementById('gps-overlay').classList.add('show');
+                    overlay.classList.add("hidden");
+                    document.getElementById("gps-overlay").classList.add("show");
                     showLocationOff();
-                    showToast('GPS is OFF on the device', true);
-                    announce('Failed to get location. GPS is disabled on device.');
+                    showToast("GPS is OFF on the device", true);
+                    announce("Failed to get location. GPS is disabled on device.");
                 }
             } catch (err) {
-                const msg = (err.message || '').toLowerCase();
-                overlay.classList.add('hidden');
-                if (msg.includes('location') || msg.includes('gps') || msg.includes('provider') || msg.includes('disabled')) {
-                    document.getElementById('gps-overlay').classList.add('show');
+                const msg = (err.message || "").toLowerCase();
+                overlay.classList.add("hidden");
+                if (
+                    msg.includes("location") ||
+                    msg.includes("gps") ||
+                    msg.includes("provider") ||
+                    msg.includes("disabled")
+                ) {
+                    document.getElementById("gps-overlay").classList.add("show");
                     showLocationOff();
                 } else {
                     showToast(`Error: ${err.message}`, true);
                 }
                 announce(`Location error: ${err.message}`);
             } finally {
-                btn.classList.remove('loading');
+                btn.classList.remove("loading");
             }
         }
 
@@ -901,7 +1104,7 @@
             currentLng = lng;
 
             // Enable Google Maps button
-            document.getElementById('btn-gmaps').classList.remove('disabled');
+            document.getElementById("btn-gmaps").classList.remove("disabled");
 
             // Remove old layers
             if (marker) map.removeLayer(marker);
@@ -915,7 +1118,7 @@
                     <span style="color:#3a5a3a;">LAT:</span> <span style="color:#00ff41;">${lat.toFixed(6)}</span><br>
                     <span style="color:#3a5a3a;">LNG:</span> <span style="color:#00ff41;">${lng.toFixed(6)}</span><br>
                     <span style="color:#3a5a3a;">ACC:</span> <span style="color:#00aaff;">±${acc.toFixed(0)}m</span><br>
-                    <span style="color:#3a5a3a;">SRC:</span> <span style="color:#ffaa00;">${loc.provider || '--'}</span><br>
+                    <span style="color:#3a5a3a;">SRC:</span> <span style="color:#ffaa00;">${loc.provider || "--"}</span><br>
                     <span style="color:#3a5a3a;">TIME:</span> ${new Date().toLocaleTimeString()}<br>
                     <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank"
                        style="color:#00aaff; text-decoration:none; font-size:11px; margin-top:4px; display:inline-block;">
@@ -928,12 +1131,12 @@
             if (acc > 0 && acc < 5000) {
                 accuracyCircle = L.circle([lat, lng], {
                     radius: acc,
-                    color: '#00ff41',
-                    fillColor: '#00ff41',
+                    color: "#00ff41",
+                    fillColor: "#00ff41",
                     fillOpacity: 0.05,
                     weight: 1.5,
                     opacity: 0.2,
-                    dashArray: '6 4'
+                    dashArray: "6 4",
                 }).addTo(map);
             }
 
@@ -942,10 +1145,10 @@
             if (pathLine) map.removeLayer(pathLine);
             if (pathCoords.length > 1) {
                 pathLine = L.polyline(pathCoords, {
-                    color: '#00aaff',
+                    color: "#00aaff",
                     weight: 2,
                     opacity: 0.4,
-                    dashArray: '8 5'
+                    dashArray: "8 5",
                 }).addTo(map);
             }
 
@@ -954,28 +1157,40 @@
 
         // ===== UPDATE STATS =====
         function updateStats(loc) {
-            document.getElementById('val-lat').textContent = (loc.latitude || 0).toFixed(6);
-            document.getElementById('val-lat').style.color = '#00e676';
-            document.getElementById('val-lng').textContent = (loc.longitude || 0).toFixed(6);
-            document.getElementById('val-lng').style.color = '#00e676';
-            document.getElementById('val-acc').textContent = loc.accuracy ? `±${loc.accuracy.toFixed(0)}m` : '--';
-            document.getElementById('val-alt').textContent = loc.altitude ? `${loc.altitude.toFixed(1)}m` : '--';
-            document.getElementById('val-spd').textContent = loc.speed ? `${(loc.speed * 3.6).toFixed(1)}km/h` : '--';
-            document.getElementById('val-src').textContent = (loc.provider || '--').toUpperCase();
+            document.getElementById("val-lat").textContent = (
+                loc.latitude || 0
+            ).toFixed(6);
+            document.getElementById("val-lat").style.color = "#00e676";
+            document.getElementById("val-lng").textContent = (
+                loc.longitude || 0
+            ).toFixed(6);
+            document.getElementById("val-lng").style.color = "#00e676";
+            document.getElementById("val-acc").textContent = loc.accuracy
+                ? `±${loc.accuracy.toFixed(0)}m`
+                : "--";
+            document.getElementById("val-alt").textContent = loc.altitude
+                ? `${loc.altitude.toFixed(1)}m`
+                : "--";
+            document.getElementById("val-spd").textContent = loc.speed
+                ? `${(loc.speed * 3.6).toFixed(1)}km/h`
+                : "--";
+            document.getElementById("val-src").textContent = (
+                loc.provider || "--"
+            ).toUpperCase();
         }
 
         // ===== SHOW LOCATION OFF STATUS =====
         function showLocationOff() {
-            document.getElementById('val-lat').textContent = 'OFF';
-            document.getElementById('val-lat').style.color = '#ff5252';
-            document.getElementById('val-lng').textContent = 'OFF';
-            document.getElementById('val-lng').style.color = '#ff5252';
-            document.getElementById('val-acc').textContent = '--';
-            document.getElementById('val-alt').textContent = '--';
-            document.getElementById('val-spd').textContent = '--';
-            document.getElementById('val-src').textContent = 'OFF';
+            document.getElementById("val-lat").textContent = "OFF";
+            document.getElementById("val-lat").style.color = "#ff5252";
+            document.getElementById("val-lng").textContent = "OFF";
+            document.getElementById("val-lng").style.color = "#ff5252";
+            document.getElementById("val-acc").textContent = "--";
+            document.getElementById("val-alt").textContent = "--";
+            document.getElementById("val-spd").textContent = "--";
+            document.getElementById("val-src").textContent = "OFF";
             gpsEnabled = false;
-            document.getElementById('btn-gps').classList.remove('active');
+            document.getElementById("btn-gps").classList.remove("active");
         }
 
         // ===== HISTORY =====
@@ -984,15 +1199,15 @@
                 lat: loc.latitude,
                 lng: loc.longitude,
                 time: new Date().toLocaleTimeString(),
-                acc: loc.accuracy
+                acc: loc.accuracy,
             });
             if (locationHistory.length > 100) locationHistory.pop();
             renderHistory();
 
             // Auto-cache to server (fire & forget)
-            fetch('/api/device/' + deviceId + '/locations/cache', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            fetch("/api/device/" + deviceId + "/locations/cache", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     latitude: loc.latitude,
                     longitude: loc.longitude,
@@ -1005,14 +1220,18 @@
         }
 
         function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = locationHistory.map((h, i) => `
+            const list = document.getElementById("history-list");
+            list.innerHTML = locationHistory
+                .map(
+                    (h, i) => `
                 <div class="h-item" role="listitem" onclick="flyTo(${h.lat},${h.lng})" tabindex="0"
                      aria-label="Location at ${h.time}, ${h.lat.toFixed(4)} ${h.lng.toFixed(4)}">
                     <span class="h-time">${h.time}</span>
                     <span class="h-coords">${h.lat.toFixed(5)}, ${h.lng.toFixed(5)}</span>
                 </div>
-            `).join('');
+            `,
+                )
+                .join("");
         }
 
         function flyTo(lat, lng) {
@@ -1022,88 +1241,116 @@
         // ===== GOOGLE MAPS =====
         function openGoogleMaps() {
             if (currentLat !== null && currentLng !== null) {
-                window.open(`https://www.google.com/maps?q=${currentLat},${currentLng}`, '_blank');
-                announce('Opened location in Google Maps');
+                window.open(
+                    `https://www.google.com/maps?q=${currentLat},${currentLng}`,
+                    "_blank",
+                );
+                announce("Opened location in Google Maps");
             }
         }
 
         // ===== AUTO TRACK =====
         function toggleAutoTrack() {
-            const btn = document.getElementById('btn-auto');
+            const btn = document.getElementById("btn-auto");
             if (autoInterval) {
                 clearInterval(autoInterval);
                 autoInterval = null;
-                btn.classList.remove('active');
-                btn.innerHTML = '\u23F1';
-                btn.setAttribute('aria-label', 'Enable auto-tracking');
-                showToast('Auto-track stopped');
-                announce('Auto-tracking disabled');
+                btn.classList.remove("active");
+                btn.innerHTML =
+                    '<i data-lucide="timer" class="fab-ic" style="width:18px;height:18px;"></i>';
+                btn.setAttribute("aria-label", "Enable auto-tracking");
+                showToast("Auto-track stopped");
+                announce("Auto-tracking disabled");
+                lucide.createIcons();
             } else {
                 autoInterval = setInterval(fetchLocation, 10000);
-                btn.classList.add('active');
-                btn.innerHTML = '\u23F8';
-                btn.setAttribute('aria-label', 'Stop auto-tracking');
-                showToast('Auto-tracking every 10s', false, true);
-                announce('Auto-tracking enabled, refreshing every 10 seconds');
+                btn.classList.add("active");
+                btn.innerHTML =
+                    '<i data-lucide="pause" class="fab-ic" style="width:18px;height:18px;"></i>';
+                btn.setAttribute("aria-label", "Stop auto-tracking");
+                showToast("Auto-tracking every 10s", false, true);
+                announce("Auto-tracking enabled, refreshing every 10 seconds");
+                lucide.createIcons();
                 fetchLocation();
             }
         }
 
         // ===== TOAST =====
         function showToast(msg, isError = false, isSuccess = false) {
-            const toast = document.getElementById('toast');
+            const toast = document.getElementById("toast");
             toast.textContent = msg;
-            toast.className = 'toast show' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
-            setTimeout(() => { toast.className = 'toast'; }, 3000);
+            toast.className =
+                "toast show" +
+                (isError ? " error" : "") +
+                (isSuccess ? " success" : "");
+            setTimeout(() => {
+                toast.className = "toast";
+            }, 3000);
         }
 
         // ===== SCREEN READER =====
         function announce(text) {
-            const el = document.getElementById('sr-announce');
-            el.textContent = '';
-            setTimeout(() => { el.textContent = text; }, 50);
+            const el = document.getElementById("sr-announce");
+            el.textContent = "";
+            setTimeout(() => {
+                el.textContent = text;
+            }, 50);
         }
 
         // ===== EVENT LISTENERS =====
-        document.getElementById('btn-refresh').addEventListener('click', fetchLocation);
-        document.getElementById('btn-auto').addEventListener('click', toggleAutoTrack);
-        document.getElementById('btn-gmaps').addEventListener('click', openGoogleMaps);
-        document.getElementById('btn-gps').addEventListener('click', toggleGPS);
+        document
+            .getElementById("btn-refresh")
+            .addEventListener("click", fetchLocation);
+        document
+            .getElementById("btn-auto")
+            .addEventListener("click", toggleAutoTrack);
+        document
+            .getElementById("btn-gmaps")
+            .addEventListener("click", openGoogleMaps);
+        document.getElementById("btn-gps").addEventListener("click", toggleGPS);
 
-        document.getElementById('btn-history').addEventListener('click', () => {
-            const panel = document.getElementById('history-panel');
-            const isOpen = panel.style.display === 'block';
-            panel.style.display = isOpen ? 'none' : 'block';
-            document.getElementById('btn-history').classList.toggle('active', !isOpen);
+        document.getElementById("btn-history").addEventListener("click", () => {
+            const panel = document.getElementById("history-panel");
+            const isOpen = panel.style.display === "block";
+            panel.style.display = isOpen ? "none" : "block";
+            document
+                .getElementById("btn-history")
+                .classList.toggle("active", !isOpen);
         });
 
-        document.getElementById('history-close').addEventListener('click', () => {
-            document.getElementById('history-panel').style.display = 'none';
-            document.getElementById('btn-history').classList.remove('active');
+        document.getElementById("history-close").addEventListener("click", () => {
+            document.getElementById("history-panel").style.display = "none";
+            document.getElementById("btn-history").classList.remove("active");
         });
 
         // Keyboard support
-        document.getElementById('history-list').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.target.click();
-                e.preventDefault();
-            }
-        });
+        document
+            .getElementById("history-list")
+            .addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.target.click();
+                    e.preventDefault();
+                }
+            });
 
         // ===== LOAD CACHED HISTORY ON STARTUP =====
         async function loadCachedHistory() {
             // Only load history panel — do NOT show cached coordinates on map/stats
             // The live fetchLocation() call will show actual location if GPS is on
             try {
-                const resp = await fetch('/api/device/' + deviceId + '/locations?limit=100');
+                const resp = await fetch(
+                    "/api/device/" + deviceId + "/locations?limit=100",
+                );
                 const json = await resp.json();
                 if (json.success && json.locations && json.locations.length > 0) {
                     json.locations.forEach(function (loc) {
                         locationHistory.push({
                             lat: loc.latitude,
                             lng: loc.longitude,
-                            time: loc.timestamp ? new Date(loc.timestamp).toLocaleTimeString() : '--',
-                            acc: loc.accuracy
+                            time: loc.timestamp
+                                ? new Date(loc.timestamp).toLocaleTimeString()
+                                : "--",
+                            acc: loc.accuracy,
                         });
                     });
                     renderHistory();

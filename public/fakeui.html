@@ -3,41 +3,157 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fake UI - Remote Access</title>
     <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
-        .fake-panel {
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            display: none;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hdr-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hdr-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── PANEL ── */
+        .panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 10px;
             padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .fake-panel h3 {
-            color: var(--accent);
-            font-size: 0.9rem;
             margin-bottom: 12px;
-            font-family: 'Courier New', monospace;
         }
 
-        /* Toggle Switch */
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        /* ── TOGGLE ── */
         .toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 0;
+            padding: 10px 0;
         }
 
         .toggle-label {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.85rem;
         }
 
         .toggle-sub {
-            color: var(--text-muted, #5a7a5a);
-            font-size: 0.72rem;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
             margin-top: 2px;
         }
 
@@ -87,63 +203,48 @@
             box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
         }
 
-        /* URL Input */
-        .url-input {
+        /* ── INPUT ── */
+        .text-input {
             width: 100%;
             padding: 10px 14px;
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 8px;
             color: var(--text-primary);
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
+            font-family: var(--font-display);
+            font-size: 0.8rem;
             box-sizing: border-box;
             transition: border-color 0.2s;
-        }
-
-        .url-input:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 6px rgba(0, 255, 65, 0.15);
         }
 
-        .url-input::placeholder {
-            color: var(--text-muted, #3a5a3a);
+        .text-input:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 6px rgba(0, 255, 65, 0.1);
         }
 
-        .label-input {
-            width: 100%;
-            padding: 10px 14px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text-primary);
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            margin-top: 10px;
+        .text-input::placeholder {
+            color: var(--text-muted);
         }
 
-        .label-input:focus {
-            outline: none;
-            border-color: var(--accent);
+        .input-hint {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 6px;
         }
 
-        .label-input::placeholder {
-            color: var(--text-muted, #3a5a3a);
-        }
-
-        /* Icon Grid */
+        /* ── ICON GRID ── */
         .icon-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
         }
 
         .icon-card {
             background: var(--bg-panel);
             border: 2px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 14px 10px;
             text-align: center;
             cursor: pointer;
@@ -151,78 +252,58 @@
         }
 
         .icon-card:hover {
-            border-color: rgba(0, 255, 65, 0.3);
-            background: rgba(0, 255, 65, 0.04);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.03);
         }
 
         .icon-card.selected {
             border-color: var(--accent);
-            background: rgba(0, 255, 65, 0.08);
-            box-shadow: 0 0 12px rgba(0, 255, 65, 0.15);
+            background: rgba(0, 255, 65, 0.06);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.1);
         }
 
         .icon-preview {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
             margin: 0 auto 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
         }
 
         .icon-name {
-            color: var(--text-primary);
-            font-size: 0.75rem;
-            font-family: 'Courier New', monospace;
-        }
-
-        /* Status */
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 0.78rem;
-            font-family: 'Courier New', monospace;
-        }
-
-        .status-key {
-            color: var(--text-muted, #5a7a5a);
-        }
-
-        .status-val {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
             color: var(--text-primary);
         }
 
-        .status-val.on {
-            color: var(--accent);
-        }
-
-        .status-val.off {
-            color: #ff5252;
-        }
-
-        /* Apply Button */
+        /* ── APPLY BUTTON ── */
         .btn-apply {
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             padding: 14px;
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid var(--accent);
+            background: rgba(0, 255, 65, 0.08);
+            border: 1px solid rgba(0, 255, 65, 0.25);
             color: var(--accent);
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
             letter-spacing: 1px;
-            margin-top: 8px;
+            margin-bottom: 12px;
         }
 
         .btn-apply:hover {
-            background: rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.12);
         }
 
         .btn-apply:disabled {
@@ -235,37 +316,273 @@
             pointer-events: none;
         }
 
-        .secret-hint {
-            color: var(--text-muted, #3a5a3a);
+        /* ── STATUS ── */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-key {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-val {
+            font-family: var(--font-display);
             font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .status-val.on {
+            color: var(--accent);
+        }
+
+        .status-val.off {
+            color: var(--danger);
+        }
+
+        .secret-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.6rem;
             text-align: center;
             margin-top: 12px;
-            font-family: 'Courier New', monospace;
             opacity: 0.6;
         }
 
-        @media (max-width: 480px) {
-            .icon-grid {
-                grid-template-columns: repeat(2, 1fr);
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
             }
 
-            .container {
-                padding: 12px;
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pg-sub {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hdr-btn .lbl {
+                display: none;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+
+            .disc {
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <a href="index.html" class="back-link">&lt;-- Back to Dashboard</a>
-        <div class="header-row">
-            <h1>&#x1F3AD; Fake UI</h1>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="layout-template" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Fake</span> UI</div>
+                    <div class="pg-sub">// app disguise configurator</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <a href="index.html" class="hdr-btn">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Dashboard</span>
+                </a>
+            </div>
         </div>
 
-        <!-- Toggle -->
-        <div class="fake-panel">
-            <h3>&#x26A1; DISGUISE MODE</h3>
+        <!-- TOGGLE -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="zap" style="width:14px;height:14px;"></i> Disguise Mode
+            </div>
             <div class="toggle-row">
                 <div>
                     <div class="toggle-label">Enable Fake UI</div>
@@ -279,27 +596,35 @@
         </div>
 
         <!-- URL -->
-        <div class="fake-panel">
-            <h3>&#x1F310; FAKE UI URL</h3>
-            <input type="text" class="url-input" id="fake-url" placeholder="https://www.example.com"
-                autocomplete="off" />
-            <div class="toggle-sub" style="margin-top:6px">Enter any URL — this page will load when the app is opened
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="globe" style="width:14px;height:14px;"></i> Fake UI URL
             </div>
+            <input type="text" class="text-input" id="fake-url" placeholder="https://www.example.com"
+                autocomplete="off" />
+            <div class="input-hint">Enter any URL — this page will load when the app is opened</div>
         </div>
 
-        <!-- Icon Picker -->
-        <div class="fake-panel">
-            <h3>&#x1F3A8; LAUNCHER DISGUISE</h3>
+        <!-- ICON PICKER -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="palette" style="width:14px;height:14px;"></i> Launcher Disguise
+            </div>
             <div class="icon-grid" id="icon-grid"></div>
-            <div class="toggle-sub" style="margin-top:8px">Icon & app name change together (Android limitation)</div>
+            <div class="input-hint" style="margin-top:8px">Icon & app name change together (Android limitation)</div>
         </div>
 
-        <!-- Apply -->
-        <button class="btn-apply" id="apply-btn" onclick="applySettings()">&#x1F680; APPLY DISGUISE</button>
+        <!-- APPLY -->
+        <button class="btn-apply" id="apply-btn" onclick="applySettings()">
+            <i data-lucide="rocket" style="width:16px;height:16px;"></i>
+            Apply Disguise
+        </button>
 
-        <!-- Status -->
-        <div class="fake-panel" style="margin-top:16px">
-            <h3>&#x1F4CA; CURRENT STATUS</h3>
+        <!-- STATUS -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> Current Status
+            </div>
             <div id="status-container">
                 <div class="status-row">
                     <span class="status-key">Status</span>
@@ -320,12 +645,34 @@
             </div>
         </div>
 
-        <div class="secret-hint">&#x1F512; Fake UI can ONLY be disabled from this dashboard</div>
+        <div class="secret-hint">
+            <i data-lucide="lock" style="width:12px;height:12px;"></i>
+            Fake UI can ONLY be disabled from this dashboard
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
     </div>
 
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
     <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
     <script>
+        lucide.createIcons();
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
         let selectedTheme = 'calculator';
 
         const THEMES = [
@@ -372,7 +719,6 @@
                     });
                 }
 
-                // Update status display
                 var stEnabled = document.getElementById('st-enabled');
                 stEnabled.textContent = data.enabled ? 'ACTIVE' : 'DISABLED';
                 stEnabled.className = 'status-val ' + (data.enabled ? 'on' : 'off');
@@ -398,7 +744,8 @@
             }
 
             btn.classList.add('saving');
-            btn.textContent = '⏳ APPLYING...';
+            btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;"></i> Applying...';
+            lucide.createIcons();
 
             try {
                 await api.sendCommand(deviceId, 'fake_ui_set', {
@@ -413,7 +760,8 @@
                 api.showToast('Failed: ' + e.message, 'error');
             } finally {
                 btn.classList.remove('saving');
-                btn.textContent = '🚀 APPLY DISGUISE';
+                btn.innerHTML = '<i data-lucide="rocket" style="width:16px;height:16px;"></i> Apply Disguise';
+                lucide.createIcons();
             }
         }
 
@@ -421,24 +769,6 @@
         buildIconGrid();
         loadStatus();
     </script>
-
-    <!-- Disclaimer -->
-    <div class="container">
-        <div class="disclaimer">
-            <h4>&#x26A0;&#xFE0F; Disclaimer</h4>
-            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
-                manage their own devices. Installing or using this application on a device without the owner's explicit
-                consent is illegal and unethical. The developers assume no liability for misuse. By using this
-                application, you agree that you are solely responsible for how it is used.</p>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p class="footer-created">Created by</p>
-        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="footer-brand">thiyo-de</a>
-        <p class="footer-copy">&copy; 2025 All Rights Reserved</p>
-    </footer>
 </body>
 
 </html>

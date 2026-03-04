@@ -21,9 +21,9 @@
         }
 
         .wrap {
-            max-width: 440px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px 20px;
+            padding: 20px 24px;
             animation: fadeInUp 0.4s ease-out;
         }
 
@@ -115,6 +115,11 @@
         }
 
         /* ── STATUS BAR ── */
+        .dialer-content {
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
         .status-bar {
             display: flex;
             align-items: center;
@@ -225,6 +230,7 @@
             outline: none;
             caret-color: var(--accent);
             -webkit-appearance: none;
+            appearance: none;
         }
 
         .number-input::placeholder {
@@ -525,58 +531,62 @@
                 <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back
             </a>
         </div>
+        <!-- DIALER CONTENT -->
+        <div class="dialer-content">
 
-        <!-- STATUS BAR -->
-        <div class="status-bar" id="call-status">
-            <span class="status-dot"></span>
-            <i data-lucide="phone-off" style="width:13px;height:13px;"></i>
-            Idle — No Active Call
-        </div>
+            <!-- STATUS BAR -->
+            <div class="status-bar" id="call-status">
+                <span class="status-dot"></span>
+                <i data-lucide="phone-off" style="width:13px;height:13px;"></i>
+                Idle — No Active Call
+            </div>
 
-        <!-- NUMBER DISPLAY -->
-        <div class="number-display" id="number-display">
-            <input type="tel" class="number-input" id="number-input" placeholder="Enter number..." autocomplete="off">
-        </div>
+            <!-- NUMBER DISPLAY -->
+            <div class="number-display" id="number-display">
+                <input type="tel" class="number-input" id="number-input" placeholder="Enter number..."
+                    autocomplete="off">
+            </div>
 
-        <!-- DIALPAD -->
-        <div class="dialpad">
-            <button class="dialpad-btn" onclick="addDigit('1')">1</button>
-            <button class="dialpad-btn" onclick="addDigit('2')">2<span class="sub">ABC</span></button>
-            <button class="dialpad-btn" onclick="addDigit('3')">3<span class="sub">DEF</span></button>
-            <button class="dialpad-btn" onclick="addDigit('4')">4<span class="sub">GHI</span></button>
-            <button class="dialpad-btn" onclick="addDigit('5')">5<span class="sub">JKL</span></button>
-            <button class="dialpad-btn" onclick="addDigit('6')">6<span class="sub">MNO</span></button>
-            <button class="dialpad-btn" onclick="addDigit('7')">7<span class="sub">PQRS</span></button>
-            <button class="dialpad-btn" onclick="addDigit('8')">8<span class="sub">TUV</span></button>
-            <button class="dialpad-btn" onclick="addDigit('9')">9<span class="sub">WXYZ</span></button>
-            <button class="dialpad-btn special" onclick="addDigit('*')">*</button>
-            <button class="dialpad-btn" onclick="addDigit('0')">0<span class="sub">+</span></button>
-            <button class="dialpad-btn special" onclick="addDigit('#')">#</button>
-        </div>
+            <!-- DIALPAD -->
+            <div class="dialpad">
+                <button class="dialpad-btn" onclick="addDigit('1')">1</button>
+                <button class="dialpad-btn" onclick="addDigit('2')">2<span class="sub">ABC</span></button>
+                <button class="dialpad-btn" onclick="addDigit('3')">3<span class="sub">DEF</span></button>
+                <button class="dialpad-btn" onclick="addDigit('4')">4<span class="sub">GHI</span></button>
+                <button class="dialpad-btn" onclick="addDigit('5')">5<span class="sub">JKL</span></button>
+                <button class="dialpad-btn" onclick="addDigit('6')">6<span class="sub">MNO</span></button>
+                <button class="dialpad-btn" onclick="addDigit('7')">7<span class="sub">PQRS</span></button>
+                <button class="dialpad-btn" onclick="addDigit('8')">8<span class="sub">TUV</span></button>
+                <button class="dialpad-btn" onclick="addDigit('9')">9<span class="sub">WXYZ</span></button>
+                <button class="dialpad-btn special" onclick="addDigit('*')">*</button>
+                <button class="dialpad-btn" onclick="addDigit('0')">0<span class="sub">+</span></button>
+                <button class="dialpad-btn special" onclick="addDigit('#')">#</button>
+            </div>
 
-        <!-- UTILITY ROW -->
-        <div class="utility-row">
-            <button class="dialpad-btn special" onclick="addDigit('+')">+</button>
-            <button class="dialpad-btn special" onclick="backspace()">
-                <i data-lucide="delete" style="width:18px;height:18px;"></i>
-            </button>
-        </div>
+            <!-- UTILITY ROW -->
+            <div class="utility-row">
+                <button class="dialpad-btn special" onclick="addDigit('+')">+</button>
+                <button class="dialpad-btn special" onclick="backspace()">
+                    <i data-lucide="delete" style="width:18px;height:18px;"></i>
+                </button>
+            </div>
 
-        <!-- CALL / END / CLEAR -->
-        <div class="action-buttons">
-            <button class="btn-action btn-call" onclick="dialCall()">
-                <i data-lucide="phone" style="width:16px;height:16px;"></i> Call
-            </button>
-        </div>
+            <!-- CALL / END / CLEAR -->
+            <div class="action-buttons">
+                <button class="btn-action btn-call" onclick="dialCall()">
+                    <i data-lucide="phone" style="width:16px;height:16px;"></i> Call
+                </button>
+            </div>
 
-        <div class="action-buttons">
-            <button class="btn-action btn-endcall" onclick="endCall()">
-                <i data-lucide="phone-off" style="width:14px;height:14px;"></i> End Call
-            </button>
-            <button class="btn-action btn-clear" onclick="clearNumber()">
-                <i data-lucide="x" style="width:14px;height:14px;"></i> Clear
-            </button>
-        </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-endcall" onclick="endCall()">
+                    <i data-lucide="phone-off" style="width:14px;height:14px;"></i> End Call
+                </button>
+                <button class="btn-action btn-clear" onclick="clearNumber()">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i> Clear
+                </button>
+            </div>
+        </div> <!-- /dialer-content -->
 
         <!-- DISCLAIMER -->
         <div class="disc">

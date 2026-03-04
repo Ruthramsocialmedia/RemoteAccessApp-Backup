@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -12,19 +12,14 @@
         :root {
             --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --sb-w: 300px;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
+        /* ===== LAYOUT OVERRIDES ===== */
         body {
             overflow: hidden;
             padding: 0;
             margin: 0;
             height: 100vh;
-            font-family: var(--font-display) !important;
         }
 
         body::before {
@@ -44,15 +39,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #050a0e;
+            background: #000;
             position: relative;
             overflow: hidden;
-            user-select: none;
             background-image:
-                radial-gradient(ellipse at center, rgba(0, 255, 65, 0.03) 0%, transparent 70%),
-                linear-gradient(rgba(0, 255, 65, 0.012) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 65, 0.012) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
+                radial-gradient(ellipse at center, rgba(0, 255, 65, 0.04) 0%, transparent 70%),
+                linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            user-select: none;
         }
 
         .screen-wrapper {
@@ -60,16 +55,19 @@
             display: inline-block;
             max-width: 100%;
             max-height: 100%;
-            border: 1px solid rgba(0, 255, 65, 0.1);
-            box-shadow: 0 0 60px rgba(0, 0, 0, 0.95), 0 0 100px rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            box-shadow:
+                0 0 40px rgba(0, 0, 0, 0.9),
+                0 0 80px rgba(0, 0, 0, 0.4),
+                inset 0 0 30px rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
             overflow: hidden;
         }
 
         #screen-display {
             max-width: 100%;
             max-height: calc(100vh - 20px);
-            border-radius: 10px;
+            border-radius: 6px;
             display: none;
             cursor: crosshair;
             image-rendering: auto;
@@ -79,52 +77,45 @@
         .placeholder {
             text-align: center;
             color: var(--text-secondary);
-            border: 1px dashed rgba(0, 255, 65, 0.12);
-            padding: 52px 40px;
-            border-radius: 16px;
-            background: rgba(10, 14, 20, 0.85);
-            max-width: 400px;
-            backdrop-filter: blur(16px);
+            border: 1px dashed var(--border);
+            padding: 40px 30px;
+            border-radius: 12px;
+            background: rgba(13, 17, 23, 0.7);
+            max-width: 380px;
+            backdrop-filter: blur(8px);
         }
 
         .placeholder .ph-icon {
-            margin-bottom: 18px;
-            display: flex;
-            justify-content: center;
-            opacity: 0.35;
-            color: var(--accent);
-            animation: pulse-icon 2.5s ease-in-out infinite;
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.5;
+            animation: pulse-icon 2s ease-in-out infinite;
         }
 
         @keyframes pulse-icon {
 
             0%,
             100% {
-                opacity: 0.25;
+                opacity: 0.4;
                 transform: scale(1);
             }
 
             50% {
-                opacity: 0.55;
-                transform: scale(1.06);
+                opacity: 0.7;
+                transform: scale(1.05);
             }
         }
 
         .placeholder h2 {
-            font-family: var(--font-display);
             color: var(--text-primary);
-            margin: 0 0 8px;
-            font-size: 1.15rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-size: 1.1rem;
         }
 
         .placeholder p {
-            font-family: var(--font-display);
-            font-size: 0.78rem;
-            font-weight: 400;
-            line-height: 1.6;
-            margin: 0;
+            font-size: 0.8rem;
+            line-height: 1.5;
         }
 
         /* ===== CURSOR OVERLAY ===== */
@@ -175,7 +166,7 @@
         .cursor-line-h,
         .cursor-line-v {
             position: absolute;
-            background: rgba(0, 255, 65, 0.08);
+            background: rgba(0, 255, 65, 0.12);
         }
 
         .cursor-line-h {
@@ -205,24 +196,26 @@
             bottom: -20px;
             left: 50%;
             transform: translateX(-50%);
-            font-family: var(--font-display);
             font-size: 9px;
-            font-weight: 400;
             color: rgba(0, 255, 65, 0.6);
             white-space: nowrap;
             letter-spacing: 0.5px;
         }
 
-        /* ===== LOCK / COOLDOWN ===== */
+        /* ===== COOLDOWN OVERLAY ===== */
+        /* ===== DASHBOARD LOCK OVERLAY ===== */
         .lock-overlay {
             position: absolute;
-            inset: 0;
-            background: rgba(255, 0, 0, 0.1);
-            border: 2px solid rgba(255, 0, 0, 0.35);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid rgba(255, 0, 0, 0.5);
             pointer-events: none;
             z-index: 50;
             display: none;
-            border-radius: 8px;
+            border-radius: 4px;
         }
 
         .lock-overlay.active {
@@ -232,30 +225,29 @@
         }
 
         .lock-badge {
-            margin-top: 14px;
-            padding: 5px 16px;
-            background: rgba(255, 0, 0, 0.65);
+            margin-top: 12px;
+            padding: 4px 14px;
+            background: rgba(255, 0, 0, 0.7);
             color: #fff;
-            font-family: var(--font-display);
-            font-size: 0.65rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: bold;
             letter-spacing: 2px;
-            border-radius: 6px;
+            border-radius: 4px;
             text-transform: uppercase;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .cooldown-overlay {
             position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.08);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.12);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.15s;
             z-index: 5;
-            border-radius: 10px;
+            border-radius: 6px;
         }
 
         .cooldown-overlay.active {
@@ -265,26 +257,23 @@
         /* ===== TOUCH HINT ===== */
         .touch-hint {
             position: absolute;
-            bottom: 14px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(5, 10, 14, 0.9);
-            color: var(--text-muted);
-            padding: 7px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: var(--text-secondary);
+            padding: 6px 16px;
             border-radius: 20px;
-            font-family: var(--font-display);
-            font-size: 0.65rem;
-            font-weight: 400;
+            font-size: 0.7rem;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s;
             z-index: 15;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
             white-space: nowrap;
             max-width: 90%;
             overflow: hidden;
             text-overflow: ellipsis;
-            backdrop-filter: blur(8px);
         }
 
         .touch-hint.visible {
@@ -297,19 +286,17 @@
             top: 16px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(5, 10, 14, 0.92);
-            border: 1px solid rgba(0, 255, 65, 0.25);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid var(--accent);
             color: var(--accent);
-            padding: 6px 20px;
+            padding: 6px 18px;
             border-radius: 20px;
-            font-family: var(--font-display);
-            font-size: 0.75rem;
-            font-weight: 500;
+            font-size: 0.8rem;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.25s ease;
             z-index: 200;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(4px);
             letter-spacing: 0.5px;
         }
 
@@ -317,6 +304,7 @@
             opacity: 1;
         }
 
+        /* ===== TAP RIPPLE ===== */
         @keyframes tapRipple {
             0% {
                 transform: scale(0.5);
@@ -331,21 +319,21 @@
 
         /* ===== SIDEBAR ===== */
         .sidebar {
-            width: var(--sb-w);
-            min-width: var(--sb-w);
-            background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(10, 14, 20, 0.99));
-            border-left: 1px solid rgba(0, 255, 65, 0.08);
+            width: 300px;
+            min-width: 300px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             overflow-y: auto;
             overflow-x: hidden;
             position: fixed;
             top: 0;
-            right: calc(var(--sb-w) * -1 - 10px);
+            right: -310px;
             height: 100vh;
             z-index: 1000;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
+            transition: right 0.3s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.open {
@@ -353,7 +341,7 @@
         }
 
         .sidebar::-webkit-scrollbar {
-            width: 3px;
+            width: 4px;
         }
 
         .sidebar::-webkit-scrollbar-track {
@@ -361,50 +349,42 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.06);
+            background: var(--border);
             border-radius: 2px;
         }
 
         .sidebar-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(13, 17, 23, 0.95);
+            background: var(--bg-panel);
             position: sticky;
             top: 0;
             z-index: 10;
-            backdrop-filter: blur(12px);
         }
 
         .sidebar-header h1 {
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            font-weight: 700;
+            font-size: 0.95rem;
             margin: 0;
             color: var(--accent);
-            letter-spacing: 2.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: 2px;
         }
 
         .status-indicator {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-family: var(--font-display);
-            font-size: 0.65rem;
-            font-weight: 400;
+            font-size: 0.7rem;
             color: var(--text-muted);
         }
 
         .status-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #444;
+            background: #6e7681;
             transition: all 0.3s;
         }
 
@@ -422,14 +402,14 @@
             }
 
             50% {
-                box-shadow: 0 0 14px rgba(0, 255, 65, 0.4);
+                box-shadow: 0 0 12px rgba(0, 255, 65, 0.4);
             }
         }
 
         /* ===== CONTROL SECTIONS ===== */
         .ctrl-section {
-            padding: 18px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
         }
 
         .ctrl-section:last-child {
@@ -437,16 +417,14 @@
         }
 
         .ctrl-label {
-            font-family: var(--font-display);
-            font-size: 0.55rem;
-            font-weight: 600;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.25);
-            margin-bottom: 14px;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
         }
 
         /* ===== STREAM BUTTONS ===== */
@@ -457,107 +435,97 @@
         }
 
         .s-btn {
-            padding: 11px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
             cursor: pointer;
-            font-family: var(--font-display);
             font-weight: 600;
-            font-size: 0.75rem;
-            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            transition: all 0.15s ease;
             text-align: center;
+            font-family: inherit;
             letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
         }
 
         .s-btn:active:not(:disabled) {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
 
         .s-btn:disabled {
-            opacity: 0.3;
+            opacity: 0.35;
             cursor: not-allowed;
         }
 
         .s-btn.start {
-            background: rgba(0, 255, 65, 0.08);
+            background: rgba(0, 255, 65, 0.12);
             color: var(--accent);
-            border-color: rgba(0, 255, 65, 0.15);
+            border-color: rgba(0, 255, 65, 0.25);
         }
 
         .s-btn.start:hover:not(:disabled) {
-            background: rgba(0, 255, 65, 0.15);
-            border-color: rgba(0, 255, 65, 0.4);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            background: rgba(0, 255, 65, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
         }
 
         .s-btn.stop {
-            background: rgba(255, 51, 51, 0.06);
+            background: rgba(255, 51, 51, 0.1);
             color: var(--danger);
-            border-color: rgba(255, 51, 51, 0.12);
+            border-color: rgba(255, 51, 51, 0.2);
         }
 
         .s-btn.stop:hover:not(:disabled) {
-            background: rgba(255, 51, 51, 0.12);
-            border-color: rgba(255, 51, 51, 0.3);
-            box-shadow: 0 0 20px rgba(255, 51, 51, 0.08);
+            background: rgba(255, 51, 51, 0.2);
+            border-color: var(--danger);
+            box-shadow: 0 0 15px var(--danger-glow);
         }
 
         .res-info {
             display: none;
-            margin-top: 10px;
-            padding: 5px 10px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 6px;
-            font-family: var(--font-display);
-            font-size: 0.65rem;
-            font-weight: 400;
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.7rem;
             color: var(--text-muted);
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
         }
 
         /* ===== MODE TOGGLE ===== */
         .mode-toggle {
             display: flex;
             gap: 2px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
             padding: 3px;
-            margin-bottom: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
         }
 
         .mode-btn {
             flex: 1;
-            padding: 8px 8px;
+            padding: 7px 8px;
             border: none;
             background: transparent;
             color: var(--text-muted);
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-family: var(--font-display);
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.2s;
+            font-family: inherit;
             letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
         }
 
         .mode-btn.active {
             background: var(--accent);
             color: #000;
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .mode-btn:hover:not(.active) {
-            background: rgba(0, 255, 65, 0.06);
+            background: rgba(0, 255, 65, 0.08);
             color: var(--text-primary);
         }
 
@@ -565,11 +533,11 @@
         .dpad-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.18);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            border: 1px solid var(--border);
             max-width: 200px;
             margin: 0 auto;
         }
@@ -579,39 +547,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
-            background: rgba(13, 17, 23, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 1.1rem;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             color: var(--text-primary);
             cursor: pointer;
-            transition: all 0.12s;
-            font-family: var(--font-display);
+            transition: all 0.1s;
+            font-family: inherit;
             min-height: 44px;
         }
 
         .dpad-btn:hover {
-            border-color: rgba(0, 255, 65, 0.2);
-            background: rgba(0, 255, 65, 0.04);
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.05);
         }
 
         .dpad-btn:active {
-            transform: scale(0.9);
+            transform: scale(0.92);
             background: var(--accent);
             color: #000;
-            box-shadow: 0 0 14px var(--accent-glow);
+            box-shadow: 0 0 12px var(--accent-glow);
         }
 
         .dpad-btn.center-btn {
             background: var(--accent);
             color: #000;
-            font-weight: 700;
-            font-size: 0.8rem;
-            letter-spacing: 1.5px;
-            border-color: rgba(0, 255, 65, 0.3);
+            font-weight: bold;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            border-color: var(--accent);
         }
 
         .dpad-btn.center-btn:hover {
-            box-shadow: 0 0 20px var(--accent-glow);
+            box-shadow: 0 0 18px var(--accent-glow);
         }
 
         .dpad-btn.center-btn:active {
@@ -619,29 +588,28 @@
         }
 
         .dpad-empty {
+            /* Empty cells in D-pad grid */
             visibility: visible;
         }
 
         .dpad-btn.cooldown {
-            opacity: 0.3;
+            opacity: 0.4;
             pointer-events: none;
         }
 
-        /* ===== SPEED ===== */
+        /* ===== SPEED CONTROL ===== */
         .speed-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 14px;
-            font-family: var(--font-display);
-            font-size: 0.65rem;
-            font-weight: 400;
+            margin-top: 10px;
+            font-size: 0.7rem;
             color: var(--text-muted);
         }
 
         .speed-row input[type="range"] {
             flex: 1;
-            height: 3px;
+            height: 4px;
             accent-color: var(--accent);
             cursor: pointer;
         }
@@ -650,8 +618,7 @@
             color: var(--accent);
             min-width: 32px;
             text-align: right;
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.75rem;
         }
 
         /* ===== NAV BUTTONS ===== */
@@ -663,36 +630,31 @@
 
         .nav-btn {
             padding: 10px 8px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            background: rgba(13, 17, 23, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
             color: var(--text-primary);
             cursor: pointer;
-            font-family: var(--font-display);
-            font-size: 0.72rem;
-            font-weight: 500;
+            font-size: 0.78rem;
+            font-family: inherit;
             transition: all 0.15s;
             text-align: center;
             letter-spacing: 0.5px;
             min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
         }
 
         .nav-btn:hover {
-            border-color: rgba(0, 255, 65, 0.2);
-            background: rgba(0, 255, 65, 0.04);
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.05);
         }
 
         .nav-btn:active {
-            transform: scale(0.95);
-            background: rgba(0, 255, 65, 0.08);
+            transform: scale(0.96);
+            background: rgba(0, 255, 65, 0.1);
         }
 
         .nav-btn.cooldown {
-            opacity: 0.3;
+            opacity: 0.4;
             pointer-events: none;
         }
 
@@ -704,76 +666,69 @@
 
         .text-input-row input {
             flex: 1;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
             color: var(--text-primary);
-            font-family: var(--font-display);
-            font-size: 0.78rem;
-            font-weight: 400;
+            font-family: inherit;
+            font-size: 0.8rem;
             transition: border-color 0.2s;
         }
 
         .text-input-row input:focus {
             outline: none;
-            border-color: rgba(0, 255, 65, 0.4);
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.08);
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
         }
 
         .text-input-row input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+            color: var(--text-muted);
         }
 
         .text-input-row button {
-            padding: 10px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            background: rgba(13, 17, 23, 0.6);
+            padding: 9px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
             color: var(--accent);
             cursor: pointer;
-            font-family: var(--font-display);
-            font-size: 0.7rem;
+            font-family: inherit;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.15s;
             white-space: nowrap;
-            letter-spacing: 0.5px;
         }
 
         .text-input-row button:hover {
-            border-color: rgba(0, 255, 65, 0.2);
-            background: rgba(0, 255, 65, 0.06);
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.08);
         }
 
         .text-input-row button:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
         }
 
-        /* ===== TOOL BTN ===== */
+        /* ===== TOOL BUTTONS ===== */
         .tool-btn {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            background: rgba(13, 17, 23, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
             color: var(--text-primary);
             cursor: pointer;
-            font-family: var(--font-display);
-            font-size: 0.75rem;
-            font-weight: 500;
+            font-family: inherit;
+            font-size: 0.8rem;
             transition: all 0.15s;
             text-align: center;
-            margin-top: 8px;
+            margin-top: 6px;
             min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
         }
 
         .tool-btn:hover {
-            border-color: rgba(0, 255, 65, 0.2);
-            background: rgba(0, 255, 65, 0.04);
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.05);
         }
 
         .tool-btn:active {
@@ -782,19 +737,15 @@
 
         /* ===== BACK LINK ===== */
         .back-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 14px 16px;
+            display: block;
+            padding: 12px 16px;
+            text-align: center;
             color: var(--text-muted);
             text-decoration: none;
-            font-family: var(--font-display);
-            font-size: 0.7rem;
-            font-weight: 500;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
             transition: all 0.2s;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             margin-top: auto;
         }
 
@@ -803,12 +754,148 @@
             background: rgba(0, 255, 65, 0.03);
         }
 
-        /* â”€â”€ DISCLAIMER â”€â”€ */
+        /* ===== RESPONSIVE: TABLET ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+                min-width: 280px;
+            }
+
+            .dpad-grid {
+                max-width: 180px;
+            }
+        }
+
+        /* ===== RESPONSIVE: MOBILE ===== */
+        @media (max-width: 900px) {
+            .screen-area {
+                flex: 1;
+                width: 100%;
+            }
+
+            .sidebar {
+                width: 280px;
+                min-width: 280px;
+            }
+
+            .dpad-grid {
+                max-width: 170px;
+            }
+
+            .touch-hint {
+                font-size: 0.6rem;
+                bottom: 6px;
+            }
+        }
+
+        /* ===== SIDEBAR TOGGLE BUTTON (floating, when sidebar is closed) ===== */
+        .sidebar-toggle-btn {
+            display: flex;
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-panel);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            font-size: 1.2rem;
+            color: var(--accent);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .sidebar-toggle-btn:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .sidebar-toggle-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Hide when sidebar is open on desktop */
+        .sidebar-toggle-btn.hidden {
+            display: none;
+        }
+
+        /* ===== SIDEBAR CLOSE BUTTON (inside header) ===== */
+        .sidebar-close-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .sidebar-close-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* ===== SIDEBAR OVERLAY ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== MOBILE SIDEBAR TWEAKS ===== */
+        @media (max-width: 900px) {
+            .sidebar-header h1 {
+                font-size: 0.8rem;
+            }
+
+            .ctrl-section {
+                padding: 10px 12px;
+            }
+
+            .dpad-grid {
+                max-width: 150px;
+                gap: 4px;
+                padding: 6px;
+            }
+
+            .nav-grid {
+                gap: 4px;
+            }
+        }
+
+        /* ── DISCLAIMER ── */
         .disc {
-            padding: 14px 16px;
-            background: rgba(255, 170, 0, 0.02);
-            border: 1px solid rgba(255, 170, 0, 0.08);
-            border-radius: 10px;
+            padding: 12px 14px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 8px;
         }
 
         .disc h4 {
@@ -816,36 +903,35 @@
             align-items: center;
             gap: 6px;
             font-family: var(--font-display);
-            font-size: 0.58rem;
+            font-size: 0.65rem;
             font-weight: 500;
             color: var(--warning);
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            margin: 0 0 6px;
+            margin-bottom: 4px;
         }
 
         .disc p {
             font-family: var(--font-display);
-            font-size: 0.55rem;
+            font-size: 0.6rem;
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.2);
-            line-height: 1.7;
-            margin: 0;
+            color: var(--text-muted);
+            line-height: 1.6;
         }
 
-        /* â”€â”€ FOOTER â”€â”€ */
+        /* ── FOOTER ── */
         .ft {
             text-align: center;
-            padding: 22px 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 20px 16px;
+            border-top: 1px solid var(--border);
         }
 
         .ft .ft-label {
             font-family: var(--font-display);
-            font-size: 0.48rem;
+            font-size: 0.55rem;
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.18);
-            letter-spacing: 2.5px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 4px;
         }
@@ -853,7 +939,7 @@
         .ft .ft-brand {
             display: inline-block;
             font-family: var(--font-display);
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             letter-spacing: 3px;
             text-transform: lowercase;
@@ -863,146 +949,27 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.15));
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
         }
 
         .ft .ft-copy {
             font-family: var(--font-display);
-            font-size: 0.45rem;
+            font-size: 0.5rem;
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.12);
+            color: var(--text-muted);
             margin-top: 4px;
             letter-spacing: 1px;
-        }
-
-        /* ===== SIDEBAR TOGGLE / CLOSE ===== */
-        .sidebar-toggle-btn {
-            display: flex;
-            position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 1001;
-            width: 44px;
-            height: 44px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            background: rgba(13, 17, 23, 0.9);
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-            color: var(--accent);
-            transition: all 0.2s ease;
-            backdrop-filter: blur(8px);
-        }
-
-        .sidebar-toggle-btn:hover {
-            border-color: rgba(0, 255, 65, 0.3);
-            box-shadow: 0 0 14px var(--accent-glow);
-        }
-
-        .sidebar-toggle-btn:active {
-            transform: scale(0.9);
-        }
-
-        .sidebar-toggle-btn.hidden {
-            display: none;
-        }
-
-        .sidebar-close-btn {
-            width: 30px;
-            height: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 8px;
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-            padding: 0;
-            flex-shrink: 0;
-        }
-
-        .sidebar-close-btn:hover {
-            color: var(--accent);
-            border-color: rgba(0, 255, 65, 0.2);
-            background: rgba(0, 255, 65, 0.04);
-        }
-
-        .sidebar-close-btn:active {
-            transform: scale(0.88);
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.65);
-            z-index: 999;
-            backdrop-filter: blur(2px);
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 1024px) {
-            .sidebar {
-                --sb-w: 280px;
-            }
-
-            .dpad-grid {
-                max-width: 180px;
-            }
-        }
-
-        @media (max-width: 900px) {
-            .screen-area {
-                flex: 1;
-                width: 100%;
-            }
-
-            .sidebar {
-                --sb-w: 280px;
-            }
-
-            .dpad-grid {
-                max-width: 150px;
-                gap: 4px;
-                padding: 8px;
-            }
-
-            .touch-hint {
-                font-size: 0.58rem;
-                bottom: 8px;
-            }
-
-            .sidebar-header h1 {
-                font-size: 0.78rem;
-            }
-
-            .ctrl-section {
-                padding: 14px 16px;
-            }
-
-            .nav-grid {
-                gap: 4px;
-            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Sidebar Toggle -->
+    <!-- Sidebar Toggle Button (visible when sidebar is closed) -->
     <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="openSidebar()"><i data-lucide="menu"
             style="width:20px;height:20px;"></i></button>
 
-    <!-- Sidebar Overlay -->
+    <!-- Sidebar Overlay (mobile only) -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="app-container">
@@ -1012,11 +979,12 @@
             <div id="placeholder" class="placeholder">
                 <span class="ph-icon"><i data-lucide="monitor-smartphone" style="width:48px;height:48px;"></i></span>
                 <h2>Ready to Connect</h2>
-                <p>Click <strong style="color:var(--accent);">START</strong> to begin screen streaming.</p>
-                <p style="opacity: 0.4; margin-top: 6px; font-size: 0.68rem;">Ensure phone screen is ON</p>
+                <p>Click <strong>START</strong> to begin streaming.</p>
+                <p style="opacity: 0.5; margin-top: 4px;">Ensure phone screen is ON</p>
             </div>
             <div class="screen-wrapper" id="screen-wrapper">
                 <img id="screen-display" draggable="false" />
+                <!-- Cursor overlay -->
                 <div class="cursor-overlay" id="cursor-overlay">
                     <div class="cursor-line-h"></div>
                     <div class="cursor-line-v"></div>
@@ -1025,57 +993,68 @@
                     </div>
                 </div>
                 <div class="lock-overlay" id="lock-overlay"><span class="lock-badge"><i data-lucide="lock"
-                            style="width:11px;height:11px;"></i> Locked</span></div>
+                            style="width:12px;height:12px;"></i> Locked</span></div>
                 <div class="cooldown-overlay" id="cooldown-overlay"></div>
             </div>
             <div class="touch-hint visible" id="touch-hint">D-Pad scrolls &bull; Select confirms focused item &bull;
-                Swipe on screen</div>
+                Swipe on screen
+            </div>
         </div>
 
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h1><i data-lucide="gamepad-2" style="width:16px;height:16px;"></i> REMOTE</h1>
-                <button class="sidebar-close-btn" onclick="closeSidebar()" title="Close"><i data-lucide="x"
-                        style="width:14px;height:14px;"></i></button>
+                <h1><i data-lucide="gamepad-2" style="width:18px;height:18px;"></i> REMOTE</h1>
+                <button class="sidebar-close-btn" onclick="closeSidebar()" title="Close panel"><i data-lucide="x"
+                        style="width:16px;height:16px;"></i></button>
             </div>
 
-            <!-- Stream -->
+            <!-- Stream Control -->
             <div class="ctrl-section">
-                <div class="ctrl-label"><i data-lucide="radio" style="width:11px;height:11px;"></i> STREAM</div>
+                <div class="ctrl-label"><i data-lucide="radio" style="width:12px;height:12px;"></i> STREAM</div>
                 <div class="stream-btns">
                     <button class="s-btn start" id="btn-start"><i data-lucide="play"
-                            style="width:13px;height:13px;"></i> START</button>
+                            style="width:14px;height:14px;"></i> START</button>
                     <button class="s-btn stop" id="btn-stop" disabled><i data-lucide="square"
-                            style="width:13px;height:13px;"></i> STOP</button>
+                            style="width:14px;height:14px;"></i> STOP</button>
                 </div>
-                <div class="res-info" id="resolution-info"><span id="res-label">--</span></div>
+                <div class="res-info" id="resolution-info">
+                    <span id="res-label">--</span>
+                </div>
             </div>
 
-            <!-- Control -->
+            <!-- D-Pad Control -->
             <div class="ctrl-section">
-                <div class="ctrl-label"><i data-lucide="joystick" style="width:11px;height:11px;"></i> CONTROL</div>
+                <div class="ctrl-label"><i data-lucide="joystick" style="width:12px;height:12px;"></i> CONTROL</div>
+
+                <!-- Mode Toggle -->
                 <div class="mode-toggle">
                     <button class="mode-btn" id="mode-cursor" onclick="setMode('cursor')"><i data-lucide="crosshair"
-                            style="width:11px;height:11px;"></i> CURSOR</button>
+                            style="width:12px;height:12px;"></i>
+                        CURSOR</button>
                     <button class="mode-btn active" id="mode-gesture" onclick="setMode('gesture')"><i data-lucide="hand"
-                            style="width:11px;height:11px;"></i> SWIPE</button>
+                            style="width:12px;height:12px;"></i>
+                        SWIPE</button>
                 </div>
+
                 <div class="dpad-grid">
                     <div class="dpad-empty"></div>
                     <button class="dpad-btn action-btn" onclick="dpadAction('up')"><i data-lucide="chevron-up"
                             style="width:18px;height:18px;"></i></button>
                     <div class="dpad-empty"></div>
+
                     <button class="dpad-btn action-btn" onclick="dpadAction('left')"><i data-lucide="chevron-left"
                             style="width:18px;height:18px;"></i></button>
                     <button class="dpad-btn center-btn action-btn" onclick="selectAction()">OK</button>
                     <button class="dpad-btn action-btn" onclick="dpadAction('right')"><i data-lucide="chevron-right"
                             style="width:18px;height:18px;"></i></button>
+
                     <div class="dpad-empty"></div>
                     <button class="dpad-btn action-btn" onclick="dpadAction('down')"><i data-lucide="chevron-down"
                             style="width:18px;height:18px;"></i></button>
                     <div class="dpad-empty"></div>
                 </div>
+
                 <div class="speed-row">
                     <span>SPEED</span>
                     <input type="range" id="cursor-speed" min="10" max="100" value="40"
@@ -1086,37 +1065,40 @@
 
             <!-- Navigation -->
             <div class="ctrl-section">
-                <div class="ctrl-label"><i data-lucide="compass" style="width:11px;height:11px;"></i> NAVIGATION</div>
+                <div class="ctrl-label"><i data-lucide="compass" style="width:12px;height:12px;"></i> NAVIGATION</div>
                 <div class="nav-grid">
                     <button class="nav-btn action-btn" onclick="sendAction('key', 'BACK')"><i data-lucide="arrow-left"
-                            style="width:13px;height:13px;"></i> Back</button>
+                            style="width:14px;height:14px;"></i> Back</button>
                     <button class="nav-btn action-btn" onclick="sendAction('key', 'HOME')"><i data-lucide="home"
-                            style="width:13px;height:13px;"></i> Home</button>
+                            style="width:14px;height:14px;"></i> Home</button>
                     <button class="nav-btn action-btn" onclick="sendAction('key', 'RECENTS')"><i data-lucide="layers"
-                            style="width:13px;height:13px;"></i> Apps</button>
+                            style="width:14px;height:14px;"></i> Apps</button>
                     <button class="nav-btn action-btn" onclick="sendAction('key', 'NOTIFICATIONS')"><i
-                            data-lucide="bell" style="width:13px;height:13px;"></i> Notif</button>
+                            data-lucide="bell" style="width:14px;height:14px;"></i>
+                        Notif</button>
                 </div>
             </div>
 
             <!-- Text & Tools -->
             <div class="ctrl-section">
-                <div class="ctrl-label"><i data-lucide="keyboard" style="width:11px;height:11px;"></i> TEXT INPUT</div>
+                <div class="ctrl-label"><i data-lucide="keyboard" style="width:12px;height:12px;"></i> TEXT INPUT</div>
                 <div class="text-input-row">
                     <input type="text" id="TextInput" placeholder="Type text..." autocomplete="off">
                     <button class="action-btn" onclick="sendText()">SEND</button>
                 </div>
                 <button class="tool-btn" id="btn-screenshot"><i data-lucide="camera"
-                        style="width:13px;height:13px;"></i> Screenshot</button>
+                        style="width:14px;height:14px;"></i> Screenshot</button>
             </div>
 
             <!-- Disclaimer -->
             <div class="ctrl-section" style="border-bottom:none;">
                 <div class="disc">
-                    <h4><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Disclaimer</h4>
+                    <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
                     <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to
-                        remotely manage their own devices. Installing or using this on a device without the owner's
-                        explicit consent is illegal and unethical.</p>
+                        remotely
+                        manage their own devices. Installing or using this application on a device without the owner's
+                        explicit
+                        consent is illegal and unethical.</p>
                 </div>
             </div>
 
@@ -1127,10 +1109,11 @@
                 <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
             </footer>
 
-            <a href="index.html" class="back-link"><i data-lucide="arrow-left" style="width:11px;height:11px;"></i>
+            <a href="index.html" class="back-link"><i data-lucide="arrow-left" style="width:12px;height:12px;"></i>
                 DASHBOARD</a>
         </div>
     </div>
+
     <script src="/js/api.js"></script>
     <script src="/js/smart-ui.js"></script>
     <script src="/js/call-notification.js"></script>
@@ -1278,7 +1261,7 @@
             if (!isStreaming) return;
 
             if (controlMode === 'cursor') {
-                // Move cursor locally â€“ NO network call, instant
+                // Move cursor locally – NO network call, instant
                 switch (direction) {
                     case 'up': moveCursor(0, -cursorStep); break;
                     case 'down': moveCursor(0, cursorStep); break;
@@ -1287,7 +1270,7 @@
                 }
                 showActionIndicator(`\u{1F3AF} Cursor: ${Math.round(cursorX)}, ${Math.round(cursorY)}`);
             } else {
-                // Gesture mode â€“ send swipe to Android
+                // Gesture mode – send swipe to Android
                 sendAction('accessibility_swipe', { direction: direction });
             }
         }
@@ -1309,7 +1292,7 @@
             console.log(`[Select] Mode: ${controlMode}, cursorX: ${Math.round(cursorX)}, cursorY: ${Math.round(cursorY)}, actionInProgress: ${actionInProgress}`);
 
             if (controlMode === 'cursor') {
-                // Tap at cursor position â€“ sends accessibility_tap
+                // Tap at cursor position – sends accessibility_tap
                 const tapCoords = { x: Math.round(cursorX), y: Math.round(cursorY) };
                 console.log(`[Select/Cursor] Sending TAP at (${tapCoords.x}, ${tapCoords.y})`);
                 sendAction('tap', tapCoords);
@@ -1318,7 +1301,7 @@
                 cursorCrosshair.classList.add('tap-flash');
                 setTimeout(() => cursorCrosshair.classList.remove('tap-flash'), 300);
             } else {
-                // Gesture mode â€“ press Enter on focused element
+                // Gesture mode – press Enter on focused element
                 console.log('[Select/Gesture] Sending ENTER key');
                 sendAction('key', 'ENTER');
             }
@@ -1512,10 +1495,10 @@
                         imgDisplay.src = `data:image/jpeg;base64,${msg.data}`;
                         isStreaming = true;
 
-                        // Auto-detect: frames arrived while consent was pending â†’ user granted it manually
+                        // Auto-detect: frames arrived while consent was pending → user granted it manually
                         if (waitingForConsent) {
                             waitingForConsent = false;
-                            console.log('[Stream] Frames arrived during consent â€” auto-closing SmartUI');
+                            console.log('[Stream] Frames arrived during consent — auto-closing SmartUI');
                             if (typeof SmartUI !== 'undefined') SmartUI.close?.();
                             api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
                             btnStop.disabled = false;
@@ -1591,7 +1574,7 @@
                 }
 
                 if (data.status === 'started' || result.success) {
-                    // Stream started â€” consent already granted
+                    // Stream started — consent already granted
                     isStreaming = true;
                     btnStop.disabled = false;
                     btnStart.textContent = '\u25B6 START';
@@ -1604,10 +1587,10 @@
                 btnStart.textContent = '\u25B6 START';
 
                 if (e.message && e.message.includes('device_locked')) {
-                    api.showToast('Device is locked \uD83D\uDD12 â€” unlock it first', 'error');
+                    api.showToast('Device is locked \uD83D\uDD12 — unlock it first', 'error');
 
                 } else if (e.message && e.message.includes('waiting_for_consent')) {
-                    // Consent dialog showing â€” SmartUI handles lock/unlock automatically
+                    // Consent dialog showing — SmartUI handles lock/unlock automatically
                     waitingForConsent = true;
                     api.sendCommand(deviceId, 'touch_lock').catch(() => { });
                     await new Promise(r => setTimeout(r, 500));

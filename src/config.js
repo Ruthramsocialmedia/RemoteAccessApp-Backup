@@ -22,7 +22,15 @@ export const config = {
   // File upload settings
   upload: {
     maxFileSize: 100 * 1024 * 1024, // 100MB
-    allowedMimeTypes: ['*'], // Allow all file types
+    allowedMimeTypes: [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'video/mp4', 'video/webm', 'video/3gpp',
+      'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg',
+      'application/pdf', 'application/zip',
+      'application/vnd.android.package-archive', // APK
+      'application/octet-stream', // Generic binary
+      'text/plain',
+    ],
   },
 
   // Supabase database

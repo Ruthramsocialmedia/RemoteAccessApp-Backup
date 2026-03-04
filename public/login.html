@@ -232,6 +232,7 @@
             outline: none;
             transition: all 0.3s ease;
             -webkit-appearance: none;
+            appearance: none;
         }
 
         .input-wrap input:focus {
@@ -249,7 +250,9 @@
             color: rgba(255, 255, 255, 0.15);
             font-style: normal;
             font-family: var(--font-display);
-            font-weight: 400;
+            font-weight: lighter;
+            font-size: 0.90rem;
+            letter-spacing: 1px;
         }
 
         .login-btn {
@@ -268,6 +271,7 @@
             transition: all 0.3s ease;
             margin-top: 8px;
             -webkit-appearance: none;
+            appearance: none;
             min-height: 48px;
             display: flex;
             align-items: center;
@@ -411,6 +415,7 @@
             letter-spacing: 1px;
         }
 
+        /* ── Tablets Portrait ── */
         @media (max-width: 768px) {
             .login-wrapper {
                 padding: 24px 16px;
@@ -429,8 +434,55 @@
             .login-header h1 {
                 font-size: 1.2rem;
             }
+
+            .disc-wrap {
+                padding: 0 16px 16px;
+            }
         }
 
+        /* ── Phablets ── */
+        @media (max-width: 600px) {
+            .login-wrapper {
+                padding: 22px 14px;
+            }
+
+            .login-card {
+                padding: 32px 26px;
+                border-radius: 14px;
+            }
+
+            .login-header {
+                margin-bottom: 30px;
+            }
+
+            .lock-icon {
+                width: 54px;
+                height: 54px;
+                border-radius: 14px;
+            }
+
+            .login-header h1 {
+                font-size: 1.15rem;
+            }
+
+            .fg label {
+                font-size: 0.6rem;
+            }
+
+            .disc-wrap {
+                padding: 0 14px 14px;
+            }
+
+            .ft {
+                padding: 20px 14px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        /* ── Regular Phones ── */
         @media (max-width: 480px) {
             .login-wrapper {
                 padding: 20px 14px;
@@ -484,9 +536,38 @@
                 font-size: 0.55rem;
                 margin-top: 18px;
             }
+
+            .disc-wrap {
+                padding: 0 14px 12px;
+            }
+
+            .disc {
+                padding: 12px 14px;
+            }
+
+            .disc h4 {
+                font-size: 0.55rem;
+            }
+
+            .disc p {
+                font-size: 0.52rem;
+            }
+
+            .ft {
+                padding: 18px 12px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
         }
 
-        @media (max-width: 360px) {
+        /* ── Small Phones ── */
+        @media (max-width: 380px) {
             .login-wrapper {
                 padding: 14px 10px;
             }
@@ -511,6 +592,11 @@
                 font-size: 1rem;
             }
 
+            .login-header p {
+                font-size: 0.55rem;
+                letter-spacing: 1px;
+            }
+
             .input-wrap input {
                 padding: 12px 14px 12px 38px;
             }
@@ -520,8 +606,36 @@
                 font-size: 0.75rem;
                 letter-spacing: 1px;
             }
+
+            .disc-wrap {
+                padding: 0 10px 10px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .disc h4 {
+                font-size: 0.5rem;
+                gap: 4px;
+            }
+
+            .disc p {
+                font-size: 0.48rem;
+            }
+
+            .ft {
+                padding: 16px 10px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
         }
 
+        /* ── Landscape Mode ── */
         @media (max-height: 500px) and (orientation: landscape) {
             .login-wrapper {
                 align-items: flex-start;
@@ -561,6 +675,14 @@
 
             .term-line {
                 margin-top: 12px;
+            }
+
+            .disc-wrap {
+                padding: 0 16px 8px;
+            }
+
+            .ft {
+                padding: 14px 12px;
             }
         }
 
@@ -602,7 +724,7 @@
                             Username
                         </label>
                         <div class="input-wrap">
-                            <input type="text" id="username" name="username" placeholder="enter username"
+                            <input type="text" id="username" name="username" placeholder="Enter username"
                                 autocomplete="username" required autofocus>
                             <i data-lucide="user" class="in-icon" style="width:16px;height:16px;"></i>
                         </div>
@@ -613,7 +735,7 @@
                             Password
                         </label>
                         <div class="input-wrap">
-                            <input type="password" id="password" name="password" placeholder="enter password"
+                            <input type="password" id="password" name="password" placeholder="Enter password"
                                 autocomplete="current-password" required>
                             <i data-lucide="lock" class="in-icon" style="width:16px;height:16px;"></i>
                         </div>
