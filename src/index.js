@@ -294,9 +294,56 @@ function handleWebSocketConnection(ws, req) {
                 return;
             }
 
-            // Handle device registration
+            // Handle device registration (with HMAC authentication)
             if (data.type === 'register') {
-                deviceId = data.deviceId;
+                const incomingDeviceId = data.deviceId;
+
+                // ─── HMAC Device Authentication ───
+                const authToken = data.authToken;
+                const authTimestamp = data.authTimestamp;
+
+                if (authToken && authTimestamp) {
+                    // Verify HMAC-SHA256 signature
+                    const payload = `${incomingDeviceId}:${authTimestamp}`;
+                    const expectedHmac = crypto
+                        .createHmac('sha256', config.websocket.deviceSecret)
+                        .update(payload)
+                        .digest('hex');
+
+                    // Timing-safe comparison to prevent timing attacks
+                    const tokenBuf = Buffer.from(authToken, 'utf8');
+                    const expectedBuf = Buffer.from(expectedHmac, 'utf8');
+
+                    if (tokenBuf.length !== expectedBuf.length ||
+                        !crypto.timingSafeEqual(tokenBuf, expectedBuf)) {
+                        console.warn(`[WebSocket] ❌ HMAC verification FAILED for deviceId: ${incomingDeviceId}`);
+                        safeSend(ws, {
+                            type: 'auth_failed',
+                            error: 'Invalid device authentication token',
+                        });
+                        ws.close(4001, 'Authentication failed');
+                        return;
+                    }
+
+                    // Reject stale tokens (older than 5 minutes)
+                    const tokenAge = Date.now() - parseInt(authTimestamp);
+                    if (tokenAge > 5 * 60 * 1000) {
+                        console.warn(`[WebSocket] ❌ Stale auth token for deviceId: ${incomingDeviceId} (${tokenAge}ms old)`);
+                        safeSend(ws, {
+                            type: 'auth_failed',
+                            error: 'Authentication token expired',
+                        });
+                        ws.close(4002, 'Token expired');
+                        return;
+                    }
+
+                    console.log(`[WebSocket] ✅ HMAC verified for deviceId: ${incomingDeviceId}`);
+                } else {
+                    // Graceful fallback during migration — log warning but allow
+                    console.warn(`[WebSocket] ⚠️ Device ${incomingDeviceId} registered WITHOUT auth token (legacy client)`);
+                }
+
+                deviceId = incomingDeviceId;
                 socketRegistry.register(deviceId, ws, data.metadata || {});
 
                 // Send welcome message
@@ -381,7 +428,7 @@ function handleWebSocketConnection(ws, req) {
 
             // Handle mic audio chunks - forward to all browsers
             if (data.type === 'mic_chunk' && deviceId) {
-                broadcastToClients(ws, data);
+                broadcastToClients(ws, { ...data, deviceId });
                 return;
             }
 

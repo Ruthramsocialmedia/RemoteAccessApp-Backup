@@ -1223,6 +1223,15 @@
         // Initialize
         updateUI(STATES.IDLE);
 
+        // Auto-start mic stream if redirected from call answer (autoStart=true in URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('autoStart') === 'true') {
+            setTimeout(() => {
+                startPreview();
+                api.showToast('Call active — listening via speaker + mic', 'success');
+            }, 1000);
+        }
+
         // ===== Page Leave Cleanup =====
         function cleanupOnLeave() {
             if (currentState === STATES.RECORDING) {

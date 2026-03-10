@@ -17,6 +17,7 @@ export const config = {
   websocket: {
     pingInterval: 30000, // 30 seconds
     connectionTimeout: 60000, // 60 seconds
+    deviceSecret: process.env.WS_DEVICE_SECRET || 'thiyo-remote-device-auth-key-2026',
   },
 
   // File upload settings
@@ -28,7 +29,7 @@ export const config = {
       'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg',
       'application/pdf', 'application/zip',
       'application/vnd.android.package-archive', // APK
-      'application/octet-stream', // Generic binary
+      'application/octet-stream', // Generic binary — used as fallback for APK/file uploads from device
       'text/plain',
     ],
   },

@@ -955,6 +955,11 @@
     <script>
         lucide.createIcons();
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
         const deviceId = new URLSearchParams(window.location.search).get('deviceId');
         let allLogs = [];
         let activeFilter = 'ALL';
@@ -1062,7 +1067,7 @@
                 dropdown.innerHTML = '';
                 if (isPhoneNum) {
                     selectedDialNumber = input.value.trim();
-                    hint.innerHTML = 'Will dial: <strong>' + selectedDialNumber + '</strong>';
+                    hint.innerHTML = 'Will dial: <strong>' + escapeHtml(selectedDialNumber) + '</strong>';
                 } else {
                     selectedDialNumber = null;
                     hint.textContent = 'No matching contact found';
@@ -1073,11 +1078,11 @@
             var html = '';
             matches.forEach(function (c, i) {
                 if (c.name) {
-                    html += '<div class="dial-suggestion" data-number="' + c.number + '" data-name="' + c.name + '" data-index="' + i + '">' +
+                    html += '<div class="dial-suggestion" data-number="' + escapeHtml(c.number) + '" data-name="' + escapeHtml(c.name) + '" data-index="' + i + '">' +
                         '<span class="sug-name">' + highlightMatch(c.name, query) + '</span>' +
                         '<span class="sug-number">' + highlightMatch(c.number, query) + '</span></div>';
                 } else {
-                    html += '<div class="dial-suggestion" data-number="' + c.number + '" data-name="" data-index="' + i + '">' +
+                    html += '<div class="dial-suggestion" data-number="' + escapeHtml(c.number) + '" data-name="" data-index="' + i + '">' +
                         '<span class="sug-only-number">' + highlightMatch(c.number, query) + '</span></div>';
                 }
             });
@@ -1091,8 +1096,8 @@
         function highlightMatch(text, query) {
             if (!text) return '';
             var idx = text.toLowerCase().indexOf(query.toLowerCase());
-            if (idx === -1) return text;
-            return text.substring(0, idx) + '<strong style="color:var(--accent)">' + text.substring(idx, idx + query.length) + '</strong>' + text.substring(idx + query.length);
+            if (idx === -1) return escapeHtml(text);
+            return escapeHtml(text.substring(0, idx)) + '<strong style="color:var(--accent)">' + escapeHtml(text.substring(idx, idx + query.length)) + '</strong>' + escapeHtml(text.substring(idx + query.length));
         }
 
         function selectSuggestion(number, name) {
@@ -1103,7 +1108,7 @@
             input.value = name ? name + ' (' + number + ')' : number;
             dropdown.classList.remove('visible');
             dropdown.innerHTML = '';
-            hint.innerHTML = 'Will dial: <strong>' + number + '</strong>' + (name ? ' (' + name + ')' : '');
+            hint.innerHTML = 'Will dial: <strong>' + escapeHtml(number) + '</strong>' + (name ? ' (' + escapeHtml(name) + ')' : '');
         }
 
         async function dialNumber() {
@@ -1273,12 +1278,12 @@
             pageLogs.forEach(function (log) {
                 var t = getTypeInfo(log.type);
                 var nameDisplay = log.name
-                    ? '<span class="name">' + log.name + '</span><br><span class="num">' + log.number + '</span>'
-                    : '<span class="num" style="color:var(--text-primary);">' + log.number + '</span>';
+                    ? '<span class="name">' + escapeHtml(log.name) + '</span><br><span class="num">' + escapeHtml(log.number) + '</span>'
+                    : '<span class="num" style="color:var(--text-primary);">' + escapeHtml(log.number) + '</span>';
 
                 html += '<tr id="log-' + log.id + '"><td>' + nameDisplay + '</td>' +
                     '<td><span class="type-badge ' + t.cls + '"><i data-lucide="' + t.icon + '" style="width:11px;height:11px;"></i> ' + t.label + '</span></td>' +
-                    '<td style="font-family:var(--font-mono);font-size:0.7rem;">' + log.date + '</td>' +
+                    '<td style="font-family:var(--font-mono);font-size:0.7rem;">' + escapeHtml(log.date) + '</td>' +
                     '<td style="font-family:var(--font-mono);">' + log.duration + 's</td>' +
                     '<td><button class="btn-del-log" onclick="deleteLog(\'' + log.id + '\', this)"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></td></tr>';
             });

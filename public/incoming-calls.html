@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Incoming Calls - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Share Tech Mono', 'Courier New', monospace;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .wrap {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 16px 22px;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #e2e2e2;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── HERO STATE PANEL ── */
+        .hero {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 32px 24px;
+            text-align: center;
+            margin-bottom: 14px;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            transition: all 0.5s;
+        }
+
+        .hero.ringing {
+            border-color: rgba(255, 170, 0, 0.3);
+        }
+
+        .hero.ringing::before {
+            background: linear-gradient(90deg, transparent, var(--warning), transparent);
+        }
+
+        .hero.active {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .hero.active::before {
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .hero-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid var(--border);
+            color: var(--text-secondary);
+            transition: all 0.5s;
+        }
+
+        .hero.ringing .hero-avatar {
+            border-color: rgba(255, 170, 0, 0.4);
+            color: var(--warning);
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.1);
+            animation: ringPulse 1.5s infinite;
+        }
+
+        .hero.active .hero-avatar {
+            border-color: rgba(0, 255, 65, 0.4);
+            color: var(--accent);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+        }
+
+        .hero-state {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .hero.ringing .hero-state {
+            color: var(--warning);
+            border-color: rgba(255, 170, 0, 0.2);
+            background: rgba(255, 170, 0, 0.06);
+        }
+
+        .hero.active .hero-state {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.06);
+        }
+
+        .hero-state .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .hero.ringing .hero-state .dot {
+            background: var(--warning);
+            animation: livePulse 1s infinite;
+        }
+
+        .hero.active .hero-state .dot {
+            background: var(--accent);
+            animation: livePulse 2s infinite;
+        }
+
+        .hero-name {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #e2e2e2;
+            margin: 10px 0 4px;
+        }
+
+        .hero-number {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .hero-timer {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            color: var(--accent);
+            margin-top: 12px;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            display: none;
+        }
+
+        .hero.active .hero-timer {
+            display: block;
+        }
+
+        /* Ring animation */
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 170, 0, 0.1);
+            }
+
+            50% {
+                transform: scale(1.06);
+                box-shadow: 0 0 40px rgba(255, 170, 0, 0.2);
+            }
+        }
+
+        .ring-waves {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%);
+            pointer-events: none;
+            display: none;
+        }
+
+        .hero.ringing .ring-waves {
+            display: block;
+        }
+
+        .ring-wave {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            top: -50px;
+            left: -50px;
+            animation: waveExpand 2s infinite;
+        }
+
+        .ring-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .ring-wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        @keyframes waveExpand {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* ── CONTROL BAR ── */
+        .ctrl-bar {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .cb {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 18px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cb:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .cb:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .cb:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .cb-answer {
+            border-color: rgba(0, 255, 65, 0.3);
+            color: var(--accent);
+            background: rgba(0, 255, 65, 0.06);
+        }
+
+        .cb-answer:hover:not(:disabled) {
+            background: rgba(0, 255, 65, 0.12);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .cb-answer.pulse {
+            animation: btnPulse 1.2s infinite;
+        }
+
+        .cb-reject {
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+            background: rgba(255, 51, 51, 0.06);
+        }
+
+        .cb-reject:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.12);
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.1);
+        }
+
+        .cb-end {
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+            background: rgba(255, 51, 51, 0.06);
+        }
+
+        .cb-end:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.12);
+        }
+
+        .cb-speaker {
+            border-color: rgba(0, 170, 255, 0.3);
+            color: var(--info);
+            background: rgba(0, 170, 255, 0.06);
+        }
+
+        .cb-speaker:hover:not(:disabled) {
+            background: rgba(0, 170, 255, 0.12);
+        }
+
+        .cb-speaker.on {
+            background: rgba(0, 170, 255, 0.15);
+            border-color: rgba(0, 170, 255, 0.5);
+            box-shadow: 0 0 12px rgba(0, 170, 255, 0.1);
+        }
+
+        .cb-listen {
+            border-color: rgba(0, 229, 255, 0.3);
+            color: #00e5ff;
+            background: rgba(0, 229, 255, 0.06);
+        }
+
+        .cb-listen:hover:not(:disabled) {
+            background: rgba(0, 229, 255, 0.12);
+        }
+
+        .cb-listen.on {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: rgba(0, 229, 255, 0.5);
+        }
+
+        .cb-record {
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+            background: rgba(255, 51, 51, 0.06);
+        }
+
+        .cb-record:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.12);
+        }
+
+        .cb-record.on {
+            background: rgba(255, 51, 51, 0.15);
+            border-color: rgba(255, 51, 51, 0.5);
+        }
+
+        .cb-record.on .rec-dot {
+            display: inline-block;
+        }
+
+        .rec-dot {
+            display: none;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: livePulse 1s infinite;
+        }
+
+        @keyframes btnPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(0, 255, 65, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 24px rgba(0, 255, 65, 0.25);
+            }
+        }
+
+        /* ── SECTIONS (shared) ── */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── WAVEFORM ── */
+        .wf-container {
+            height: 100px;
+            background: rgba(10, 14, 23, 0.8);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .wf-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .wf-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            gap: 8px;
+        }
+
+        .vol-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vol-row label {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .vol-row input[type=range] {
+            flex: 1;
+            accent-color: var(--accent);
+        }
+
+        .vol-val {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            min-width: 36px;
+        }
+
+        .buf-info {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── DTMF KEYPAD ── */
+        .dtmf-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .dtmf-btn {
+            padding: 14px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .dtmf-btn:hover {
+            border-color: rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .dtmf-btn:active {
+            transform: scale(0.93);
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .dtmf-digit {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #e2e2e2;
+        }
+
+        .dtmf-sub {
+            font-family: var(--font-display);
+            font-size: 0.45rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ── RECORDINGS LIST ── */
+        .rec-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .rec-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.15s;
+        }
+
+        .rec-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .rec-item:last-child {
+            border-bottom: none;
+        }
+
+        .rec-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .rec-name {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rec-date {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .rec-dl {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.06);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rec-dl:hover {
+            background: rgba(0, 255, 65, 0.12);
+        }
+
+        /* ── TIMELINE ── */
+        .timeline {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .tl-entry {
+            display: flex;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 0.7rem;
+            align-items: flex-start;
+        }
+
+        .tl-time {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            min-width: 60px;
+            flex-shrink: 0;
+        }
+
+        .tl-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .tl-dot.green {
+            background: var(--accent);
+        }
+
+        .tl-dot.red {
+            background: var(--danger);
+        }
+
+        .tl-dot.orange {
+            background: var(--warning);
+        }
+
+        .tl-dot.blue {
+            background: var(--info);
+        }
+
+        .tl-text {
+            font-family: var(--font-display);
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        /* ── AUTO-LISTEN TOGGLE ── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .toggle-label {
+            font-family: var(--font-display);
+            font-size: 0.72rem;
+            color: var(--text-primary);
+        }
+
+        .toggle-desc {
+            font-family: var(--font-display);
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .toggle-switch {
+            width: 42px;
+            height: 22px;
+            border-radius: 11px;
+            position: relative;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: 2px;
+            left: 3px;
+            background: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.on {
+            background: rgba(0, 255, 65, 0.15);
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+
+        .toggle-switch.on::after {
+            left: 22px;
+            background: var(--accent);
+        }
+
+        /* ── CONN BAR ── */
+        .conn-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        .conn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .conn-dot.ok {
+            background: var(--accent);
+            animation: livePulse 2s infinite;
+        }
+
+        .conn-dot.fail {
+            background: var(--danger);
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 28px 16px;
+            margin-top: 20px;
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%
+            }
+
+            50% {
+                background-position: 100% 50%
+            }
+
+            100% {
+                background-position: 0% 50%
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.4
+            }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media(max-width:768px) {
+            .wrap {
+                padding: 12px
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px
+            }
+
+            .pg-title {
+                font-size: 0.95rem
+            }
+
+            .hero {
+                padding: 24px 16px
+            }
+
+            .hero-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 1.4rem
+            }
+        }
+
+        @media(max-width:600px) {
+            .wrap {
+                padding: 10px
+            }
+
+            .ctrl-bar {
+                gap: 6px
+            }
+
+            .cb {
+                padding: 8px 12px;
+                font-size: 0.62rem
+            }
+
+            .dtmf-grid {
+                max-width: 220px;
+                gap: 6px
+            }
+
+            .dtmf-digit {
+                font-size: 1.1rem
+            }
+        }
+
+        @media(max-width:480px) {
+            .pg-sub {
+                display: none
+            }
+
+            .btn-back span {
+                display: none
+            }
+
+            .hero-name {
+                font-size: 1.1rem
+            }
+
+            .hero-number {
+                font-size: 0.85rem
+            }
+
+            .hero-timer {
+                font-size: 1.5rem
+            }
+
+            .ctrl-bar {
+                flex-direction: column
+            }
+
+            .cb {
+                width: 100%;
+                justify-content: center
+            }
+
+            .section {
+                padding: 12px 14px
+            }
+        }
+
+        @media(max-width:380px) {
+            .wrap {
+                padding: 8px
+            }
+
+            .pg-header {
+                padding: 10px 12px
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px
+            }
+
+            .pg-title {
+                font-size: 0.85rem
+            }
+
+            .hero {
+                padding: 20px 12px
+            }
+
+            .hero-avatar {
+                width: 52px;
+                height: 52px;
+                font-size: 1.2rem
+            }
+
+            .dtmf-grid {
+                max-width: 200px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="phone-incoming" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Incoming</span> Calls</div>
+                    <div class="pg-sub">// real-time call control</div>
+                </div>
+            </div>
+            <a href="index.html" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+
+        <!-- CONNECTION BAR -->
+        <div class="conn-bar">
+            <span><span class="conn-dot fail" id="conn-dot"></span> <span id="conn-status">Connecting...</span></span>
+            <span>Device: <span id="conn-device">—</span></span>
+            <span>Last: <span id="conn-last">—</span></span>
+        </div>
+
+        <!-- HERO STATE PANEL -->
+        <div class="hero" id="hero">
+            <div class="ring-waves">
+                <div class="ring-wave"></div>
+                <div class="ring-wave"></div>
+                <div class="ring-wave"></div>
+            </div>
+            <div class="hero-avatar" id="hero-avatar"><i data-lucide="phone" style="width:28px;height:28px;"></i></div>
+            <div class="hero-state" id="hero-state"><span class="dot"></span> Idle</div>
+            <div class="hero-name" id="hero-name">No Active Call</div>
+            <div class="hero-number" id="hero-number">&nbsp;</div>
+            <div class="hero-timer" id="hero-timer">00:00</div>
+        </div>
+
+        <!-- CONTROL BAR -->
+        <div class="ctrl-bar" id="ctrl-bar">
+            <button class="cb cb-answer pulse" id="btn-answer" disabled><i data-lucide="phone-incoming"
+                    style="width:14px;height:14px;"></i> Answer</button>
+            <button class="cb cb-reject" id="btn-reject" disabled><i data-lucide="phone-off"
+                    style="width:14px;height:14px;"></i> Reject</button>
+            <button class="cb cb-speaker" id="btn-speaker" disabled><i data-lucide="volume-2"
+                    style="width:14px;height:14px;"></i> Speaker</button>
+            <button class="cb cb-listen" id="btn-listen" disabled><i data-lucide="headphones"
+                    style="width:14px;height:14px;"></i> Live Listen</button>
+            <button class="cb cb-record" id="btn-record" disabled><span class="rec-dot"></span><i data-lucide="disc"
+                    style="width:14px;height:14px;"></i> Record</button>
+            <button class="cb cb-end" id="btn-end" disabled><i data-lucide="phone-off"
+                    style="width:14px;height:14px;"></i> End Call</button>
+        </div>
+
+        <!-- LIVE AUDIO WAVEFORM -->
+        <div class="section" id="sec-waveform" style="display:none;">
+            <div class="section-title"><i data-lucide="audio-waveform" style="width:13px;height:13px;opacity:0.5;"></i>
+                Live Audio Stream</div>
+            <div class="wf-container" id="wf-container">
+                <div class="wf-placeholder" id="wf-placeholder"><i data-lucide="audio-waveform"
+                        style="width:24px;height:24px;"></i> Waiting for audio...</div>
+                <canvas id="wf-canvas" style="display:none;"></canvas>
+            </div>
+            <div class="vol-row">
+                <label><i data-lucide="volume-2" style="width:13px;height:13px;"></i> Vol</label>
+                <input type="range" id="vol-slider" min="0" max="200" value="100">
+                <span class="vol-val" id="vol-label">100%</span>
+            </div>
+            <div class="buf-info" id="buf-info"></div>
+        </div>
+
+        <!-- DTMF KEYPAD -->
+        <div class="section" id="sec-dtmf" style="display:none;">
+            <div class="section-title"><i data-lucide="grid-3x3" style="width:13px;height:13px;opacity:0.5;"></i> Keypad
+                (DTMF)</div>
+            <div class="dtmf-grid" id="dtmf-grid"></div>
+        </div>
+
+        <!-- CALL RECORDINGS -->
+        <div class="section" id="sec-recordings">
+            <div class="section-title">
+                <i data-lucide="hard-drive-download" style="width:13px;height:13px;opacity:0.5;"></i> Call Recordings
+                <button class="cb" style="margin-left:auto;padding:5px 10px;font-size:0.55rem;" id="btn-scan-rec">
+                    <i data-lucide="refresh-cw" style="width:11px;height:11px;"></i> Scan
+                </button>
+            </div>
+            <div class="rec-list" id="rec-list">
+                <div
+                    style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-display);font-size:0.7rem;">
+                    Click "Scan" to find call recordings on device
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTO-LISTEN TOGGLE -->
+        <div class="section">
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Auto-Listen on Answer</div>
+                    <div class="toggle-desc">Automatically enable Speaker + Mic Stream when a call is answered</div>
+                </div>
+                <div class="toggle-switch" id="toggle-auto" role="button" tabindex="0"></div>
+            </div>
+        </div>
+
+        <!-- CALL TIMELINE -->
+        <div class="section">
+            <div class="section-title"><i data-lucide="activity" style="width:13px;height:13px;opacity:0.5;"></i> Call
+                Timeline</div>
+            <div class="timeline" id="timeline">
+                <div
+                    style="text-align:center;padding:16px;color:var(--text-muted);font-family:var(--font-display);font-size:0.7rem;">
+                    Waiting for call events...
+                </div>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="section" style="background:rgba(255,170,0,0.03);border-color:rgba(255,170,0,0.1);">
+            <div
+                style="font-family:var(--font-display);font-size:0.6rem;font-weight:600;color:var(--warning);display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer
+            </div>
+            <div style="font-family:var(--font-display);font-size:0.58rem;color:var(--text-muted);line-height:1.6;">
+                This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <!-- NOTE: call-notification.js intentionally NOT loaded here — this page has its own call controls -->
+    <script>
+        lucide.createIcons();
+
+        // ===== Config =====
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+        document.getElementById('conn-device').textContent = deviceId;
+
+        const SAMPLE_RATE = 44100;
+        const RING_BUFFER_SIZE = SAMPLE_RATE * 3;
+        const SCRIPT_BUFFER_SIZE = 4096;
+
+        // ===== State =====
+        let callState = 'IDLE', callerNumber = null, callerName = null;
+        let speakerOn = false, listening = false, recording = false;
+        let ws = null, audioCtx = null, scriptNode = null, gainNode = null, analyserNode = null;
+        let callTimer = null, callStartTime = null, animFrameId = null;
+        let autoListen = localStorage.getItem('ic_auto_listen') === 'true';
+
+        // Ring buffer
+        class RingBuf {
+            constructor(cap) { this.buf = new Float32Array(cap); this.cap = cap; this.wp = 0; this.rp = 0; this.avail = 0; }
+            write(s) { for (let i = 0; i < s.length; i++) { this.buf[this.wp] = s[i]; this.wp = (this.wp + 1) % this.cap; } this.avail = Math.min(this.avail + s.length, this.cap); }
+            read(o) { const n = Math.min(o.length, this.avail); for (let i = 0; i < n; i++) { o[i] = this.buf[this.rp]; this.rp = (this.rp + 1) % this.cap; } for (let i = n; i < o.length; i++) o[i] = 0; this.avail -= n; return n; }
+            fillPct() { return ((this.avail / this.cap) * 100).toFixed(1); }
+            clear() { this.wp = 0; this.rp = 0; this.avail = 0; }
+        }
+        const ringBuf = new RingBuf(RING_BUFFER_SIZE);
+
+        // ===== Elements =====
+        const hero = document.getElementById('hero');
+        const heroAvatar = document.getElementById('hero-avatar');
+        const heroState = document.getElementById('hero-state');
+        const heroName = document.getElementById('hero-name');
+        const heroNumber = document.getElementById('hero-number');
+        const heroTimer = document.getElementById('hero-timer');
+        const btnAnswer = document.getElementById('btn-answer');
+        const btnReject = document.getElementById('btn-reject');
+        const btnSpeaker = document.getElementById('btn-speaker');
+        const btnListen = document.getElementById('btn-listen');
+        const btnRecord = document.getElementById('btn-record');
+        const btnEnd = document.getElementById('btn-end');
+        const secWaveform = document.getElementById('sec-waveform');
+        const secDtmf = document.getElementById('sec-dtmf');
+        const timeline = document.getElementById('timeline');
+        const toggleAuto = document.getElementById('toggle-auto');
+
+        // ===== Auto-Listen Toggle =====
+        if (autoListen) toggleAuto.classList.add('on');
+        toggleAuto.addEventListener('click', () => {
+            autoListen = !autoListen;
+            toggleAuto.classList.toggle('on', autoListen);
+            localStorage.setItem('ic_auto_listen', autoListen);
+        });
+
+        // ===== Timeline =====
+        let tlEntries = [];
+        function addTimeline(text, color = 'green') {
+            const now = new Date();
+            const ts = now.toTimeString().slice(0, 8);
+            tlEntries.push({ ts, text, color });
+            if (tlEntries.length > 30) tlEntries.shift();
+            let html = '';
+            for (const e of tlEntries) {
+                html += `<div class="tl-entry"><span class="tl-time">${escHtml(e.ts)}</span><span class="tl-dot ${e.color}"></span><span class="tl-text">${escHtml(e.text)}</span></div>`;
+            }
+            timeline.innerHTML = html;
+            timeline.scrollTop = timeline.scrollHeight;
+        }
+
+        // ===== DTMF Keypad =====
+        const dtmfKeys = [
+            { d: '1', s: '' }, { d: '2', s: 'ABC' }, { d: '3', s: 'DEF' },
+            { d: '4', s: 'GHI' }, { d: '5', s: 'JKL' }, { d: '6', s: 'MNO' },
+            { d: '7', s: 'PQRS' }, { d: '8', s: 'TUV' }, { d: '9', s: 'WXYZ' },
+            { d: '*', s: '' }, { d: '0', s: '+' }, { d: '#', s: '' }
+        ];
+        const dtmfGrid = document.getElementById('dtmf-grid');
+        dtmfKeys.forEach(k => {
+            const btn = document.createElement('div');
+            btn.className = 'dtmf-btn';
+            btn.innerHTML = `<div class="dtmf-digit">${k.d}</div><div class="dtmf-sub">${k.s}</div>`;
+            btn.addEventListener('click', () => {
+                api.sendCommand(deviceId, 'call_dtmf', { digit: k.d }).catch(() => { });
+                addTimeline(`DTMF: ${k.d}`, 'blue');
+            });
+            dtmfGrid.appendChild(btn);
+        });
+
+        // ===== Call State Update =====
+        function updateCallState(state, number, name) {
+            const prev = callState;
+            callState = state;
+            callerNumber = number || callerNumber;
+            callerName = name || callerName;
+
+            hero.className = 'hero' + (state === 'RINGING' ? ' ringing' : state === 'OFFHOOK' ? ' active' : '');
+            heroState.innerHTML = `<span class="dot"></span> ${state === 'OFFHOOK' ? 'Active Call' : state}`;
+
+            if (state === 'IDLE') {
+                heroAvatar.innerHTML = '<i data-lucide="phone" style="width:28px;height:28px;"></i>';
+                heroName.textContent = 'No Active Call';
+                heroNumber.innerHTML = '&nbsp;';
+                stopCallTimer();
+                if (listening) stopListen();
+                callerNumber = null; callerName = null; speakerOn = false; recording = false;
+            } else {
+                const initial = (callerName || callerNumber || '?')[0].toUpperCase();
+                heroAvatar.textContent = initial;
+                heroName.textContent = callerName || 'Unknown';
+                heroNumber.textContent = callerNumber || 'Private Number';
+            }
+
+            if (state === 'OFFHOOK' && prev === 'RINGING') {
+                startCallTimer();
+                if (autoListen && !listening) startListen();
+            }
+
+            // Button states
+            const ringing = state === 'RINGING', active = state === 'OFFHOOK', idle = state === 'IDLE';
+            btnAnswer.disabled = !ringing; btnAnswer.style.display = ringing ? '' : 'none';
+            btnReject.disabled = !ringing; btnReject.style.display = ringing ? '' : 'none';
+            btnSpeaker.disabled = !active; btnSpeaker.style.display = active ? '' : 'none';
+            btnListen.disabled = !active; btnListen.style.display = active ? '' : 'none';
+            btnRecord.disabled = !active; btnRecord.style.display = active ? '' : 'none';
+            btnEnd.disabled = !active; btnEnd.style.display = active ? '' : 'none';
+            secDtmf.style.display = active ? '' : 'none';
+            if (idle) secWaveform.style.display = 'none';
+
+            // Timeline
+            if (state === 'RINGING') addTimeline(`RINGING ${callerNumber || 'Private'}${callerName ? ' (' + callerName + ')' : ''}`, 'orange');
+            if (state === 'OFFHOOK' && prev === 'RINGING') addTimeline('ANSWERED', 'green');
+            if (state === 'IDLE' && prev !== 'IDLE') addTimeline('ENDED' + (callStartTime ? ` (${heroTimer.textContent})` : ''), 'red');
+
+            document.getElementById('conn-last').textContent = new Date().toTimeString().slice(0, 8);
+            lucide.createIcons();
+        }
+
+        // ===== Call Timer =====
+        function startCallTimer() {
+            callStartTime = Date.now();
+            heroTimer.style.display = 'block';
+            callTimer = setInterval(() => {
+                const s = Math.floor((Date.now() - callStartTime) / 1000);
+                heroTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+            }, 1000);
+        }
+        function stopCallTimer() {
+            clearInterval(callTimer); callTimer = null; callStartTime = null;
+            heroTimer.textContent = '00:00'; heroTimer.style.display = 'none';
+        }
+
+        // ===== WebSocket =====
+        function connectWS() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${proto}//${location.host}`);
+            ws.onopen = () => {
+                document.getElementById('conn-dot').className = 'conn-dot ok';
+                document.getElementById('conn-status').textContent = 'Connected';
+                // Get current state
+                api.sendCommand(deviceId, 'call_state').then(r => {
+                    if (r && r.data) updateCallState(r.data.state || 'IDLE', r.data.number, r.data.contactName);
+                }).catch(() => { });
+            };
+            ws.onmessage = (e) => {
+                try {
+                    const d = JSON.parse(e.data);
+                    if (d.type === 'call_state' && d.deviceId === deviceId) {
+                        updateCallState(d.state, d.number, d.contactName);
+                    }
+                    if (d.type === 'mic_chunk' && d.deviceId === deviceId && listening) {
+                        const b = atob(d.data), bytes = new Uint8Array(b.length);
+                        for (let i = 0; i < b.length; i++) bytes[i] = b.charCodeAt(i);
+                        const pcm = new Int16Array(bytes.buffer), f32 = new Float32Array(pcm.length);
+                        for (let i = 0; i < pcm.length; i++) f32[i] = pcm[i] / 32768.0;
+                        ringBuf.write(f32);
+                    }
+                } catch (err) { }
+            };
+            ws.onclose = () => {
+                document.getElementById('conn-dot').className = 'conn-dot fail';
+                document.getElementById('conn-status').textContent = 'Disconnected';
+                setTimeout(connectWS, 3000);
+            };
+        }
+        connectWS();
+
+        // ===== Button Actions =====
+        btnAnswer.addEventListener('click', async () => {
+            try {
+                await api.sendCommand(deviceId, 'call_answer');
+                addTimeline('Answer command sent', 'green');
+            } catch (e) { api.showToast('Answer failed', 'error'); }
+        });
+        btnReject.addEventListener('click', async () => {
+            try {
+                await api.sendCommand(deviceId, 'call_end');
+                addTimeline('Rejected', 'red');
+            } catch (e) { api.showToast('Reject failed', 'error'); }
+        });
+        btnEnd.addEventListener('click', async () => {
+            try {
+                await api.sendCommand(deviceId, 'call_end');
+                addTimeline('End call sent', 'red');
+            } catch (e) { api.showToast('End failed', 'error'); }
+        });
+        btnSpeaker.addEventListener('click', async () => {
+            speakerOn = !speakerOn;
+            try {
+                await api.sendCommand(deviceId, 'call_speaker', { on: speakerOn });
+                btnSpeaker.classList.toggle('on', speakerOn);
+                addTimeline(`Speaker ${speakerOn ? 'ON' : 'OFF'}`, 'blue');
+            } catch (e) { speakerOn = !speakerOn; api.showToast('Speaker toggle failed', 'error'); }
+        });
+        btnRecord.addEventListener('click', async () => {
+            recording = !recording;
+            try {
+                await api.sendCommand(deviceId, 'call_record_trigger', { start: recording });
+                btnRecord.classList.toggle('on', recording);
+                addTimeline(`Native recording ${recording ? 'STARTED' : 'STOPPED'}`, recording ? 'red' : 'blue');
+            } catch (e) { recording = !recording; api.showToast('Recording trigger failed (may not be supported)', 'warning'); }
+        });
+
+        // ===== Live Listen =====
+        btnListen.addEventListener('click', () => { listening ? stopListen() : startListen(); });
+        async function startListen() {
+            try {
+                if (!speakerOn) {
+                    speakerOn = true;
+                    await api.sendCommand(deviceId, 'call_speaker', { on: true });
+                    btnSpeaker.classList.add('on');
+                    addTimeline('Speaker ON (auto)', 'blue');
+                }
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                ringBuf.clear();
+                gainNode = audioCtx.createGain();
+                gainNode.gain.value = document.getElementById('vol-slider').value / 100;
+                gainNode.connect(audioCtx.destination);
+                analyserNode = audioCtx.createAnalyser();
+                analyserNode.fftSize = 256; analyserNode.smoothingTimeConstant = 0.7;
+                scriptNode = audioCtx.createScriptProcessor(SCRIPT_BUFFER_SIZE, 0, 1);
+                scriptNode.onaudioprocess = (e) => ringBuf.read(e.outputBuffer.getChannelData(0));
+                scriptNode.connect(analyserNode); analyserNode.connect(gainNode);
+                await api.sendCommand(deviceId, 'mic_start');
+                listening = true; btnListen.classList.add('on');
+                secWaveform.style.display = '';
+                startWaveform();
+                addTimeline('Live Listen STARTED', 'green');
+            } catch (e) { api.showToast('Listen failed: ' + e.message, 'error'); }
+        }
+        async function stopListen() {
+            try { await api.sendCommand(deviceId, 'mic_stop'); } catch (e) { }
+            if (scriptNode) { scriptNode.disconnect(); scriptNode = null; }
+            if (analyserNode) { analyserNode.disconnect(); analyserNode = null; }
+            if (gainNode) { gainNode.disconnect(); gainNode = null; }
+            ringBuf.clear(); stopWaveform();
+            listening = false; btnListen.classList.remove('on');
+            addTimeline('Live Listen STOPPED', 'blue');
+        }
+        document.getElementById('vol-slider').addEventListener('input', (e) => {
+            document.getElementById('vol-label').textContent = e.target.value + '%';
+            if (gainNode) gainNode.gain.value = e.target.value / 100;
+        });
+
+        // ===== Waveform =====
+        function startWaveform() {
+            const canvas = document.getElementById('wf-canvas');
+            document.getElementById('wf-placeholder').style.display = 'none';
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            const bufLen = analyserNode.frequencyBinCount;
+            const data = new Uint8Array(bufLen);
+            (function draw() {
+                animFrameId = requestAnimationFrame(draw);
+                const c = document.getElementById('wf-container');
+                canvas.width = c.clientWidth; canvas.height = c.clientHeight;
+                analyserNode.getByteFrequencyData(data);
+                ctx.fillStyle = 'rgba(10,14,23,0.9)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const bars = 50, bw = (canvas.width / bars) * 0.65, gap = (canvas.width / bars) * 0.35;
+                const step = Math.floor(bufLen / bars);
+                for (let i = 0; i < bars; i++) {
+                    const v = data[i * step] || 0, h = (v / 255) * canvas.height * 0.85;
+                    const x = i * (bw + gap) + gap / 2, y = canvas.height - h;
+                    const int = v / 255;
+                    ctx.fillStyle = `rgba(0,${180 + int * 75},${80 + int * 40},${0.4 + int * 0.6})`;
+                    ctx.beginPath();
+                    const r = Math.min(bw / 2, 3);
+                    ctx.moveTo(x + r, y); ctx.lineTo(x + bw - r, y);
+                    ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+                    ctx.lineTo(x + bw, canvas.height); ctx.lineTo(x, canvas.height);
+                    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.fill();
+                }
+            })();
+        }
+        function stopWaveform() {
+            if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+            document.getElementById('wf-canvas').style.display = 'none';
+            document.getElementById('wf-placeholder').style.display = 'flex';
+        }
+
+        // ===== Call Recordings Scanner =====
+        document.getElementById('btn-scan-rec').addEventListener('click', async () => {
+            const recList = document.getElementById('rec-list');
+            recList.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-family:var(--font-display);font-size:0.7rem;">Scanning...</div>';
+            try {
+                const paths = [
+                    '/storage/emulated/0/Recordings/Call',
+                    '/storage/emulated/0/Call',
+                    '/storage/emulated/0/MIUI/sound_recorder/call_rec',
+                    '/storage/emulated/0/Music/Recordings',
+                    '/storage/emulated/0/Record/Call'
+                ];
+                let allFiles = [];
+                for (const p of paths) {
+                    try {
+                        const r = await api.sendCommand(deviceId, 'file_list', { path: p });
+                        if (r && r.data && Array.isArray(r.data.files)) {
+                            r.data.files.forEach(f => { if (!f.isDirectory) allFiles.push({ ...f, dir: p }); });
+                        }
+                    } catch (e) { }
+                }
+                allFiles.sort((a, b) => (b.modified || 0) - (a.modified || 0));
+                if (allFiles.length === 0) {
+                    recList.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-family:var(--font-display);font-size:0.7rem;">No recordings found</div>';
+                    return;
+                }
+                recList.innerHTML = '';
+                allFiles.slice(0, 20).forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = 'rec-item';
+                    const fullPath = f.dir + '/' + f.name;
+                    div.innerHTML = `
+                    <div style="color:var(--danger);display:flex;align-items:center;"><i data-lucide="file-audio" style="width:16px;height:16px;"></i></div>
+                    <div class="rec-meta">
+                        <div class="rec-name">${escHtml(f.name)}</div>
+                        <div class="rec-date">${f.sizeFormatted || ''} ${f.modified ? '· ' + new Date(f.modified).toLocaleString() : ''}</div>
+                    </div>
+                    <button class="rec-dl" onclick="api.downloadFile('${deviceId}','${escHtml(fullPath)}')">
+                        <i data-lucide="download" style="width:11px;height:11px;"></i> DL
+                    </button>`;
+                    recList.appendChild(div);
+                });
+                lucide.createIcons();
+                addTimeline(`Found ${allFiles.length} recording(s)`, 'green');
+            } catch (e) {
+                recList.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-muted);font-family:var(--font-display);font-size:0.7rem;">Scan failed</div>';
+            }
+        });
+
+        // ===== Cleanup =====
+        function cleanup() {
+            if (listening) {
+                const url = `/api/command/${deviceId}`;
+                navigator.sendBeacon(url, new Blob([JSON.stringify({ action: 'mic_stop', payload: {} })], { type: 'application/json' }));
+            }
+            if (ws) ws.close();
+        }
+        window.addEventListener('pagehide', cleanup);
+        window.addEventListener('beforeunload', cleanup);
+
+        // Init
+        updateCallState('IDLE');
+    </script>
+</body>
+
+</html>

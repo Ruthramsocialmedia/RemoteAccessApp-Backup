@@ -450,8 +450,26 @@
     };
 
     window._cnAnswer = function () {
+        // Step 1: Answer the call
         sendCallAction('call_answer').then(function (r) {
-            if (typeof api !== 'undefined') api.showToast(r.success ? 'Answering call via dashboard...' : ('Answer failed: ' + (r.error || 'unknown')), r.success ? 'success' : 'error');
+            if (r.success) {
+                if (typeof api !== 'undefined') api.showToast('Call answered — enabling speaker + mic stream...', 'success');
+                // Step 2: Enable speaker (wait 500ms for call to connect)
+                setTimeout(function () {
+                    speakerOn = true;
+                    sendCallAction('call_speaker', { on: true }).then(function () {
+                        // Step 3: Redirect to mic-stream page to hear both sides
+                        setTimeout(function () {
+                            window.location.href = '/mic-stream.html?deviceId=' + encodeURIComponent(deviceId) + '&autoStart=true';
+                        }, 300);
+                    }).catch(function () {
+                        // Speaker failed, still redirect to mic stream
+                        window.location.href = '/mic-stream.html?deviceId=' + encodeURIComponent(deviceId) + '&autoStart=true';
+                    });
+                }, 500);
+            } else {
+                if (typeof api !== 'undefined') api.showToast('Answer failed: ' + (r.error || 'unknown'), 'error');
+            }
         }).catch(function () { if (typeof api !== 'undefined') api.showToast('Answer failed', 'error'); });
     };
 

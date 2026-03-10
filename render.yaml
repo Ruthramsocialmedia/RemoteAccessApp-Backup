@@ -19,4 +19,6 @@ services:
         sync: false # Set in Render Dashboard
       - key: SUPABASE_KEY
         sync: false # Set in Render Dashboard
+      - key: WS_DEVICE_SECRET
+        sync: false # Set in Render Dashboard
     healthCheckPath: /
