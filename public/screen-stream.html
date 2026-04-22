@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remote Control - Scrcpy Web</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --sb-w: 300px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        body::before {
+            display: none;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* ===== SCREEN AREA ===== */
+        .screen-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #050a0e;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            background-image:
+                radial-gradient(ellipse at center, rgba(0, 255, 65, 0.03) 0%, transparent 70%),
+                linear-gradient(rgba(0, 255, 65, 0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.012) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .screen-wrapper {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            max-height: 100%;
+            border: 1px solid rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.95), 0 0 100px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #screen-display {
+            max-width: 100%;
+            max-height: calc(100vh - 100px);
+            border-radius: 10px;
+            display: none;
+            cursor: crosshair;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* ===== PLACEHOLDER ===== */
+        .placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            border: 1px dashed rgba(0, 255, 65, 0.12);
+            padding: 52px 40px;
+            border-radius: 16px;
+            background: rgba(10, 14, 20, 0.85);
+            max-width: 400px;
+            backdrop-filter: blur(16px);
+        }
+
+        .placeholder .ph-icon {
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: center;
+            opacity: 0.35;
+            color: var(--accent);
+            animation: pulse-icon 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-icon {
+
+            0%,
+            100% {
+                opacity: 0.25;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.55;
+                transform: scale(1.06);
+            }
+        }
+
+        .placeholder h2 {
+            font-family: var(--font-display);
+            color: var(--text-primary);
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .placeholder p {
+            font-family: var(--font-display);
+            font-size: 0.78rem;
+            font-weight: 400;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ===== CURSOR OVERLAY ===== */
+        .cursor-overlay {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+            top: 0;
+            left: 0;
+        }
+
+        .cursor-crosshair {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            transition: left 0.06s linear, top 0.06s linear;
+        }
+
+        .cursor-crosshair::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 26px;
+            height: 26px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent-glow), inset 0 0 6px rgba(0, 255, 65, 0.1);
+            transition: all 0.1s ease;
+        }
+
+        .cursor-crosshair::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--accent);
+        }
+
+        .cursor-line-h,
+        .cursor-line-v {
+            position: absolute;
+            background: rgba(0, 255, 65, 0.08);
+        }
+
+        .cursor-line-h {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+            left: 0;
+        }
+
+        .cursor-line-v {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+
+        .cursor-crosshair.tap-flash::before {
+            width: 36px;
+            height: 36px;
+            border-color: #fff;
+            background: rgba(0, 255, 65, 0.25);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.5);
+        }
+
+        .cursor-coords {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 400;
+            color: rgba(0, 255, 65, 0.6);
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== LOCK / COOLDOWN ===== */
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 0, 0, 0.1);
+            border: 2px solid rgba(255, 0, 0, 0.35);
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            border-radius: 8px;
+        }
+
+        .lock-overlay.active {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .lock-badge {
+            margin-top: 14px;
+            padding: 5px 16px;
+            background: rgba(255, 0, 0, 0.65);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cooldown-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 5;
+            border-radius: 10px;
+        }
+
+        .cooldown-overlay.active {
+            opacity: 1;
+        }
+
+        /* ===== TOUCH HINT ===== */
+        .touch-hint {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(5, 10, 14, 0.9);
+            color: var(--text-muted);
+            padding: 7px 20px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 400;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 15;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            white-space: nowrap;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(8px);
+        }
+
+        .touch-hint.visible {
+            opacity: 1;
+        }
+
+        /* ===== ACTION HUD ===== */
+        .action-hud {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(5, 10, 14, 0.92);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            z-index: 200;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
+        }
+
+        .action-hud.active {
+            opacity: 1;
+        }
+
+        @keyframes tapRipple {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sb-w);
+            min-width: var(--sb-w);
+            background: linear-gradient(180deg, rgba(13, 17, 23, 0.98), rgba(10, 14, 20, 0.99));
+            border-left: 1px solid rgba(0, 255, 65, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: fixed;
+            top: 0;
+            right: calc(var(--sb-w) * -1 - 10px);
+            height: 100vh;
+            z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.7);
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+        }
+
+        .sidebar-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(13, 17, 23, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+        }
+
+        .sidebar-header h1 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent);
+            letter-spacing: 2.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #444;
+            transition: all 0.3s;
+        }
+
+        .status-dot.connected {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                box-shadow: 0 0 4px var(--accent-glow);
+            }
+
+            50% {
+                box-shadow: 0 0 14px rgba(0, 255, 65, 0.4);
+            }
+        }
+
+        /* ===== CONTROL SECTIONS ===== */
+        .ctrl-section {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .ctrl-section:last-child {
+            border-bottom: none;
+        }
+
+        .ctrl-label {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.25);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        /* ===== STREAM BUTTONS ===== */
+        .stream-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .s-btn {
+            padding: 11px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            text-align: center;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .s-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .s-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .s-btn.start {
+            background: rgba(0, 255, 65, 0.08);
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.15);
+        }
+
+        .s-btn.start:hover:not(:disabled) {
+            background: rgba(0, 255, 65, 0.15);
+            border-color: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        .s-btn.stop {
+            background: rgba(255, 51, 51, 0.06);
+            color: var(--danger);
+            border-color: rgba(255, 51, 51, 0.12);
+        }
+
+        .s-btn.stop:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.12);
+            border-color: rgba(255, 51, 51, 0.3);
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.08);
+        }
+
+        .res-info {
+            margin-top: 10px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== QUALITY SELECT ===== */
+        .quality-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quality-label {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.25);
+            white-space: nowrap;
+        }
+
+        .quality-select {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.75);
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            font-weight: 500;
+            padding: 7px 10px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.25)'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 28px;
+        }
+
+        .quality-select:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .quality-select:focus {
+            border-color: rgba(0, 255, 65, 0.35);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .quality-select option {
+            background: #0d1117;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .res-info {
+            display: none;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 6px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* ===== MODE TOGGLE ===== */
+        .mode-toggle {
+            display: flex;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            padding: 3px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: rgba(0, 255, 65, 0.06);
+            color: var(--text-primary);
+        }
+
+        /* ===== D-PAD ===== */
+        .dpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .dpad-btn {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.12s;
+            font-family: var(--font-display);
+            min-height: 44px;
+        }
+
+        .dpad-btn:hover {
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .dpad-btn:active {
+            transform: scale(0.9);
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        .dpad-btn.center-btn {
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .dpad-btn.center-btn:hover {
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .dpad-btn.center-btn:active {
+            background: #00cc33;
+        }
+
+        .dpad-empty {
+            visibility: visible;
+        }
+
+        .dpad-btn.cooldown {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* ===== SPEED ===== */
+        .speed-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .speed-row input[type="range"] {
+            flex: 1;
+            height: 3px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .speed-row .speed-val {
+            color: var(--accent);
+            min-width: 32px;
+            text-align: right;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* ===== NAV BUTTONS ===== */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .nav-btn {
+            padding: 10px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            background: rgba(13, 17, 23, 0.6);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.72rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            text-align: center;
+            letter-spacing: 0.5px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .nav-btn:hover {
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+            background: rgba(0, 255, 65, 0.08);
+        }
+
+        .nav-btn.cooldown {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* ===== TEXT INPUT ===== */
+        .text-input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .text-input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.78rem;
+            font-weight: 400;
+            transition: border-color 0.2s;
+        }
+
+        .text-input-row input:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.08);
+        }
+
+        .text-input-row input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .text-input-row button {
+            padding: 10px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            background: rgba(13, 17, 23, 0.6);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.15s;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+
+        .text-input-row button:hover {
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.06);
+        }
+
+        .text-input-row button:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== TOOL BTN ===== */
+        .tool-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            background: rgba(13, 17, 23, 0.6);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            text-align: center;
+            margin-top: 8px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tool-btn:hover {
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .tool-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== BACK LINK ===== */
+        .back-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s;
+            letter-spacing: 1.5px;
+            margin-top: auto;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            background: rgba(0, 255, 65, 0.03);
+        }
+
+        /* â”€â”€ DISCLAIMER â”€â”€ */
+        .disc {
+            padding: 14px 16px;
+            background: rgba(255, 170, 0, 0.02);
+            border: 1px solid rgba(255, 170, 0, 0.08);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 0.58rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.2);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* â”€â”€ FOOTER â”€â”€ */
+        .ft {
+            text-align: center;
+            padding: 22px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.48rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.18);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.15));
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.45rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.12);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== SIDEBAR TOGGLE / CLOSE ===== */
+        .sidebar-toggle-btn {
+            display: flex;
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 1001;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            background: rgba(13, 17, 23, 0.9);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+            color: var(--accent);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .sidebar-toggle-btn:hover {
+            border-color: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        .sidebar-toggle-btn:active {
+            transform: scale(0.9);
+        }
+
+        .sidebar-toggle-btn.hidden {
+            display: none;
+        }
+
+        .sidebar-close-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .sidebar-close-btn:active {
+            transform: scale(0.88);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 999;
+            backdrop-filter: blur(2px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                --sb-w: 280px;
+            }
+
+            .dpad-grid {
+                max-width: 180px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .screen-area {
+                flex: 1;
+                width: 100%;
+            }
+
+            .sidebar {
+                --sb-w: 280px;
+            }
+
+            .dpad-grid {
+                max-width: 150px;
+                gap: 4px;
+                padding: 8px;
+            }
+
+            .touch-hint {
+                font-size: 0.58rem;
+                bottom: 8px;
+            }
+
+            .sidebar-header h1 {
+                font-size: 0.78rem;
+            }
+
+            .ctrl-section {
+                padding: 14px 16px;
+            }
+
+            .nav-grid {
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="openSidebar()"><i data-lucide="menu"
+            style="width:20px;height:20px;"></i></button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="app-container">
+        <!-- Screen Area -->
+        <div class="screen-area" id="screen-container">
+            <div id="action-indicator" class="action-hud"></div>
+            <div id="placeholder" class="placeholder">
+                <span class="ph-icon"><i data-lucide="monitor-smartphone" style="width:48px;height:48px;"></i></span>
+                <h2>Ready to Connect</h2>
+                <p>Click <strong style="color:var(--accent);">START</strong> to begin screen streaming.</p>
+                <p style="opacity: 0.4; margin-top: 6px; font-size: 0.68rem;">Ensure phone screen is ON</p>
+            </div>
+            <div class="screen-wrapper" id="screen-wrapper">
+                <video id="screen-display" autoplay playsinline muted></video>
+                <div class="cursor-overlay" id="cursor-overlay">
+                    <div class="cursor-line-h"></div>
+                    <div class="cursor-line-v"></div>
+                    <div class="cursor-crosshair" id="cursor-crosshair">
+                        <span class="cursor-coords" id="cursor-coords"></span>
+                    </div>
+                </div>
+                <div class="lock-overlay" id="lock-overlay"><span class="lock-badge"><i data-lucide="lock"
+                            style="width:11px;height:11px;"></i> Locked</span></div>
+                <div class="cooldown-overlay" id="cooldown-overlay"></div>
+            </div>
+            <div class="touch-hint visible" id="touch-hint">D-Pad scrolls &bull; Select confirms focused item &bull;
+                Swipe on screen</div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1><i data-lucide="gamepad-2" style="width:16px;height:16px;"></i> REMOTE</h1>
+                <button class="sidebar-close-btn" onclick="closeSidebar()" title="Close"><i data-lucide="x"
+                        style="width:14px;height:14px;"></i></button>
+            </div>
+
+            <!-- Stream -->
+            <div class="ctrl-section">
+                <div class="ctrl-label"><i data-lucide="radio" style="width:11px;height:11px;"></i> STREAM</div>
+                <div class="stream-btns">
+                    <button class="s-btn start" id="btn-start"><i data-lucide="play"
+                            style="width:13px;height:13px;"></i> START</button>
+                    <button class="s-btn stop" id="btn-stop" disabled><i data-lucide="square"
+                            style="width:13px;height:13px;"></i> STOP</button>
+                </div>
+                <div class="quality-row">
+                    <span class="quality-label">Quality</span>
+                    <select id="quality-select" class="quality-select">
+                        <option value="auto" selected>Auto (Best)</option>
+                        <option value="ultra">Ultra — 4 Mbps</option>
+                        <option value="high">High — 2 Mbps</option>
+                        <option value="medium">Medium — 1 Mbps</option>
+                        <option value="low">Low — 500 kbps</option>
+                    </select>
+                </div>
+                <div class="res-info" id="resolution-info"><span id="res-label">--</span></div>
+            </div>
+
+            <!-- Control -->
+            <div class="ctrl-section">
+                <div class="ctrl-label"><i data-lucide="joystick" style="width:11px;height:11px;"></i> CONTROL</div>
+                <div class="mode-toggle">
+                    <button class="mode-btn" id="mode-cursor" onclick="setMode('cursor')"><i data-lucide="crosshair"
+                            style="width:11px;height:11px;"></i> CURSOR</button>
+                    <button class="mode-btn active" id="mode-gesture" onclick="setMode('gesture')"><i data-lucide="hand"
+                            style="width:11px;height:11px;"></i> SWIPE</button>
+                </div>
+                <div class="dpad-grid">
+                    <div class="dpad-empty"></div>
+                    <button class="dpad-btn action-btn" onclick="dpadAction('up')"><i data-lucide="chevron-up"
+                            style="width:18px;height:18px;"></i></button>
+                    <div class="dpad-empty"></div>
+                    <button class="dpad-btn action-btn" onclick="dpadAction('left')"><i data-lucide="chevron-left"
+                            style="width:18px;height:18px;"></i></button>
+                    <button class="dpad-btn center-btn action-btn" onclick="selectAction()">OK</button>
+                    <button class="dpad-btn action-btn" onclick="dpadAction('right')"><i data-lucide="chevron-right"
+                            style="width:18px;height:18px;"></i></button>
+                    <div class="dpad-empty"></div>
+                    <button class="dpad-btn action-btn" onclick="dpadAction('down')"><i data-lucide="chevron-down"
+                            style="width:18px;height:18px;"></i></button>
+                    <div class="dpad-empty"></div>
+                </div>
+                <div class="speed-row">
+                    <span>SPEED</span>
+                    <input type="range" id="cursor-speed" min="10" max="100" value="40"
+                        oninput="updateCursorSpeed(this.value)">
+                    <span class="speed-val" id="speed-label">40px</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="ctrl-section">
+                <div class="ctrl-label"><i data-lucide="compass" style="width:11px;height:11px;"></i> NAVIGATION</div>
+                <div class="nav-grid">
+                    <button class="nav-btn action-btn" onclick="sendAction('key', 'BACK')"><i data-lucide="arrow-left"
+                            style="width:13px;height:13px;"></i> Back</button>
+                    <button class="nav-btn action-btn" onclick="sendAction('key', 'HOME')"><i data-lucide="home"
+                            style="width:13px;height:13px;"></i> Home</button>
+                    <button class="nav-btn action-btn" onclick="sendAction('key', 'RECENTS')"><i data-lucide="layers"
+                            style="width:13px;height:13px;"></i> Apps</button>
+                    <button class="nav-btn action-btn" onclick="sendAction('key', 'NOTIFICATIONS')"><i
+                            data-lucide="bell" style="width:13px;height:13px;"></i> Notif</button>
+                </div>
+            </div>
+
+            <!-- Text & Tools -->
+            <div class="ctrl-section">
+                <div class="ctrl-label"><i data-lucide="keyboard" style="width:11px;height:11px;"></i> TEXT INPUT</div>
+                <div class="text-input-row">
+                    <input type="text" id="TextInput" placeholder="Type text..." autocomplete="off">
+                    <button class="action-btn" onclick="sendText()">SEND</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <button class="tool-btn" id="btn-screenshot" style="margin-top: 0;"><i data-lucide="camera" style="width:13px;height:13px;"></i> Screenshot</button>
+                    <button class="tool-btn" id="btn-record" style="margin-top: 0;"><i data-lucide="video" style="width:13px;height:13px;"></i> Record</button>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="ctrl-section" style="border-bottom:none;">
+                <div class="disc">
+                    <h4><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Disclaimer</h4>
+                    <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to
+                        remotely manage their own devices. Installing or using this on a device without the owner's
+                        explicit consent is illegal and unethical.</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="ft">
+                <div class="ft-label">crafted by</div>
+                <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+                <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+            </footer>
+
+            <a href="javascript:window.history.back()" class="back-link"><i data-lucide="arrow-left" style="width:11px;height:11px;"></i>
+                BACK</a>
+        </div>
+    </div>
+    <script src="/js/api.js"></script>
+    <script src="/js/smart-ui.js"></script>
+    <script src="/js/call-notification.js"></script>
+
+    <script>
+        lucide.createIcons();
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+
+        // Elements
+        const imgDisplay = document.getElementById('screen-display'); // <video> element
+        const placeholder = document.getElementById('placeholder');
+        const statusDot = document.getElementById('status-dot');
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const btnScreenshot = document.getElementById('btn-screenshot');
+        const btnRecord = document.getElementById('btn-record');
+        const cooldownOverlay = document.getElementById('cooldown-overlay');
+        const touchHint = document.getElementById('touch-hint');
+        const actionIndicator = document.getElementById('action-indicator');
+        const cursorOverlay = document.getElementById('cursor-overlay');
+        const cursorCrosshair = document.getElementById('cursor-crosshair');
+        const cursorCoords = document.getElementById('cursor-coords');
+        const screenWrapper = document.getElementById('screen-wrapper');
+
+        // State
+        let isStreaming = false;
+        let ws = null;
+        let originalResolution = null;  // Will be set from device response or first frame
+        let resolutionDetected = false;
+
+        // Mode: 'cursor' or 'gesture'
+        let controlMode = 'gesture';
+
+        // Cursor position (in DEVICE coordinates)
+        let cursorX = 540;
+        let cursorY = 1200;
+        let cursorStep = 40;
+
+        // Throttle
+        let actionInProgress = false;
+        let waitingForConsent = false;
+        let isTouchLocked = false;
+        const COOLDOWN_MS = 400;
+        const lockOverlay = document.getElementById('lock-overlay');
+        let cooldownTimer = null;
+
+        // ========== WEBRTC STATE ==========
+        let pc = null;  // RTCPeerConnection
+        let dc = null;  // RTCDataChannel
+        const ICE_SERVERS = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' }
+        ];
+
+        // Wrap api.sendCommand to sync dashboard lock overlay
+        const _origSendCommand = api.sendCommand.bind(api);
+        api.sendCommand = async function (devId, action, ...args) {
+            const result = await _origSendCommand(devId, action, ...args);
+            if (action === 'touch_lock') {
+                isTouchLocked = true;
+                lockOverlay.classList.add('active');
+            } else if (action === 'touch_unlock') {
+                isTouchLocked = false;
+                lockOverlay.classList.remove('active');
+            }
+            return result;
+        };
+
+
+        if (!deviceId) window.location.href = 'index.html';
+
+        // ========== CURSOR SYSTEM ==========
+
+        function updateCursorDisplay() {
+            if (!isStreaming) return;
+
+            const rect = imgDisplay.getBoundingClientRect();
+            const wrapperRect = screenWrapper.getBoundingClientRect();
+
+            // Scale from device coords to displayed coords
+            if (!originalResolution) return;
+            const scaleX = rect.width / originalResolution.width;
+            const scaleY = rect.height / originalResolution.height;
+
+            // Position relative to wrapper
+            const displayX = (rect.left - wrapperRect.left) + cursorX * scaleX;
+            const displayY = (rect.top - wrapperRect.top) + cursorY * scaleY;
+
+            cursorCrosshair.style.left = displayX + 'px';
+            cursorCrosshair.style.top = displayY + 'px';
+
+            // Update coord display
+            cursorCoords.textContent = `${Math.round(cursorX)}, ${Math.round(cursorY)}`;
+        }
+
+        function moveCursor(dx, dy) {
+            if (!originalResolution) return;
+            cursorX = Math.max(0, Math.min(originalResolution.width, cursorX + dx));
+            cursorY = Math.max(0, Math.min(originalResolution.height, cursorY + dy));
+            updateCursorDisplay();
+        }
+
+        function showCursor() {
+            cursorOverlay.style.display = 'block';
+            // Size overlay to match image
+            const rect = imgDisplay.getBoundingClientRect();
+            const wrapperRect = screenWrapper.getBoundingClientRect();
+            cursorOverlay.style.left = (rect.left - wrapperRect.left) + 'px';
+            cursorOverlay.style.top = (rect.top - wrapperRect.top) + 'px';
+            cursorOverlay.style.width = rect.width + 'px';
+            cursorOverlay.style.height = rect.height + 'px';
+            updateCursorDisplay();
+        }
+
+        function hideCursor() {
+            cursorOverlay.style.display = 'none';
+        }
+
+        function updateCursorSpeed(val) {
+            cursorStep = parseInt(val);
+            document.getElementById('speed-label').textContent = val + 'px';
+        }
+
+        function updateResolutionDisplay(w, h, source) {
+            const resInfo = document.getElementById('resolution-info');
+            const resLabel = document.getElementById('res-label');
+            resInfo.style.display = 'block';
+            const sourceIcon = source === 'device' ? '\u{1F4F1}' : (source === 'frame' ? '\u{1F5BC}' : '\u{2699}');
+            resLabel.textContent = `${w} \u00D7 ${h} ${sourceIcon}`;
+            resInfo.title = `Device resolution: ${w}\u00D7${h} (detected from ${source})`;
+        }
+
+        // ========== MODE SYSTEM ==========
+
+        function setMode(mode) {
+            controlMode = mode;
+            document.getElementById('mode-cursor').classList.toggle('active', mode === 'cursor');
+            document.getElementById('mode-gesture').classList.toggle('active', mode === 'gesture');
+
+            if (mode === 'cursor') {
+                actionIndicator.textContent = '\u{1F3AF} Cursor Mode \u2022 Move cursor, then Select';
+                if (isStreaming) showCursor();
+                touchHint.textContent = 'Use D-Pad to move cursor \u2022 Select to tap \u2022 Arrow keys work too';
+            } else {
+                actionIndicator.textContent = '\u{1F44B} Gesture Mode \u2022 Swipe/scroll directly';
+                hideCursor();
+                touchHint.textContent = 'D-Pad scrolls \u2022 Select confirms focused item \u2022 Swipe on screen';
+            }
+        }
+
+        // ========== D-PAD ACTION (mode-dependent) ==========
+
+        function dpadAction(direction) {
+            if (!isStreaming) return;
+
+            if (controlMode === 'cursor') {
+                // Move cursor locally â€“ NO network call, instant
+                switch (direction) {
+                    case 'up': moveCursor(0, -cursorStep); break;
+                    case 'down': moveCursor(0, cursorStep); break;
+                    case 'left': moveCursor(-cursorStep, 0); break;
+                    case 'right': moveCursor(cursorStep, 0); break;
+                }
+                showActionIndicator(`\u{1F3AF} Cursor: ${Math.round(cursorX)}, ${Math.round(cursorY)}`);
+            } else {
+                // Gesture mode â€“ send swipe to Android
+                sendAction('accessibility_swipe', { direction: direction });
+            }
+        }
+
+        function swipeAction(direction) {
+            if (!isStreaming) return;
+            // Always send swipe, regardless of mode
+            sendAction('accessibility_swipe', { direction: direction });
+        }
+
+        // ========== SELECT ACTION (mode-dependent) ==========
+
+        function selectAction() {
+            if (!isStreaming) {
+                console.log('[Select] Not streaming, ignoring');
+                return;
+            }
+
+            console.log(`[Select] Mode: ${controlMode}, cursorX: ${Math.round(cursorX)}, cursorY: ${Math.round(cursorY)}, actionInProgress: ${actionInProgress}`);
+
+            if (controlMode === 'cursor') {
+                // Tap at cursor position â€“ sends accessibility_tap
+                const tapCoords = { x: Math.round(cursorX), y: Math.round(cursorY) };
+                console.log(`[Select/Cursor] Sending TAP at (${tapCoords.x}, ${tapCoords.y})`);
+                sendAction('tap', tapCoords);
+
+                // Visual flash
+                cursorCrosshair.classList.add('tap-flash');
+                setTimeout(() => cursorCrosshair.classList.remove('tap-flash'), 300);
+            } else {
+                // Gesture mode â€“ press Enter on focused element
+                console.log('[Select/Gesture] Sending ENTER key');
+                sendAction('key', 'ENTER');
+            }
+        }
+
+        // ========== THROTTLED ACTION SYSTEM ==========
+
+        async function sendCommand(action, payload, timeoutMs = 8000) {
+            const url = `/api/command/${deviceId}`;
+            const body = JSON.stringify({ action, payload });
+            console.log(`%c[sendCommand] POST ${url} action=${action}`, 'color: lime', payload);
+
+            // Include CSRF token (same as api.js) to avoid 403 on protected routes
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.content : '';
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: body,
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+
+                const data = await response.json();
+                console.log(`%c[sendCommand] Response:`, 'color: lime', response.status, data);
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                return data;
+            } catch (e) {
+                clearTimeout(timer);
+                if (e.name === 'AbortError') {
+                    throw new Error(`Timeout after ${timeoutMs}ms`);
+                }
+                throw e;
+            }
+        }
+
+        async function sendAction(type, value) {
+            console.log(`%c[sendAction] type=${type}, mode=${controlMode}, deviceId=${deviceId}, actionInProgress=${actionInProgress}`, 'color: cyan; font-weight: bold');
+            console.log(`[sendAction] value:`, value);
+
+            if (!isStreaming) {
+                console.warn('[sendAction] BLOCKED: Not streaming');
+                return;
+            }
+            if (actionInProgress) {
+                console.warn('[sendAction] BLOCKED: actionInProgress=true (cooldown)');
+                return;
+            }
+
+            actionInProgress = true;
+            setActionButtons(false);
+            cooldownOverlay.classList.add('active');
+
+            try {
+                switch (type) {
+                    case 'swipe':
+                        if (dc && dc.readyState === 'open') {
+                            // Convert direction to coordinates for DataChannel
+                            const cx = originalResolution ? originalResolution.width / 2 : 540;
+                            const cy = originalResolution ? originalResolution.height / 2 : 1200;
+                            const dist = 300;
+                            let sCoords = { startX: cx, startY: cy, endX: cx, endY: cy };
+                            if (value === 'up') sCoords = { startX: cx, startY: cy + dist, endX: cx, endY: cy - dist };
+                            else if (value === 'down') sCoords = { startX: cx, startY: cy - dist, endX: cx, endY: cy + dist };
+                            else if (value === 'left') sCoords = { startX: cx + dist, startY: cy, endX: cx - dist, endY: cy };
+                            else if (value === 'right') sCoords = { startX: cx - dist, startY: cy, endX: cx + dist, endY: cy };
+                            dc.send(JSON.stringify({ type: 'swipe', ...sCoords, duration: 300 }));
+                            showActionIndicator(`\u{1F4A8} Swipe ${value} \u26A1`);
+                        } else {
+                            await sendCommand('accessibility_swipe', { direction: value });
+                            showActionIndicator(`\u{1F4A8} Swipe ${value}`);
+                        }
+                        break;
+                    case 'key':
+                        if (dc && dc.readyState === 'open') {
+                            dc.send(JSON.stringify({ type: 'key', key: value }));
+                            showActionIndicator(`\u{2328} ${value} \u26A1`);
+                        } else {
+                            await sendCommand('accessibility_key', { key: value });
+                            showActionIndicator(`\u{2328} ${value}`);
+                        }
+                        break;
+                    case 'tap':
+                        if (dc && dc.readyState === 'open') {
+                            dc.send(JSON.stringify({ type: 'tap', x: value.x, y: value.y }));
+                            showActionIndicator(`\u{1F446} Tap (${value.x}, ${value.y}) \u26A1`);
+                        } else {
+                            await sendCommand('accessibility_tap', value, 5000);
+                            showActionIndicator(`\u{1F446} Tap (${value.x}, ${value.y})`);
+                        }
+                        break;
+                    case 'swipe_coords':
+                        await sendCommand('accessibility_swipe', value);
+                        showActionIndicator('\u{1F4A8} Swipe');
+                        break;
+                    case 'accessibility_swipe':
+                        await sendCommand('accessibility_swipe', value);
+                        showActionIndicator('\u{1F4A8} Swipe');
+                        break;
+                    default:
+                        console.error(`[sendAction] Unknown type: ${type}`);
+                        return;
+                }
+            } catch (e) {
+                console.error('%c[sendAction] ERROR:', 'color: red; font-weight: bold', e.message);
+                showActionIndicator('\u{274C} ' + e.message);
+            }
+
+            cooldownTimer = setTimeout(() => {
+                actionInProgress = false;
+                setActionButtons(true);
+                cooldownOverlay.classList.remove('active');
+            }, dc && dc.readyState === 'open' ? 150 : COOLDOWN_MS);
+        }
+
+        function setActionButtons(enabled) {
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.classList.toggle('cooldown', !enabled);
+            });
+        }
+
+        function showActionIndicator(text) {
+            actionIndicator.textContent = text;
+            actionIndicator.classList.add('active');
+            setTimeout(() => {
+                actionIndicator.classList.remove('active');
+                if (!actionInProgress) {
+                    actionIndicator.textContent = controlMode === 'cursor'
+                        ? '\u{1F3AF} Cursor Mode \u2013 Move cursor, then Select'
+                        : '\u{1F44B} Gesture Mode \u2013 Swipe/scroll directly';
+                }
+            }, 1500);
+        }
+
+        // ========== KEYBOARD ==========
+
+        document.addEventListener('keydown', (e) => {
+            if (!isStreaming) return;
+
+            if (document.activeElement.tagName === 'INPUT') {
+                if (e.key === 'Enter') sendText();
+                return;
+            }
+
+            switch (e.key) {
+                case 'Enter':
+                    e.preventDefault();
+                    selectAction();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    dpadAction('up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    dpadAction('down');
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    dpadAction('left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    dpadAction('right');
+                    break;
+                case 'Escape':
+                case 'Backspace':
+                    e.preventDefault();
+                    sendAction('key', 'BACK');
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    sendAction('key', 'HOME');
+                    break;
+                case 'F3':
+                    e.preventDefault();
+                    sendAction('key', 'RECENTS');
+                    break;
+                case 'Tab':
+                    // Toggle mode
+                    e.preventDefault();
+                    setMode(controlMode === 'cursor' ? 'gesture' : 'cursor');
+                    break;
+            }
+        });
+
+        // ========== WEBSOCKET ==========
+
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+
+            ws.onopen = () => {
+                console.log('WS Connected');
+                // Send real deviceId so server routes webrtc_answer/ice_candidate to this tab
+                ws.send(JSON.stringify({ type: 'identify', role: 'browser', deviceId: deviceId }));
+                if (statusDot) {
+                    statusDot.classList.add('connected');
+                    statusDot.title = "Connected";
+                }
+            };
+
+            let frameCount = 0;
+            ws.onmessage = async (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+
+                    if (frameCount < 3) {
+                        console.log('[WS] Message:', msg.type);
+                    }
+
+                    if (msg.type === 'webrtc_answer') {
+                        // WebRTC signaling: set remote answer
+                        if (pc) {
+                            console.log('%c[WebRTC] Received answer', 'color: lime; font-weight: bold');
+                            await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: msg.payload.sdp }));
+                        }
+                    } else if (msg.type === 'webrtc_ice_candidate') {
+                        // WebRTC signaling: add remote ICE candidate
+                        if (pc && msg.payload) {
+                            await pc.addIceCandidate(new RTCIceCandidate({
+                                sdpMid: msg.payload.sdpMid,
+                                sdpMLineIndex: msg.payload.sdpMLineIndex,
+                                candidate: msg.payload.sdp
+                            }));
+                        }
+                    } else if (msg.type === 'error') {
+                        api.showToast(`Device Error: ${msg.error}`, 'error');
+                    }
+                } catch (e) {
+                    console.error('[WS] Parse error:', e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('WS Disconnected — reconnecting in 3s...');
+                if (statusDot) {
+                    statusDot.classList.remove('connected');
+                    statusDot.title = "Disconnected";
+                }
+                setTimeout(initWebSocket, 3000);
+            };
+        }
+
+        // ========== STREAM ==========
+
+        let webrtcTimeout = null;
+
+        async function setupWebRTC() {
+            // Close any existing connection
+            if (pc) { pc.close(); pc = null; }
+            dc = null;
+            if (webrtcTimeout) { clearTimeout(webrtcTimeout); webrtcTimeout = null; }
+
+            pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+            // Create DataChannel for controls
+            dc = pc.createDataChannel('controls', { ordered: true });
+            dc.onopen = () => console.log('%c[WebRTC] DataChannel OPEN', 'color: lime; font-weight: bold');
+            dc.onclose = () => console.log('[WebRTC] DataChannel closed');
+
+            // Handle incoming video track
+            pc.ontrack = (event) => {
+                console.log('%c[WebRTC] Track received!', 'color: lime; font-weight: bold', event.track.kind);
+                if (webrtcTimeout) { clearTimeout(webrtcTimeout); webrtcTimeout = null; }
+                if (event.track.kind === 'video') {
+                    imgDisplay.srcObject = event.streams[0];
+                    imgDisplay.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    isStreaming = true;
+                    btnStart.disabled = true;
+                    btnStart.textContent = '\u25B6 START';
+                    btnStop.disabled = false;
+                    api.showToast('WebRTC stream connected!', 'success');
+
+                    // Auto-detect resolution from video
+                    imgDisplay.onloadedmetadata = () => {
+                        if (!resolutionDetected && imgDisplay.videoWidth > 0) {
+                            const vw = imgDisplay.videoWidth;
+                            const vh = imgDisplay.videoHeight;
+                            if (!originalResolution) {
+                                originalResolution = { width: vw, height: vh };
+                                cursorX = vw / 2;
+                                cursorY = vh / 2;
+                                updateResolutionDisplay(vw, vh, 'stream');
+                                console.log(`%c[Resolution] From WebRTC: ${vw}x${vh}`, 'color: orange; font-weight: bold');
+                            }
+                            resolutionDetected = true;
+                        }
+                    };
+
+                    setTimeout(() => {
+                        if (controlMode === 'cursor') showCursor();
+                    }, 200);
+                }
+            };
+
+            // Send ICE candidates to server
+            pc.onicecandidate = (event) => {
+                if (event.candidate && ws && ws.readyState === ws.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'webrtc_ice_candidate',
+                        deviceId: deviceId,
+                        payload: {
+                            sdpMid: event.candidate.sdpMid,
+                            sdpMLineIndex: event.candidate.sdpMLineIndex,
+                            sdp: event.candidate.candidate
+                        }
+                    }));
+                }
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                const state = pc ? pc.iceConnectionState : 'null';
+                console.log(`[WebRTC] ICE state: ${state}`);
+                if (state === 'connected' || state === 'completed') {
+                    if (webrtcTimeout) { clearTimeout(webrtcTimeout); webrtcTimeout = null; }
+                }
+                if (state === 'failed') {
+                    api.showToast('WebRTC connection failed — try again', 'error');
+                    stopStream();
+                } else if (state === 'disconnected') {
+                    api.showToast('WebRTC connection lost — reconnecting...', 'warning');
+                }
+            };
+
+            // Create offer
+            const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: false });
+            await pc.setLocalDescription(offer);
+
+            // Send offer to Android device via REST command
+            console.log('[WebRTC] Sending offer to device...');
+            await api.sendCommand(deviceId, 'webrtc_offer', { sdp: offer.sdp });
+
+            // WebRTC connection timeout — if no track received in 15s, fail gracefully
+            webrtcTimeout = setTimeout(() => {
+                if (!isStreaming && pc) {
+                    console.error('[WebRTC] Connection timeout — no video track received in 15s');
+                    api.showToast('Stream timeout — no video received. Try again.', 'error');
+                    stopStream();
+                }
+            }, 15000);
+
+            // Apply current quality setting after connection
+            setTimeout(() => applyQuality(document.getElementById('quality-select').value), 2000);
+        }
+
+        // ========== QUALITY CONTROL ==========
+        const QUALITY_PRESETS = {
+            'auto':   { maxBitrate: 0,       maxHeight: 0 },    // No limit — best quality
+            'ultra':  { maxBitrate: 4000000, maxHeight: 0 },    // 4 Mbps — crisp
+            'high':   { maxBitrate: 2000000, maxHeight: 0 },    // 2 Mbps — great
+            'medium': { maxBitrate: 1000000, maxHeight: 0 },    // 1 Mbps — good
+            'low':    { maxBitrate: 500000,  maxHeight: 0 },    // 500 kbps — smooth on slow networks
+        };
+
+        function applyQuality(preset) {
+            const q = QUALITY_PRESETS[preset];
+            if (!q) return;
+
+            // Send quality command to Android via DataChannel (Android is the sender/encoder)
+            if (dc && dc.readyState === 'open') {
+                dc.send(JSON.stringify({ type: 'quality', maxBitrate: q.maxBitrate, maxHeight: q.maxHeight }));
+                console.log(`[Quality] Sent to device: ${preset} (${q.maxBitrate ? (q.maxBitrate/1000)+'kbps' : 'auto'})`);
+                const labels = { auto: 'Auto', ultra: 'Ultra', high: 'High', medium: 'Medium', low: 'Low' };
+                api.showToast(`Quality: ${labels[preset] || preset}`, 'info');
+            } else {
+                console.warn('[Quality] DataChannel not open, cannot send quality command');
+                api.showToast('Stream not connected yet', 'warning');
+            }
+        }
+
+        document.getElementById('quality-select').addEventListener('change', (e) => {
+            applyQuality(e.target.value);
+        });
+
+        async function startStream() {
+            try {
+                btnStart.disabled = true;
+                btnStart.textContent = '\u23F3 Starting...';
+
+                // Step 1: Press HOME — clear overlays, go to clean home screen
+                console.log('[Stream] Step 1: Pressing HOME...');
+                try {
+                    await api.sendCommand(deviceId, 'accessibility_key', { key: 'home' });
+                } catch (e) { console.warn('[Stream] HOME failed:', e.message); }
+                await new Promise(r => setTimeout(r, 200));
+
+                // Step 2: Initialize SmartUI node tree (ready before consent dialog)
+                console.log('[Stream] Step 2: Initializing SmartUI node tree...');
+                if (typeof SmartUI !== 'undefined') {
+                    SmartUI.show(deviceId, {
+                        title: 'GRANT SCREEN PERMISSION',
+                        onDone: () => {
+                            // User interacted with SmartUI — just close the popup
+                            console.log('[Stream] SmartUI onDone — closing popup');
+                            waitingForConsent = false;
+                            try { SmartUI.close(); } catch(e) {}
+                            api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
+                        },
+                        onClose: () => {
+                            waitingForConsent = false;
+                            api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
+                            if (!isStreaming) btnStart.disabled = false;
+                            if (!isStreaming) btnStart.textContent = '\u25B6 START';
+                        }
+                    });
+                }
+                await new Promise(r => setTimeout(r, 200));
+
+                // Step 3: Lock touch to prevent phone user interference
+                try { await api.sendCommand(deviceId, 'touch_lock'); } catch (e) { }
+
+                // Step 4: Trigger MediaProjection consent prompt
+                console.log('[Stream] Step 3: Triggering consent prompt...');
+                waitingForConsent = true;
+                const result = await api.sendCommand(deviceId, 'screen_stream_start');
+                const data = result.data || result;
+
+                if (data.deviceResolution || data.resolution) {
+                    const resStr = data.deviceResolution || data.resolution;
+                    const [w, h] = resStr.split('x').map(Number);
+                    originalResolution = { width: w, height: h };
+                    resolutionDetected = true;
+                    cursorX = w / 2;
+                    cursorY = h / 2;
+                    updateResolutionDisplay(w, h, data.deviceResolution ? 'device' : 'stream');
+                }
+
+                if (data.status === 'started' || result.success) {
+                    // MediaProjection granted — close SmartUI, unlock, start WebRTC
+                    waitingForConsent = false;
+                    try { if (typeof SmartUI !== 'undefined') SmartUI.close(); } catch(e) {}
+                    api.sendCommand(deviceId, 'touch_unlock').catch(() => { });
+                    console.log('%c[WebRTC] MediaProjection granted, setting up PeerConnection...', 'color: lime; font-weight: bold');
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    await setupWebRTC();
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (e) {
+                if (e.message && e.message.includes('waiting_for_consent')) {
+                    waitingForConsent = true;
+                    btnStart.disabled = true;
+                    btnStart.textContent = '\u23F3 Waiting...';
+                    console.log('[Stream] Waiting for consent via SmartUI...');
+                    return;
+                }
+                btnStart.disabled = false;
+                btnStart.textContent = '\u25B6 START';
+                if (e.message && e.message.includes('device_locked')) {
+                    api.showToast('Device is locked � unlock it first', 'error');
+                } else {
+                    api.showToast(e.message, 'error');
+                }
+            }
+        }
+
+        async function stopStream() {
+            try {
+                await api.sendCommand(deviceId, 'screen_stream_stop');
+            } catch (e) { console.error(e); }
+            finally {
+                // Close WebRTC
+                if (webrtcTimeout) { clearTimeout(webrtcTimeout); webrtcTimeout = null; }
+                if (pc) { pc.close(); pc = null; }
+                dc = null;
+                isStreaming = false;
+                actionInProgress = false;
+                resolutionDetected = false;
+                originalResolution = null;
+                if (cooldownTimer) clearTimeout(cooldownTimer);
+                setActionButtons(true);
+                cooldownOverlay.classList.remove('active');
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+                imgDisplay.style.display = 'none';
+                imgDisplay.srcObject = null;
+                placeholder.style.display = 'block';
+                hideCursor();
+                document.getElementById('resolution-info').style.display = 'none';
+                api.showToast('Stream stopped', 'info');
+            }
+        }
+
+
+        // ========== TEXT INPUT ==========
+
+        async function sendText() {
+            const input = document.getElementById('TextInput');
+            const text = input.value;
+            if (!text || actionInProgress) return;
+
+            actionInProgress = true;
+            setActionButtons(false);
+
+            try {
+                await api.sendCommand(deviceId, 'accessibility_text', { text });
+                input.value = '';
+                showActionIndicator('\u{1F4AC} Text sent');
+                api.showToast('Text sent', 'success');
+            } catch (e) {
+                showActionIndicator('\u{274C} Text failed');
+                api.showToast('Failed to send text', 'error');
+            }
+
+            setTimeout(() => {
+                actionInProgress = false;
+                setActionButtons(true);
+            }, COOLDOWN_MS);
+        }
+
+        // ========== SCREENSHOT & RECORDING ==========
+
+        async function takeScreenshot() {
+            try {
+                const response = await api.sendCommand(deviceId, 'screen_snap');
+                const result = response.data || response;
+                if (result.path || result.status === 'success') {
+                    api.showToast('Screenshot saved to device', 'success');
+                }
+            } catch (e) { api.showToast(e.message, 'error'); }
+        }
+
+        let isRecordingVideo = false;
+        async function toggleRecording() {
+            try {
+                if (isRecordingVideo) {
+                    const response = await api.sendCommand(deviceId, 'screen_record_stop');
+                    const result = response.data || response;
+                    if (result.status === 'success' || result.status === 'error') {
+                        isRecordingVideo = false;
+                        btnRecord.innerHTML = `<i data-lucide="video" style="width:13px;height:13px;"></i> Record`;
+                        btnRecord.style.color = '';
+                        btnRecord.style.borderColor = '';
+                        lucide.createIcons();
+                        api.showToast('Recording saved to device', 'success');
+                    }
+                } else {
+                    const response = await api.sendCommand(deviceId, 'screen_record_start');
+                    const result = response.data || response;
+                    if (result.status === 'started' || result.status === 'success') {
+                        isRecordingVideo = true;
+                        btnRecord.innerHTML = `<i data-lucide="square" style="width:13px;height:13px;"></i> Stop Rec`;
+                        btnRecord.style.color = 'var(--danger)';
+                        btnRecord.style.borderColor = 'var(--danger)';
+                        lucide.createIcons();
+                        api.showToast('Recording started', 'success');
+                    }
+                }
+            } catch (e) {
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        // ========== TOUCH & MOUSE INTERACTION ==========
+
+        let isDragging = false;
+        let mouseDownTime = 0;
+        let startX = 0, startY = 0;
+        const TAP_THRESHOLD = 15;    // Max pixels moved to count as tap (not drag/swipe)
+        const SWIPE_THRESHOLD = 40;  // Min pixels for a swipe gesture
+
+        function getDeviceCoords(clientX, clientY) {
+            if (!originalResolution) return null;
+            const rect = imgDisplay.getBoundingClientRect();
+            const scaleX = originalResolution.width / rect.width;
+            const scaleY = originalResolution.height / rect.height;
+            return {
+                x: Math.round(Math.max(0, Math.min(originalResolution.width, (clientX - rect.left) * scaleX))),
+                y: Math.round(Math.max(0, Math.min(originalResolution.height, (clientY - rect.top) * scaleY)))
+            };
+        }
+
+        function showTapRipple(clientX, clientY) {
+            const rect = imgDisplay.getBoundingClientRect();
+            const wrapperRect = screenWrapper.getBoundingClientRect();
+            const ripple = document.createElement('div');
+            ripple.style.cssText = `
+                position: absolute;
+                left: ${clientX - wrapperRect.left}px;
+                top: ${clientY - wrapperRect.top}px;
+                width: 30px; height: 30px;
+                margin-left: -15px; margin-top: -15px;
+                border-radius: 50%;
+                background: rgba(0, 255, 65, 0.3);
+                border: 2px solid rgba(0, 255, 65, 0.6);
+                pointer-events: none;
+                animation: tapRipple 0.5s ease-out forwards;
+                z-index: 100;
+            `;
+            screenWrapper.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 500);
+        }
+
+        function getSwipeDirection(dx, dy) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+                return dx > 0 ? 'right' : 'left';
+            }
+            return dy > 0 ? 'down' : 'up';
+        }
+
+        // --- Mouse Events ---
+
+        imgDisplay.addEventListener('mousedown', e => {
+            if (!isStreaming || !originalResolution) return;
+            e.preventDefault();
+            const c = getDeviceCoords(e.clientX, e.clientY);
+            if (!c) return;
+
+            startX = c.x; startY = c.y;
+            mouseDownTime = Date.now();
+            isDragging = true;
+
+            if (controlMode === 'cursor') {
+                // Move cursor to click position immediately
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+            }
+        });
+
+        imgDisplay.addEventListener('mousemove', e => {
+            if (!isDragging || !isStreaming || !originalResolution) return;
+            e.preventDefault();
+            const c = getDeviceCoords(e.clientX, e.clientY);
+            if (!c) return;
+
+            if (controlMode === 'cursor') {
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+            }
+        });
+
+        imgDisplay.addEventListener('mouseup', e => {
+            if (!isStreaming || !isDragging || !originalResolution) return;
+            e.preventDefault();
+            isDragging = false;
+
+            const c = getDeviceCoords(e.clientX, e.clientY);
+            if (!c) return;
+
+            const dx = c.x - startX;
+            const dy = c.y - startY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (controlMode === 'cursor') {
+                // Cursor mode: move cursor + tap at final position
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+
+                if (dist < TAP_THRESHOLD) {
+                    // Short click = tap
+                    console.log(`[Click\u2192Tap] Cursor mode at (${c.x}, ${c.y})`);
+                    cursorCrosshair.classList.add('tap-flash');
+                    setTimeout(() => cursorCrosshair.classList.remove('tap-flash'), 300);
+                    showTapRipple(e.clientX, e.clientY);
+                    sendAction('tap', { x: c.x, y: c.y });
+                }
+                // Long drag = just repositioned cursor, no action
+            } else {
+                // Gesture mode: tap or swipe
+                if (dist < TAP_THRESHOLD) {
+                    // Tap at click position
+                    console.log(`[Click\u2192Tap] Gesture mode at (${c.x}, ${c.y})`);
+                    showTapRipple(e.clientX, e.clientY);
+                    sendAction('tap', { x: c.x, y: c.y });
+                } else if (dist >= SWIPE_THRESHOLD) {
+                    // Swipe gesture
+                    const direction = getSwipeDirection(dx, dy);
+                    console.log(`[Drag\u2192Swipe] Gesture mode: ${direction} (${Math.round(dist)}px)`);
+                    sendAction('accessibility_swipe', {
+                        fromX: startX, fromY: startY,
+                        toX: c.x, toY: c.y,
+                        duration: 300
+                    });
+                }
+            }
+        });
+
+        imgDisplay.addEventListener('mouseleave', () => { isDragging = false; });
+
+        // --- Touch Events (mobile browsers) ---
+
+        let touchStartCoords = null;
+
+        imgDisplay.addEventListener('touchstart', e => {
+            if (!isStreaming || !originalResolution) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const c = getDeviceCoords(touch.clientX, touch.clientY);
+            if (!c) return;
+
+            touchStartCoords = { ...c, clientX: touch.clientX, clientY: touch.clientY };
+            mouseDownTime = Date.now();
+
+            if (controlMode === 'cursor') {
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+            }
+        }, { passive: false });
+
+        imgDisplay.addEventListener('touchmove', e => {
+            if (!isStreaming || !originalResolution || !touchStartCoords) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const c = getDeviceCoords(touch.clientX, touch.clientY);
+            if (!c) return;
+
+            if (controlMode === 'cursor') {
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+            }
+        }, { passive: false });
+
+        imgDisplay.addEventListener('touchend', e => {
+            if (!isStreaming || !originalResolution || !touchStartCoords) return;
+            e.preventDefault();
+
+            const touch = e.changedTouches[0];
+            const c = getDeviceCoords(touch.clientX, touch.clientY);
+            if (!c) return;
+
+            const dx = c.x - touchStartCoords.x;
+            const dy = c.y - touchStartCoords.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (controlMode === 'cursor') {
+                cursorX = c.x;
+                cursorY = c.y;
+                updateCursorDisplay();
+
+                if (dist < TAP_THRESHOLD) {
+                    cursorCrosshair.classList.add('tap-flash');
+                    setTimeout(() => cursorCrosshair.classList.remove('tap-flash'), 300);
+                    showTapRipple(touch.clientX, touch.clientY);
+                    sendAction('tap', { x: c.x, y: c.y });
+                }
+            } else {
+                if (dist < TAP_THRESHOLD) {
+                    showTapRipple(touch.clientX, touch.clientY);
+                    sendAction('tap', { x: c.x, y: c.y });
+                } else if (dist >= SWIPE_THRESHOLD) {
+                    const direction = getSwipeDirection(dx, dy);
+                    sendAction('accessibility_swipe', {
+                        fromX: touchStartCoords.x, fromY: touchStartCoords.y,
+                        toX: c.x, toY: c.y,
+                        duration: 300
+                    });
+                }
+            }
+
+            touchStartCoords = null;
+        }, { passive: false });
+
+        // Reposition cursor overlay when window resizes
+        window.addEventListener('resize', () => {
+            if (isStreaming && controlMode === 'cursor') {
+                showCursor();
+            }
+        });
+
+        // ========== INIT ==========
+
+        btnStart.addEventListener('click', startStream);
+        btnStop.addEventListener('click', stopStream);
+        btnScreenshot.addEventListener('click', takeScreenshot);
+        btnRecord.addEventListener('click', toggleRecording);
+
+        initWebSocket();
+
+        // ========== SIDEBAR TOGGLE ==========
+        const isMobile = () => window.innerWidth <= 900;
+
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggleBtn = document.getElementById('sidebar-toggle');
+
+            sidebar.classList.add('open');
+            toggleBtn.classList.add('hidden');
+            // Only show overlay on mobile
+            if (isMobile()) {
+                overlay.classList.add('active');
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggleBtn = document.getElementById('sidebar-toggle');
+
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            toggleBtn.classList.remove('hidden');
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+
+        // Auto-open sidebar on desktop
+        if (window.innerWidth > 900) {
+            openSidebar();
+        }
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (isStreaming || pc) {
+                // Close WebRTC
+                if (pc) { pc.close(); pc = null; }
+                dc = null;
+                if (imgDisplay) { imgDisplay.srcObject = null; }
+
+                // Tell device to stop streaming
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action: 'screen_stream_stop', payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
+
+    </script>
+
+
+</body>
+
+</html>

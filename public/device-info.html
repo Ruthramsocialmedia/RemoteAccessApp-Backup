@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Device Info - Remote Access</title>
+  <link rel="stylesheet" href="/css/hacker-theme.css">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      padding: 0;
+      min-height: 100vh;
+      font-family: var(--font-display) !important;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 22px 26px;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* ── HEADER ── */
+    .pg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pg-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+      opacity: 0.4;
+    }
+
+    .pg-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pg-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+      border: 1px solid rgba(0, 255, 65, 0.25);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+    }
+
+    .pg-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e8e8e8;
+    }
+
+    .pg-title span {
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    }
+
+    .pg-sub {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-top: 1px;
+    }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+      color: var(--accent);
+      border-color: rgba(0, 255, 65, 0.25);
+      background: rgba(0, 255, 65, 0.04);
+    }
+
+    /* ── REFRESH BAR ── */
+    .refresh-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 0.65rem;
+    }
+
+    .refresh-bar .ts {
+      font-family: var(--font-display);
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .refresh-bar .btn-ref {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .refresh-bar .btn-ref:hover {
+      color: var(--accent);
+      border-color: rgba(0, 255, 65, 0.25);
+    }
+
+    /* ── INFO GRID ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 14px;
+    }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.25s;
+      position: relative;
+    }
+
+    .info-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 20%, var(--accent) 50%, transparent 80%);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .info-card:hover {
+      border-color: rgba(0, 255, 65, 0.15);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 0 12px rgba(0, 255, 65, 0.03);
+      transform: translateY(-1px);
+    }
+
+    .info-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+    }
+
+    .card-header .ic {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.03));
+      border: 1px solid rgba(0, 255, 65, 0.12);
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .card-header h3 {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+      line-height: 1;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+      font-size: 0.8rem;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row .lbl {
+      font-family: var(--font-display);
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .info-row .val {
+      font-family: var(--font-display);
+      font-weight: 400;
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      line-height: 1;
+    }
+
+    .info-row .val svg {
+      display: block;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .prog-wrap {
+      padding: 4px 18px 14px;
+    }
+
+    .prog {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-dark);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── EMPTY / ERROR ── */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+    }
+
+    .empty .e-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      opacity: 0.3;
+    }
+
+    .empty h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .empty p {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 400;
+    }
+
+    .pulse-load {
+      animation: pLoad 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pLoad {
+
+      0%,
+      100% {
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* ── DISCLAIMER ── */
+    .disc {
+      margin-top: 28px;
+      padding: 16px 20px;
+      background: rgba(255, 170, 0, 0.03);
+      border: 1px solid rgba(255, 170, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    .disc h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--warning);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .disc p {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .ft {
+      text-align: center;
+      padding: 32px 16px;
+      margin-top: 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ft .ft-label {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .ft .ft-brand {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: lowercase;
+      text-decoration: none;
+      background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+      transition: all 0.4s ease;
+    }
+
+    .ft .ft-brand:hover {
+      filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+      animation: brandShine 1.5s ease infinite;
+    }
+
+    @keyframes brandShine {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .ft .ft-copy {
+      font-family: var(--font-display);
+      font-size: 0.55rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    /* ── Tablets Portrait ── */
+    @media (max-width: 768px) {
+      .wrap {
+        padding: 12px;
+      }
+
+      .pg-header {
+        padding: 14px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pg-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .pg-title {
+        font-size: 0.95rem;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+
+    /* ── Phablets ── */
+    @media (max-width: 600px) {
+      .wrap {
+        padding: 10px;
+      }
+
+      .pg-header {
+        padding: 12px 14px;
+      }
+
+      .pg-title {
+        font-size: 0.9rem;
+      }
+
+      .card-header h3 {
+        font-size: 0.65rem;
+      }
+
+      .info-row {
+        font-size: 0.72rem;
+        padding: 9px 14px;
+      }
+
+      .card-header {
+        padding: 12px 14px;
+      }
+
+      .disc {
+        margin-top: 20px;
+        padding: 12px 14px;
+      }
+
+      .disc h4 {
+        font-size: 0.52rem;
+      }
+
+      .disc p {
+        font-size: 0.5rem;
+      }
+
+      .ft {
+        padding: 24px 12px;
+        margin-top: 20px;
+      }
+
+      .ft .ft-brand {
+        font-size: 1rem;
+      }
+    }
+
+    /* ── Regular Phones ── */
+    @media (max-width: 480px) {
+      .pg-header-left {
+        gap: 10px;
+      }
+
+      .pg-sub {
+        display: none;
+      }
+
+      .btn-back span {
+        display: none;
+      }
+
+      .pg-icon {
+        width: 34px;
+        height: 34px;
+      }
+
+      .card-header .ic {
+        width: 28px;
+        height: 28px;
+      }
+
+      .card-header h3 {
+        font-size: 0.62rem;
+        line-height: 28px;
+      }
+
+      .info-row {
+        padding: 8px 14px;
+        font-size: 0.7rem;
+      }
+
+      .refresh-bar {
+        padding: 8px 14px;
+      }
+
+      .disc {
+        margin-top: 16px;
+      }
+
+      .ft {
+        padding: 20px 10px;
+        margin-top: 16px;
+      }
+
+      .ft .ft-brand {
+        font-size: 0.9rem;
+      }
+
+      .ft .ft-copy {
+        font-size: 0.42rem;
+      }
+    }
+
+    /* ── Small Phones ── */
+    @media (max-width: 380px) {
+      .wrap {
+        padding: 8px;
+      }
+
+      .pg-header {
+        padding: 10px 12px;
+      }
+
+      .pg-icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      .pg-title {
+        font-size: 0.85rem;
+      }
+
+      .btn-back {
+        padding: 6px 10px;
+        font-size: 0.6rem;
+      }
+
+      .info-row {
+        padding: 7px 12px;
+        font-size: 0.65rem;
+      }
+
+      .card-header {
+        padding: 10px 12px;
+      }
+
+      .card-header .ic {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+      }
+
+      .card-header h3 {
+        font-size: 0.58rem;
+        line-height: 26px;
+      }
+
+      .disc {
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+
+      .disc h4 {
+        font-size: 0.48rem;
+        gap: 4px;
+      }
+
+      .disc p {
+        font-size: 0.45rem;
+      }
+
+      .ft .ft-brand {
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- HEADER -->
+    <div class="pg-header">
+      <div class="pg-header-left">
+        <div class="pg-icon">
+          <i data-lucide="info" style="width:20px;height:20px;"></i>
+        </div>
+        <div>
+          <div class="pg-title"><span>Device</span> Information</div>
+          <div class="pg-sub">// system diagnostics</div>
+        </div>
+      </div>
+      <a href="javascript:window.history.back()" class="btn-back">
+        <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+        <span>Back</span>
+      </a>
+    </div>
+
+    <!-- REFRESH BAR -->
+    <div class="refresh-bar">
+      <span class="ts" id="last-ts">querying device...</span>
+      <button class="btn-ref" onclick="loadDeviceInfo()">
+        <i data-lucide="refresh-cw" style="width:12px;height:12px;"></i>
+        Refresh
+      </button>
+    </div>
+
+    <!-- INFO CARDS -->
+    <div id="device-info" class="info-grid">
+      <div class="empty">
+        <div class="e-icon pulse-load">
+          <i data-lucide="cpu" style="width:48px;height:48px;"></i>
+        </div>
+        <h2>Loading Device Info</h2>
+        <p>Querying device diagnostics...</p>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disc">
+      <h4>
+        <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+        Disclaimer
+      </h4>
+      <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+        manage their own devices. Installing or using this on a device without the owner's explicit
+        consent is illegal and unethical.</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="ft">
+    <div class="ft-label">crafted by</div>
+    <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+    <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/call-notification.js"></script>
+  <script>
+    lucide.createIcons();
+
+    const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+    if (!deviceId) window.location.href = 'index.html';
+
+    // Safety guard: escHtml is defined in api.js — provide fallback in case api.js fails to load
+    if (typeof window.escHtml !== 'function') {
+      window.escHtml = function (str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      };
+    }
+
+    function getBatteryColor(level) {
+      if (level > 50) return '#00ff41';
+      if (level > 20) return '#ffaa00';
+      return '#ff3333';
+    }
+
+    let isLoading = false;
+    let lastFetch = 0;
+
+    async function loadDeviceInfo(force = false) {
+      if (isLoading) return; // Guard against stacked parallel calls
+      if (!force && Date.now() - lastFetch < 5000) return; // 5s debounce
+      isLoading = true;
+      lastFetch = Date.now();
+      try {
+        const response = await api.getDeviceInfo(deviceId);
+        if (response.success) {
+          renderDeviceInfo(response.device);
+          document.getElementById('last-ts').textContent =
+            `last updated: ${new Date().toLocaleTimeString()}`;
+        } else {
+          throw new Error(response.error || 'Failed to get device info');
+        }
+      } catch (error) {
+        document.getElementById('device-info').innerHTML = `
+          <div class="empty" style="grid-column:1/-1;">
+            <div class="e-icon"><i data-lucide="alert-circle" style="width:48px;height:48px;color:var(--danger);"></i></div>
+            <h2>Error</h2>
+            <p>${escHtml(error.message)}</p>
+            <p style="margin-top:14px;"><button class="btn btn-primary" onclick="loadDeviceInfo()" style="padding:8px 20px;font-size:0.75rem;">RETRY</button></p>
+          </div>`;
+        lucide.createIcons();
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    function renderDeviceInfo(info) {
+      const container = document.getElementById('device-info');
+      const batteryLevel = parseInt(info.battery) || 0;
+      const batteryColor = getBatteryColor(batteryLevel);
+      
+      const storageUsed = info.storageUsed;
+      const storageTotal = info.storageTotal;
+      let storagePercent = null; // null means unavailable
+      if (storageUsed != null && storageTotal != null && storageTotal > 0) {
+          storagePercent = Math.min(100, (storageUsed / storageTotal * 100)).toFixed(1);
+      }
+
+      const memTotal = info.memoryTotal;
+      const memAvail = info.memoryAvailable;
+      let memUsedPercent = null; // null means unavailable
+      if (memTotal > 0 && memAvail != null) {
+          memUsedPercent = Math.min(100, ((memTotal - memAvail) / memTotal * 100)).toFixed(1);
+      }
+
+      container.innerHTML = `
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="smartphone" style="width:16px;height:16px;"></i></div>
+            <h3>Device</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Device Name</span><span class="val">${escHtml(info.deviceName || info.model || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Model</span><span class="val">${escHtml(info.model || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Brand</span><span class="val">${escHtml(info.brand || info.manufacturer || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Manufacturer</span><span class="val">${escHtml(info.manufacturer || 'Unknown')}</span></div>
+          <div class="info-row"><span class="lbl">Codename</span><span class="val">${escHtml(info.device || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Device ID</span><span class="val">${escHtml(deviceId.substring(0, 12))}...</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="settings" style="width:16px;height:16px;"></i></div>
+            <h3>System</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Android</span><span class="val">${escHtml(info.androidVersion || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">SDK Level</span><span class="val">${escHtml(String(info.sdkLevel || 'N/A'))}</span></div>
+          <div class="info-row"><span class="lbl">Security Patch</span><span class="val">${escHtml(info.securityPatch || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Build Number</span><span class="val" style="font-size:0.65rem;max-width:200px;word-break:break-all;text-align:right;">${escHtml(info.buildNumber || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Hardware</span><span class="val">${escHtml(info.hardware || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Board</span><span class="val">${escHtml(info.board || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Bootloader</span><span class="val">${escHtml(info.bootloader || 'N/A')}</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic" style="background:linear-gradient(135deg,${batteryColor}18,${batteryColor}08);border-color:${batteryColor}30;">
+              <i data-lucide="battery" style="width:16px;height:16px;color:${batteryColor};"></i>
+            </div>
+            <h3>Battery</h3>
+          </div>
+          <div class="info-row">
+            <span class="lbl">Level</span>
+            <span class="val" style="color:${batteryColor};font-weight:700;font-size:1rem;">${batteryLevel}%</span>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${batteryLevel}%;background:linear-gradient(90deg,${batteryColor}aa,${batteryColor});box-shadow:0 0 6px ${batteryColor}40;"></div>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="lbl">Charging</span>
+            <span class="val">${info.isCharging ? '<i data-lucide="zap" style="width:12px;height:12px;color:var(--warning);vertical-align:middle;"></i> Yes' : 'No'}</span>
+          </div>
+          <div class="info-row"><span class="lbl">Charge Type</span><span class="val">${escHtml(info.chargingType || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Health</span><span class="val">${escHtml(info.batteryHealth || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Temperature</span><span class="val">${info.batteryTemp != null ? escHtml(String(info.batteryTemp)) + '°C' : 'N/A'}</span></div>
+          <div class="info-row"><span class="lbl">Voltage</span><span class="val">${info.batteryVoltage != null ? escHtml(String(info.batteryVoltage)) + 'V' : 'N/A'}</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="wifi" style="width:16px;height:16px;"></i></div>
+            <h3>Network</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Type</span><span class="val">${escHtml(info.networkType || 'Unknown')}</span></div>
+          <div class="info-row">
+            <span class="lbl">Status</span>
+            <span class="val">${info.isConnected
+          ? '<span style="color:var(--accent);">● Connected</span>'
+          : '<span style="color:var(--danger);">○ Disconnected</span>'}</span>
+          </div>
+          <div class="info-row"><span class="lbl">IP Address</span><span class="val">${escHtml(info.ipAddress || 'N/A')}</span></div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="hard-drive" style="width:16px;height:16px;"></i></div>
+            <h3>Storage</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Total</span><span class="val">${api.formatFileSize(storageTotal)}</span></div>
+          <div class="info-row"><span class="lbl">Used</span><span class="val">${api.formatFileSize(storageUsed)}</span></div>
+          <div class="info-row"><span class="lbl">Free</span><span class="val">${api.formatFileSize(info.storageFree)}</span></div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${storagePercent != null ? storagePercent : 0}%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));box-shadow:0 0 6px var(--accent-glow);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic"><i data-lucide="cpu" style="width:16px;height:16px;"></i></div>
+            <h3>Memory</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Total RAM</span><span class="val">${api.formatFileSize(memTotal)}</span></div>
+          <div class="info-row"><span class="lbl">Available</span><span class="val">${api.formatFileSize(memAvail)}</span></div>
+          <div class="info-row"><span class="lbl">Usage</span><span class="val">${memUsedPercent != null ? memUsedPercent + '%' : '&mdash;'}</span></div>
+          <div class="prog-wrap">
+            <div class="prog">
+              <div class="prog-fill" style="width:${memUsedPercent != null ? memUsedPercent : 0}%;background:linear-gradient(90deg,var(--info),#00ccff);box-shadow:0 0 6px rgba(0,170,255,0.3);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic" style="background:linear-gradient(135deg,rgba(180,100,255,0.1),rgba(180,100,255,0.03));border-color:rgba(180,100,255,0.12);">
+              <i data-lucide="monitor" style="width:16px;height:16px;color:#b464ff;"></i>
+            </div>
+            <h3>Display</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Resolution</span><span class="val">${escHtml(info.screenResolution || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Density</span><span class="val">${info.screenDensity != null ? escHtml(String(info.screenDensity)) + ' dpi' : 'N/A'}</span></div>
+          <div class="info-row">
+            <span class="lbl">Screen</span>
+            <span class="val">${info.isScreenOn
+          ? '<span style="color:var(--accent);">● On</span>'
+          : '<span style="color:var(--text-muted);">○ Off</span>'}</span>
+          </div>
+          <div class="info-row">
+            <span class="lbl">Locked</span>
+            <span class="val">${info.isScreenLocked
+          ? '<i data-lucide="lock" style="width:12px;height:12px;color:var(--warning);"></i> Yes'
+          : '<i data-lucide="unlock" style="width:12px;height:12px;color:var(--accent);"></i> No'}</span>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="card-header">
+            <div class="ic" style="background:linear-gradient(135deg,rgba(0,200,255,0.1),rgba(0,200,255,0.03));border-color:rgba(0,200,255,0.12);">
+              <i data-lucide="activity" style="width:16px;height:16px;color:#00c8ff;"></i>
+            </div>
+            <h3>Status</h3>
+          </div>
+          <div class="info-row"><span class="lbl">Uptime</span><span class="val">${escHtml(info.uptimeFormatted || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Language</span><span class="val">${escHtml(info.language || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Locale</span><span class="val">${escHtml(info.locale || 'N/A')}</span></div>
+          <div class="info-row"><span class="lbl">Timezone</span><span class="val">${escHtml(info.timezone || 'N/A')}</span></div>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    loadDeviceInfo();
+
+    // Auto-refresh every 10s but pause when tab is hidden (saves resources + prevents server flood)
+    const refreshInterval = setInterval(() => {
+      if (!document.hidden) loadDeviceInfo();
+    }, 10000);
+
+    // Cleanup interval on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
+
+    // Resume immediately when tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) loadDeviceInfo(); // Triggers only if 5s debounce allows it
+    });
+  </script>
+</body>
+
+</html>

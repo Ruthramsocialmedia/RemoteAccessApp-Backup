@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Action Center - Remote Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, sans-serif;
+            --font-mono: 'SFMono-Regular', Consolas, monospace;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .hdr-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* SECURE NOTICE */
+        .secure-notice {
+            background: rgba(0, 255, 65, 0.04);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .secure-notice::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .secure-notice svg {
+            color: var(--accent);
+            flex-shrink: 0;
+            width: 20px; height: 20px;
+            margin-top: 2px;
+        }
+
+        .secure-notice h4 {
+            margin: 0 0 6px 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .secure-notice p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* GRID / CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+        }
+
+        .panel-card:hover {
+            border-color: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        }
+
+        .panel-card h2 {
+            margin: 0 0 16px 0;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .panel-card h2 svg {
+            color: var(--accent);
+            width: 18px; height: 18px;
+        }
+
+        .panel-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* INPUTS & BUTTONS */
+        .input-grp {
+            margin-bottom: 16px;
+        }
+
+        .input-grp label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 0 3px rgba(0, 255, 65, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            background: rgba(0, 255, 65, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: rgba(0, 255, 65, 0.15);
+            box-shadow: 0 0 12px rgba(0, 255, 65, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+
+        .pill-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-pill {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-pill:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.3);
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        /* DIAGNOSTICS */
+        .diag-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .diag-item {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .diag-item:hover {
+            border-color: rgba(0, 170, 255, 0.3);
+            background: rgba(0, 170, 255, 0.04);
+        }
+
+        .diag-item:hover svg {
+            color: #0af;
+            transform: translateX(2px);
+        }
+
+        .diag-info span {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .diag-info small {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .diag-item svg {
+            color: var(--text-muted);
+            width: 16px; height: 16px;
+            transition: all 0.2s;
+        }
+
+        /* TERMINAL */
+        .term-wrap {
+            background: #080808;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .term-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .term-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .term-dots span {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+        .term-dots .r { background: #ff5f56; }
+        .term-dots .y { background: #ffbd2e; }
+        .term-dots .g { background: #27c93f; }
+
+        .term-title {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-clear {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+
+        #terminal-out {
+            margin: 0;
+            padding: 16px;
+            height: 280px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #d0d0d0;
+            line-height: 1.6;
+        }
+
+        .log-entry { margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .log-cmd { color: #888; }
+        .log-cmd span { color: var(--accent); }
+        .log-res { color: #e0e0e0; margin-top: 4px; }
+        .log-err { color: var(--danger); margin-top: 4px; }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: none !important;
+            width: 14px; height: 14px;
+        }
+        .spinner.active { display: inline-block !important; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* GESTURE CONTROL */
+        .gesture-section {
+            margin-bottom: 24px;
+        }
+
+        .gesture-section h2 {
+            margin: 0 0 16px 0;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .gesture-section h2 svg {
+            color: var(--accent);
+            width: 18px; height: 18px;
+        }
+
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .gesture-grid { grid-template-columns: 1fr; }
+        }
+
+        /* D-PAD */
+        .dpad {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 8px;
+            width: 180px;
+            margin: 0 auto;
+        }
+
+        .dpad-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 1.1rem;
+            user-select: none;
+        }
+
+        .dpad-btn:hover {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.3);
+            color: var(--accent);
+            box-shadow: 0 0 10px rgba(0,255,65,0.12);
+            transform: scale(1.05);
+        }
+
+        .dpad-btn:active {
+            transform: scale(0.95);
+            background: rgba(0, 255, 65, 0.15);
+        }
+
+        .dpad-btn.center {
+            background: rgba(0,255,65,0.06);
+            border-color: rgba(0,255,65,0.2);
+            color: var(--accent);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .dpad-center-slot { /* empty corner slots */
+            visibility: hidden;
+        }
+
+        /* SYSTEM KEYS */
+        .syskeys {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .syskey-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            padding: 13px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: var(--font-display);
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .syskey-btn:hover {
+            background: rgba(0, 255, 65, 0.06);
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--text-primary);
+        }
+
+        .syskey-btn:active {
+            transform: scale(0.98);
+        }
+
+        .syskey-btn svg {
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    
+    <!-- HEADER -->
+    <div class="pg-header">
+        <div class="pg-header-left">
+            <div class="pg-icon">
+                <i data-lucide="terminal-square" style="width:20px;height:20px;"></i>
+            </div>
+            <div>
+                <div class="pg-title">Action <span>Center</span></div>
+                <div class="pg-sub" id="device-id-display">// Target: Loading...</div>
+            </div>
+        </div>
+        <div class="hdr-actions">
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- SECURE NOTICE -->
+    <div class="secure-notice">
+        <i data-lucide="shield-check"></i>
+        <div>
+            <h4>Secure Execution Environment</h4>
+            <p>Arbitrary shell commands have been deactivated. Use the Action Center to safely trigger pre-approved UI intercepts and hardware diagnostics on the target node.</p>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- ACTION INTERCEPT -->
+        <div class="panel-card">
+            <h2><i data-lucide="mouse-pointer-click"></i> UI Intercept</h2>
+            <p class="panel-desc">
+                Inject custom click events into the target's UI hierarchy. Used to remotely authorize permissions or bypass consent screens.
+            </p>
+
+            <div class="input-grp">
+                <label>Target Node Text (Case Sensitive)</label>
+                <input type="text" id="click-text" placeholder="e.g. Allow, Start now, ACCEPT">
+            </div>
+
+            <button class="btn" id="btn-click" onclick="executeClick()">
+                <i data-lucide="zap" style="width: 16px; height: 16px;"></i> Execute Null-Click
+                <i data-lucide="loader-2" class="spinner" id="spin-click"></i>
+            </button>
+
+            <div class="pill-btns">
+                <button class="btn-pill" onclick="document.getElementById('click-text').value='Allow'; executeClick()">Allow</button>
+                <button class="btn-pill" onclick="document.getElementById('click-text').value='Start now'; executeClick()">Start now</button>
+                <button class="btn-pill" onclick="document.getElementById('click-text').value='ACCEPT'; executeClick()">ACCEPT</button>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTICS -->
+        <div class="panel-card">
+            <h2><i data-lucide="activity"></i> Core Diagnostics</h2>
+            <p class="panel-desc">
+                Probe the target device for deep network and hardware telemetry without writing to shell.
+            </p>
+
+            <div class="diag-grid">
+                <div class="diag-item" onclick="runDiagnostic('ping')">
+                    <div class="diag-info">
+                        <span>Ping Global DNS</span>
+                        <small>ping -c 4 google.com</small>
+                    </div>
+                    <i data-lucide="chevron-right"></i>
+                </div>
+                <div class="diag-item" onclick="runDiagnostic('network_interfaces')">
+                    <div class="diag-info">
+                        <span>Network Interfaces</span>
+                        <small>ip addr show</small>
+                    </div>
+                    <i data-lucide="chevron-right"></i>
+                </div>
+                <div class="diag-item" onclick="runDiagnostic('device_info')">
+                    <div class="diag-info">
+                        <span>Hardware ID Check</span>
+                        <small>getprop ro.product.model</small>
+                    </div>
+                    <i data-lucide="chevron-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GESTURE CONTROL -->
+    <div class="panel-card gesture-section">
+        <h2><i data-lucide="move" style="width:18px;height:18px;"></i> Gesture Control</h2>
+        <div class="gesture-grid">
+
+            <!-- D-PAD -->
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">Swipe Direction</div>
+                <div class="dpad">
+                    <div class="dpad-center-slot"></div>
+                    <button class="dpad-btn" title="Swipe Up" onclick="doSwipe('up')">↑</button>
+                    <div class="dpad-center-slot"></div>
+
+                    <button class="dpad-btn" title="Swipe Left" onclick="doSwipe('left')">←</button>
+                    <button class="dpad-btn center" onclick="doSwipe('up')" style="font-size:0.5rem;color:var(--text-muted);">SWIPE</button>
+                    <button class="dpad-btn" title="Swipe Right" onclick="doSwipe('right')">→</button>
+
+                    <div class="dpad-center-slot"></div>
+                    <button class="dpad-btn" title="Swipe Down" onclick="doSwipe('down')">↓</button>
+                    <div class="dpad-center-slot"></div>
+                </div>
+            </div>
+
+            <!-- SYSTEM KEYS -->
+            <div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;">System Keys</div>
+                <div class="syskeys">
+                    <button class="syskey-btn" onclick="doKey('home')">
+                        <i data-lucide="home" style="width:16px;height:16px;"></i>
+                        <span>Home</span>
+                        <span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">GLOBAL_ACTION_HOME</span>
+                    </button>
+                    <button class="syskey-btn" onclick="doKey('back')">
+                        <i data-lucide="arrow-left-circle" style="width:16px;height:16px;"></i>
+                        <span>Back</span>
+                        <span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">GLOBAL_ACTION_BACK</span>
+                    </button>
+                    <button class="syskey-btn" onclick="doKey('recents')">
+                        <i data-lucide="layout-list" style="width:16px;height:16px;"></i>
+                        <span>Recents</span>
+                        <span style="margin-left:auto;font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">GLOBAL_ACTION_RECENTS</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TERMINAL OUTPUT -->
+    <div class="term-wrap">
+        <div class="term-hdr">
+            <div class="term-dots">
+                <span class="r"></span>
+                <span class="y"></span>
+                <span class="g"></span>
+            </div>
+            <div class="term-title">
+                <i data-lucide="server" style="width: 12px; height: 12px;"></i> Console Output
+            </div>
+            <button class="btn-clear" onclick="clearOutput()">clear</button>
+        </div>
+        <div id="terminal-out">Waiting for remote stream...</div>
+    </div>
+
+</div>
+
+<script src="/js/api.js?v=1.1"></script>
+<script>
+    lucide.createIcons();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get('deviceId');
+    const terminalOut = document.getElementById('terminal-out');
+    
+    // BOMB-PROOF ERROR LOGGING
+    window.onerror = function(msg, url, line, col, error) {
+        appendResponse({ status: 'error', error: `[CRITICAL JS ERROR] ${msg} at line ${line}` });
+        const spin = document.getElementById('spin-click');
+        if (spin) spin.classList.remove('active');
+        const btn = document.getElementById('btn-click');
+        if (btn) btn.disabled = false;
+        return false;
+    };
+    window.onunhandledrejection = function(event) {
+        appendResponse({ status: 'error', error: `[UNHANDLED PROMISE] ${event.reason}` });
+        const spin = document.getElementById('spin-click');
+        if (spin) spin.classList.remove('active');
+        const btn = document.getElementById('btn-click');
+        if (btn) btn.disabled = false;
+    };
+
+    if (!deviceId) {
+        alert("No device ID specified!");
+        window.location.href = "index.html";
+    }
+
+    document.getElementById('device-id-display').textContent = `// Target: ${deviceId}`;
+
+    async function executeClick() {
+        const text = document.getElementById('click-text').value.trim();
+        if (!text) return;
+
+        const btn = document.getElementById('btn-click');
+        const spin = document.getElementById('spin-click');
+        
+        // Failsafe timeout to force stop spinner after 16 seconds
+        const failsafe = setTimeout(() => {
+            if (btn) btn.disabled = false;
+            if (spin) spin.classList.remove('active');
+            appendResponse({ status: 'error', error: 'Failsafe timeout triggered: Execution hung locally for >16s' });
+        }, 16000);
+
+        try {
+            if (btn) btn.disabled = true;
+            if (spin) spin.classList.add('active');
+
+            appendCommand(`UI INTERCEPT: Click "${text}"`);
+            const res = await api.sendCommand(deviceId, 'text_click', { text: text });
+            
+            // The API wraps responses in { success: true, data: { ... } }
+            const payload = res.data || res;
+            appendResponse(payload);
+        } catch (error) {
+            appendResponse({ status: 'error', error: error.message });
+        } finally {
+            clearTimeout(failsafe);
+            if (btn) btn.disabled = false;
+            if (spin) spin.classList.remove('active');
+            
+            // Re-apply Lucide explicitly in case DOM mutations broke the SVG
+            setTimeout(() => { lucide.createIcons(); }, 100);
+        }
+    }
+
+    async function runDiagnostic(type) {
+        appendCommand(`SYS-PROBE: ${type.toUpperCase()}`);
+        try {
+            const res = await api.sendCommand(deviceId, 'sys_probe', { type: type });
+            const payload = res.data || res;
+            const outputMsg = payload.output || 'Diagnostics complete with no shell output.';
+            appendResponse({ status: 'success', output: outputMsg });
+        } catch (error) {
+            appendResponse({ status: 'error', error: error.message });
+        }
+    }
+
+    // Swipe direction presets (coordinates for 1080x1920 baseline, works on all sizes)
+    const SWIPE_PRESETS = {
+        up:    { fromX: 540, fromY: 1600, toX: 540, toY:  400, duration: 300 },
+        down:  { fromX: 540, fromY:  400, toX: 540, toY: 1600, duration: 300 },
+        left:  { fromX: 950, fromY:  960, toX: 130, toY:  960, duration: 300 },
+        right: { fromX: 130, fromY:  960, toX: 950, toY:  960, duration: 300 },
+    };
+
+    async function doSwipe(direction) {
+        const preset = SWIPE_PRESETS[direction];
+        if (!preset) return;
+        appendCommand(`GESTURE: Swipe ${direction.toUpperCase()}`);
+        try {
+            const res = await api.sendCommand(deviceId, 'accessibility_swipe', preset);
+            const payload = res.data || res;
+            appendResponse({ status: payload.status || 'success', output: payload.output || payload.message || `Swipe ${direction} executed.` });
+        } catch (error) {
+            appendResponse({ status: 'error', error: error.message });
+        }
+    }
+
+    async function doKey(key) {
+        appendCommand(`SYS-KEY: ${key.toUpperCase()}`);
+        try {
+            const res = await api.sendCommand(deviceId, 'accessibility_key', { key: key });
+            const payload = res.data || res;
+            appendResponse({ status: payload.status || 'success', output: payload.output || payload.message || `Key ${key} executed.` });
+        } catch (error) {
+            appendResponse({ status: 'error', error: error.message });
+        }
+    }
+
+    function appendCommand(cmdText) {
+        if (terminalOut.textContent === 'Waiting for remote stream...') {
+            terminalOut.innerHTML = '';
+        }
+        
+        const el = document.createElement('div');
+        el.className = 'log-entry';
+        el.innerHTML = `<div class="log-cmd">root@target:~# <span>${escHtml(cmdText)}</span></div>`;
+        terminalOut.appendChild(el);
+        terminalOut.scrollTop = terminalOut.scrollHeight;
+        return el;
+    }
+
+    function appendResponse(response) {
+        const entries = terminalOut.querySelectorAll('.log-entry');
+        if (entries.length === 0) return;
+        const lastEntry = entries[entries.length - 1];
+
+        const outDiv = document.createElement('div');
+        
+        if (response.status === 'error' || response.error) {
+            outDiv.className = 'log-err';
+            outDiv.textContent = `[FALCON-ERR] ${response.error || 'Connection rejected or node locked.'}`;
+        } else {
+            outDiv.className = 'log-res';
+            const msg = response.output || response.message || response.data?.output || response.data?.message || 'Intercept complete.';
+            outDiv.innerText = msg;
+        }
+
+        lastEntry.appendChild(outDiv);
+        terminalOut.scrollTop = terminalOut.scrollHeight;
+    }
+
+    function clearOutput() {
+        terminalOut.innerHTML = 'Waiting for remote stream...';
+    }
+
+    document.getElementById('click-text').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            executeClick();
+        }
+    });
+</script>
+</body>
+</html>

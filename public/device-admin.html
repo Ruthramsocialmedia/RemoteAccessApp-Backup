@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Device Admin - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        body { padding: 0; min-height: 100vh; font-family: var(--font-display) !important; }
+        .wrap { max-width: 960px; margin: 0 auto; padding: 20px 24px; animation: fadeInUp 0.4s ease-out; }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 22px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 10px;
+            margin-bottom: 16px; position: relative; overflow: hidden;
+        }
+        .pg-header::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%); opacity: 0.4;
+        }
+        .pg-header-left { display: flex; align-items: center; gap: 14px; }
+        .pg-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, rgba(255,68,68,0.15), rgba(255,68,68,0.04));
+            border: 1px solid rgba(255,68,68,0.3); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: #ff6b6b; box-shadow: 0 0 16px rgba(255,68,68,0.1);
+        }
+        .pg-title { font-size: 1.1rem; font-weight: 700; color: #e8e8e8; }
+        .pg-title span { color: #ff6b6b; text-shadow: 0 0 12px rgba(255,68,68,0.3); }
+        .pg-sub { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 1px; margin-top: 1px; }
+        .btn-back {
+            display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+            font-size: 0.7rem; font-weight: 500; text-decoration: none;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            color: var(--text-secondary); border-radius: 8px; transition: all 0.2s;
+        }
+        .btn-back:hover { color: var(--accent); border-color: rgba(0,255,65,0.3); }
+
+        /* ── STATUS ── */
+        .status-card {
+            padding: 16px 20px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px;
+        }
+        .status-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+        .status-row:last-child { margin-bottom: 0; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .status-dot.on { background: #00ff41; box-shadow: 0 0 8px rgba(0,255,65,0.5); }
+        .status-dot.off { background: #ff4444; box-shadow: 0 0 8px rgba(255,68,68,0.4); }
+        .status-label { font-size: 0.72rem; color: var(--text-muted); min-width: 120px; }
+        .status-value { font-size: 0.72rem; font-weight: 600; color: var(--text); }
+
+        /* ── PANELS ── */
+        .panel {
+            padding: 18px 22px; background: var(--bg-panel);
+            border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px;
+        }
+        .panel-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.65rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+        }
+        .panel-desc { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+
+        /* ── ACTION GRID ── */
+        .action-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; cursor: pointer; transition: all 0.2s;
+            text-align: left; color: var(--text);
+        }
+        .action-btn:hover { border-color: rgba(0,255,65,0.3); }
+        .action-btn .icon {
+            width: 34px; height: 34px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .action-btn .icon.green { background: rgba(0,255,65,0.08); color: var(--accent); border: 1px solid rgba(0,255,65,0.2); }
+        .action-btn .icon.red { background: rgba(255,68,68,0.08); color: #ff6b6b; border: 1px solid rgba(255,68,68,0.2); }
+        .action-btn .icon.blue { background: rgba(0,170,255,0.08); color: #00aaff; border: 1px solid rgba(0,170,255,0.2); }
+        .action-btn .icon.orange { background: rgba(255,170,0,0.08); color: #ffaa00; border: 1px solid rgba(255,170,0,0.2); }
+        .action-btn .label { font-size: 0.72rem; font-weight: 600; }
+        .action-btn .sublabel { font-size: 0.55rem; color: var(--text-muted); margin-top: 1px; }
+
+        .action-btn.danger { border-color: rgba(255,68,68,0.25); }
+        .action-btn.danger:hover { border-color: rgba(255,68,68,0.5); background: rgba(255,68,68,0.04); }
+
+        /* ── INPUT ROW ── */
+        .input-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .input-row input {
+            flex: 1; min-width: 140px; padding: 8px 14px; border-radius: 6px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            color: var(--text); font-size: 0.72rem; outline: none;
+        }
+        .input-row input:focus { border-color: rgba(0,255,65,0.4); }
+        .input-row button {
+            padding: 8px 18px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--bg-panel); color: var(--text); font-size: 0.7rem;
+            cursor: pointer; transition: all 0.2s; font-weight: 500;
+        }
+        .input-row button:hover { border-color: var(--accent); color: var(--accent); }
+        .input-row button.primary { background: rgba(0,255,65,0.08); border-color: rgba(0,255,65,0.3); color: var(--accent); }
+
+        /* ── LOG ── */
+        .log { margin-top: 12px; font-size: 0.65rem; color: var(--text-muted); font-family: 'Cascadia Code', monospace; }
+        .log-entry {
+            padding: 6px 10px; border-left: 2px solid var(--border);
+            margin-bottom: 4px; background: rgba(255,255,255,0.01); border-radius: 0 4px 4px 0;
+        }
+        .log-entry.success { border-left-color: var(--accent); }
+        .log-entry.error { border-left-color: #ff4444; color: #ff6b6b; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) {
+            .btn-back span { display: none; }
+            .action-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <!-- Header -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="shield" style="width:20px;height:20px"></i></div>
+                <div>
+                    <div class="pg-title"><span>🛡️</span> Device Admin</div>
+                    <div class="pg-sub">ADMIN · OWNER · PERSISTENCE</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px"></i>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <!-- Status Card -->
+        <div class="status-card" id="statusCard">
+            <div class="status-row">
+                <span class="status-dot off" id="adminDot"></span>
+                <span class="status-label">Device Admin</span>
+                <span class="status-value" id="adminStatus">Checking...</span>
+            </div>
+
+            <div class="status-row">
+                <span class="status-dot off" id="appInfoDot"></span>
+                <span class="status-label">App Info Block</span>
+                <span class="status-value" id="appInfoStatus">Checking...</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="zap" style="width:13px;height:13px;opacity:0.5"></i> Quick Actions
+            </div>
+            <div class="action-grid">
+                <button class="action-btn" onclick="doAction('lock_screen')">
+                    <div class="icon green"><i data-lucide="lock" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Lock Screen</div><div class="sublabel">Immediately lock device</div></div>
+                </button>
+
+                <button class="action-btn" onclick="doAppInfoBlockToggle(true)">
+                    <div class="icon red"><i data-lucide="eye-off" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Block App Info</div><div class="sublabel">Auto-close App Info screen</div></div>
+                </button>
+                <button class="action-btn" onclick="doAppInfoBlockToggle(false)">
+                    <div class="icon green"><i data-lucide="eye" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Unblock App Info</div><div class="sublabel">Allow App Info access</div></div>
+                </button>
+            </div>
+        </div>
+
+
+
+        <!-- Power Controls -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="power" style="width:13px;height:13px;opacity:0.5"></i> Power Controls
+            </div>
+            <div class="action-grid">
+                <button class="action-btn" onclick="doAction('screen_on')">
+                    <div class="icon blue"><i data-lucide="sun" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Screen On</div><div class="sublabel">Wake and turn on display</div></div>
+                </button>
+                <button class="action-btn" onclick="doAction('screen_off')">
+                    <div class="icon orange"><i data-lucide="moon" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Screen Off</div><div class="sublabel">Lock and turn off display</div></div>
+                </button>
+                <button class="action-btn danger" onclick="doReboot()">
+                    <div class="icon red"><i data-lucide="refresh-cw" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Reboot Device</div><div class="sublabel">Restart the device</div></div>
+                </button>
+                <button class="action-btn danger" onclick="doPowerOff()">
+                    <div class="icon red"><i data-lucide="power-off" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Power Off</div><div class="sublabel">Shutdown device completely</div></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Auto-Wipe -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;opacity:0.5"></i> Auto-Wipe on Failed Passwords
+            </div>
+            <div class="panel-desc">Wipe device after N failed unlock attempts. Set to 0 to disable.</div>
+            <div class="input-row">
+                <input type="number" id="maxFailedInput" placeholder="Max attempts (e.g. 5)" min="0" max="50">
+                <button class="primary" onclick="doSetMaxFailed()">Set</button>
+            </div>
+        </div>
+
+        <!-- Factory Reset -->
+        <div class="panel">
+            <div class="panel-title" style="color:#ff6b6b">
+                <i data-lucide="bomb" style="width:13px;height:13px;opacity:0.7"></i> DANGER ZONE
+            </div>
+            <div class="action-grid">
+                <button class="action-btn danger" onclick="doWipeData(false)">
+                    <div class="icon red"><i data-lucide="trash-2" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Factory Reset</div><div class="sublabel">Wipe all user data</div></div>
+                </button>
+                <button class="action-btn danger" onclick="doWipeData(true)">
+                    <div class="icon red"><i data-lucide="hard-drive" style="width:16px;height:16px"></i></div>
+                    <div><div class="label">Full Wipe + SD</div><div class="sublabel">Wipe data + SD card</div></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="panel">
+            <div class="panel-title">
+                <i data-lucide="terminal" style="width:13px;height:13px;opacity:0.5"></i> Activity Log
+            </div>
+            <div class="log" id="logArea">
+                <div class="log-entry">Waiting for actions...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const deviceId = api.deviceId;
+        if (!deviceId) window.location.href = 'index.html';
+        lucide.createIcons();
+
+        function unwrap(res) {
+            if (res && res.data !== undefined) return res.data;
+            return res || {};
+        }
+
+        function log(msg, type = 'success') {
+            const el = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML = `<div class="log-entry ${type}">[${time}] ${escHtml(msg)}</div>` + el.innerHTML;
+        }
+
+        // ── Status ──
+        async function refreshStatus() {
+            try {
+                const res = await api.sendCommand(deviceId, 'device_admin_status');
+                const d = unwrap(res);
+                const adminOn = d.isAdminActive === true;
+                document.getElementById('adminDot').className = 'status-dot ' + (adminOn ? 'on' : 'off');
+                document.getElementById('adminStatus').textContent = adminOn ? 'Active ✓' : 'Not Active';
+            } catch (e) {
+                document.getElementById('adminStatus').textContent = 'Error';
+            }
+
+            try {
+                const res3 = await api.sendCommand(deviceId, 'appinfo_block_status');
+                const d3 = unwrap(res3);
+                const enabled = d3.enabled === true;
+                document.getElementById('appInfoDot').className = 'status-dot ' + (enabled ? 'on' : 'off');
+                document.getElementById('appInfoStatus').textContent = enabled ? 'Enabled ✓' : 'Disabled';
+            } catch (e) {
+                document.getElementById('appInfoStatus').textContent = 'N/A';
+            }
+        }
+
+        // ── Quick Actions ──
+        async function doAction(action) {
+            try {
+                const res = await api.sendCommand(deviceId, action);
+                const d = unwrap(res);
+                log(d.message || `${action} OK`);
+                api.showToast(d.message || 'Done', 'success');
+                refreshStatus();
+            } catch (e) {
+                log(`${action} failed: ${e.message}`, 'error');
+                api.showToast(e.message, 'error');
+            }
+        }
+
+
+
+        async function doAppInfoBlockToggle(enable) {
+            const action = enable ? 'appinfo_block_enable' : 'appinfo_block_disable';
+            try {
+                const res = await api.sendCommand(deviceId, action);
+                const d = unwrap(res);
+                log(d.message || `App Info block ${enable ? 'enabled' : 'disabled'}`);
+                api.showToast(d.message || 'Done', 'success');
+                refreshStatus();
+            } catch (e) { log('App Info block toggle failed: ' + e.message, 'error'); api.showToast(e.message, 'error'); }
+        }
+
+
+
+        // ── Max Failed ──
+        async function doSetMaxFailed() {
+            const val = parseInt(document.getElementById('maxFailedInput').value) || 0;
+            try {
+                const res = await api.sendCommand(deviceId, 'set_max_failed_passwords', { maxAttempts: val });
+                const d = unwrap(res);
+                log(d.message || `Max failed set to ${val}`);
+                api.showToast(d.message || 'Set', 'success');
+            } catch (e) { log('Failed: ' + e.message, 'error'); api.showToast(e.message, 'error'); }
+        }
+
+        // ── Wipe ──
+        async function doWipeData(wipeExternal) {
+            const label = wipeExternal ? 'FULL WIPE' : 'FACTORY RESET';
+            if (!confirm(`⚠️ ${label}\n\nThis will PERMANENTLY ERASE ALL DATA on the device.\n\nThis CANNOT be undone!\n\nAre you absolutely sure?`)) return;
+            
+            const keyword = wipeExternal ? 'WIPE EXTERNAL' : 'WIPE DEVICE';
+            const input = prompt(`FINAL CONFIRMATION\n\nTo proceed with ${label}, type exactly:\n${keyword}`);
+            
+            if (input !== keyword) {
+                api.showToast('Wipe cancelled. Incorrect confirmation typed.', 'error');
+                return;
+            }
+            
+            try {
+                const res = await api.sendCommand(deviceId, 'wipe_data', { confirm: true, wipeExternalStorage: wipeExternal });
+                const d = unwrap(res);
+                log(d.message || 'Wipe initiated', 'error');
+                api.showToast('Factory reset initiated!', 'warning');
+            } catch (e) { log('Wipe failed: ' + e.message, 'error'); api.showToast(e.message, 'error'); }
+        }
+
+        // ── Reboot ──
+        async function doReboot() {
+            if (!confirm('\u26a0\ufe0f REBOOT DEVICE\n\nThis will restart the device immediately.\nAll unsaved work will be lost.\n\nContinue?')) return;
+            try {
+                const res = await api.sendCommand(deviceId, 'device_reboot');
+                const d = unwrap(res);
+                log(d.message || 'Reboot initiated', 'success');
+                api.showToast(d.message || 'Rebooting...', 'warning');
+            } catch (e) {
+                log('Reboot failed: ' + e.message, 'error');
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        // ── Power Off ──
+        async function doPowerOff() {
+            if (!confirm('\u26a0\ufe0f POWER OFF DEVICE\n\nThis will completely shut down the device.\nYou will NOT be able to reconnect remotely until someone physically turns it back on.\n\nContinue?')) return;
+            try {
+                const res = await api.sendCommand(deviceId, 'device_poweroff');
+                const d = unwrap(res);
+                log(d.message || 'Power off initiated', 'success');
+                api.showToast(d.message || 'Powering off...', 'warning');
+            } catch (e) {
+                log('Power off failed: ' + e.message, 'error');
+                api.showToast(e.message, 'error');
+            }
+        }
+
+        // ── WebSocket Live Sync ──
+        function connectWebSocket() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsConn = new WebSocket(proto + '//' + location.host);
+
+            wsConn.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'active_state_sync' && data.deviceId === deviceId) {
+                        const state = data.state;
+                        if (state && typeof state.isAdminActive !== 'undefined') {
+                            const adminOn = state.isAdminActive === true;
+                            document.getElementById('adminDot').className = 'status-dot ' + (adminOn ? 'on' : 'off');
+                            document.getElementById('adminStatus').textContent = adminOn ? 'Active ✓' : 'Not Active';
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+            };
+
+            wsConn.onclose = function () {
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+        connectWebSocket();
+
+        // ── Init ──
+        refreshStatus();
+    </script>
+</body>
+</html>

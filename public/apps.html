@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Management - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .count-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back,
+        .btn-ref {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover,
+        .btn-ref:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── SCHEDULED PANEL ── */
+        .sched-panel {
+            display: none;
+            background: rgba(255, 170, 0, 0.04);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .sched-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .sched-hdr h3 {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sched-hdr .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--warning);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        .sched-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.12);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            gap: 12px;
+        }
+
+        .sched-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .sched-item .pkg {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 0 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sched-item .slbl {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--warning);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-cancel-sched {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 51, 51, 0.08);
+            color: var(--danger);
+            border: 1px solid rgba(255, 51, 51, 0.2);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-cancel-sched:hover {
+            background: rgba(255, 51, 51, 0.15);
+            border-color: rgba(255, 51, 51, 0.35);
+        }
+
+        /* ── SEARCH ── */
+        .search-wrap {
+            margin-bottom: 12px;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-wrap input:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .search-wrap input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap .s-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* ── APP LIST ── */
+        .app-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            gap: 14px;
+            transition: all 0.2s;
+        }
+
+        .app-item:hover {
+            border-color: rgba(0, 255, 65, 0.12);
+            background: rgba(0, 255, 65, 0.015);
+        }
+
+        .app-ava {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 65, 0.06);
+            border: 1px solid rgba(0, 255, 65, 0.12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .app-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .app-info h3 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-info p {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .app-acts {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .act-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+        }
+
+        .act-btn.launch {
+            background: rgba(0, 255, 65, 0.08);
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.2);
+        }
+
+        .act-btn.launch:hover {
+            background: rgba(0, 255, 65, 0.15);
+        }
+
+        .act-btn.uninstall {
+            background: rgba(255, 51, 51, 0.08);
+            color: var(--danger);
+            border-color: rgba(255, 51, 51, 0.2);
+        }
+
+        .act-btn.uninstall:hover {
+            background: rgba(255, 51, 51, 0.15);
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .empty .e-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            opacity: 0.3;
+        }
+
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        .pulse-load {
+            animation: pLoad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ── SCHEDULE MODAL ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-panel);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 14px;
+            padding: 28px 26px;
+            max-width: 420px;
+            width: 90vw;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal .m-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 14px;
+            background: rgba(255, 170, 0, 0.08);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 12px;
+            color: var(--warning);
+        }
+
+        .modal h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--warning);
+            text-align: center;
+            margin: 0 0 8px;
+        }
+
+        .modal .m-reason {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .modal .m-warn {
+            background: rgba(255, 170, 0, 0.06);
+            border: 1px solid rgba(255, 170, 0, 0.15);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: var(--font-display);
+            font-size: 0.68rem;
+            color: #d4a44a;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal .m-warn b {
+            color: var(--warning);
+        }
+
+        .modal .m-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal .m-btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .modal .m-btn .btn-ic {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .modal .m-btn .btn-txt .sub {
+            font-size: 0.6rem;
+            color: #777;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .modal .btn-sched {
+            background: rgba(255, 170, 0, 0.08);
+            border: 1px solid rgba(255, 170, 0, 0.25);
+            color: var(--warning);
+        }
+
+        .modal .btn-sched .btn-ic {
+            background: rgba(255, 170, 0, 0.12);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .modal .btn-sched:hover {
+            background: rgba(255, 170, 0, 0.14);
+        }
+
+        .modal .btn-live {
+            background: rgba(0, 255, 65, 0.08);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+        }
+
+        .modal .btn-live .btn-ic {
+            background: rgba(0, 255, 65, 0.12);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .modal .btn-live:hover {
+            background: rgba(0, 255, 65, 0.14);
+        }
+
+        .modal .btn-cancel-m {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            text-align: center;
+            justify-content: center;
+        }
+
+        .modal .btn-cancel-m:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        /* ── Tablets (1024px) ── */
+        @media (max-width: 1024px) {
+            .wrap {
+                padding: 14px 16px;
+            }
+
+            .app-item {
+                padding: 10px 14px;
+                gap: 10px;
+            }
+
+            .app-ava {
+                width: 34px;
+                height: 34px;
+            }
+
+            .app-info h3 {
+                font-size: 0.8rem;
+            }
+
+            .act-btn {
+                padding: 6px 12px;
+                font-size: 0.58rem;
+            }
+        }
+
+        /* ── Small tablets / Phablets (768px) ── */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .app-item {
+                padding: 10px 12px;
+                gap: 10px;
+            }
+
+            .app-ava {
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+            }
+
+            .app-info {
+                text-align: center;
+            }
+
+            .app-info h3 {
+                font-size: 0.78rem;
+            }
+
+            .app-info p {
+                font-size: 0.55rem;
+            }
+
+            .act-btn {
+                padding: 5px 10px;
+                font-size: 0.55rem;
+                gap: 4px;
+            }
+        }
+
+        /* ── Phones (480px) ── */
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back .lbl {
+                display: none;
+            }
+
+            .app-item {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .app-ava {
+                display: none;
+            }
+
+            .app-info {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+
+            .app-acts {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .act-btn {
+                justify-content: center;
+                padding: 8px 6px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon">
+                    <i data-lucide="grid-2x2" style="width:20px;height:20px;"></i>
+                </div>
+                <div>
+                    <div class="pg-title">
+                        <span>Installed</span> Applications
+                        <span class="count-badge" id="app-count" style="display:none">0</span>
+                    </div>
+                    <div class="pg-sub">// package manager</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <button class="btn-ref" id="refresh-btn" onclick="loadApps()">
+                    <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
+                    <span>Refresh</span>
+                </button>
+                <a href="javascript:window.history.back()" class="btn-back">
+                    <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                    <span class="lbl">Back</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- SCHEDULED PANEL -->
+        <div class="sched-panel" id="scheduled-panel">
+            <div class="sched-hdr">
+                <h3><span class="pulse-dot"></span> Scheduled Uninstalls</h3>
+                <span class="count-badge" id="scheduled-count">0</span>
+            </div>
+            <div id="scheduled-list"></div>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="search-wrap">
+            <i data-lucide="search" class="s-icon" style="width:16px;height:16px;"></i>
+            <input type="search" id="app-search" placeholder="Search apps by name or package..." oninput="filterApps()">
+        </div>
+
+        <!-- APP LIST -->
+        <div id="app-list" class="app-list">
+            <div class="empty">
+                <div class="e-icon pulse-load">
+                    <i data-lucide="package-search" style="width:48px;height:48px;"></i>
+                </div>
+                <h2>Scanning Packages</h2>
+                <p>Loading installed applications...</p>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4>
+                <i data-lucide="alert-triangle" style="width:13px;height:13px;"></i>
+                Disclaimer
+            </h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- SCHEDULE MODAL -->
+    <div class="modal-overlay" id="sched-modal">
+        <div class="modal">
+            <div class="m-icon">
+                <i data-lucide="alert-triangle" style="width:24px;height:24px;"></i>
+            </div>
+            <h3>Schedule Action?</h3>
+            <div class="m-reason" id="sched-reason"></div>
+            <div class="m-warn">
+                <b><i data-lucide="zap" style="width:11px;height:11px;vertical-align:middle;"></i> Important:</b>
+                Scheduled actions use <b>Heuristic Auto-Confirm</b> to automatically click the confirmation dialog.
+                However, every OEM has different dialog layouts — <b>auto-confirm may not work on all devices.</b>
+            </div>
+            <div class="m-actions">
+                <button class="m-btn btn-sched" id="sched-btn-schedule">
+                    <span class="btn-ic"><i data-lucide="clock" style="width:14px;height:14px;"></i></span>
+                    <span class="btn-txt">Schedule with Auto-Confirm<span class="sub">Runs when device unlocks — may not
+                            work on all OEMs</span></span>
+                </button>
+                <button class="m-btn btn-live" id="sched-btn-live">
+                    <span class="btn-ic"><i data-lucide="smartphone" style="width:14px;height:14px;"></i></span>
+                    <span class="btn-txt">Perform Live (Recommended)<span class="sub">Wake device — you confirm via
+                            Smart UI — works everywhere</span></span>
+                </button>
+                <button class="m-btn btn-cancel-m" onclick="closeScheduleModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/smart-ui.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html'; // APP-BUG-5: guard missing deviceId
+        let allApps = [];
+        let ws = null;
+
+        // Use global escHtml from api.js (APP-BUG-3: removed duplicate local escapeHtml)
+
+        // ── WebSocket ──
+        function connectWS() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/`);
+            ws.onopen = () => ws.send(JSON.stringify({ type: 'identify', role: 'browser', deviceId }));
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.deviceId && msg.deviceId !== deviceId) return;
+                    if (msg.type === 'schedule_updated') { loadScheduledApps(); setTimeout(loadApps, 1500); }
+                    if (msg.type === 'device_state' && msg.state === 'online') { setTimeout(() => { loadScheduledApps(); loadApps(); }, 2000); }
+                } catch (_) { }
+            };
+            ws.onclose = () => setTimeout(connectWS, 3000);
+        }
+        connectWS();
+
+        // ── Load Apps ──
+        async function loadApps() {
+            const btn = document.getElementById('refresh-btn');
+            if (btn) btn.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;" class="spin"></i><span>Loading</span>';
+            try {
+                const response = await api.sendCommand(deviceId, 'apps_list');
+                if (response.success && response.data && response.data.status === 'success') {
+                    // Support both `data` and `apps` array keys for resilience
+                    const appArray = response.data.data || response.data.apps || [];
+                    allApps = appArray.filter(a => a.package !== 'com.remoteaccess.app');
+                    document.getElementById('app-count').style.display = 'inline-block';
+                    document.getElementById('app-count').textContent = allApps.length;
+                    renderApps(allApps);
+                } else {
+                    throw new Error(response.error || response.data?.error || 'Failed to load apps');
+                }
+            } catch (error) {
+                // If we already have apps loaded, don't destroy the list — just show a toast
+                if (allApps.length > 0) {
+                    api.showToast('Device busy — will retry shortly', 'info');
+                } else {
+                    document.getElementById('app-list').innerHTML = `
+                        <div class="empty">
+                            <div class="e-icon"><i data-lucide="alert-circle" style="width:48px;height:48px;color:var(--danger);"></i></div>
+                            <h2>Error</h2>
+                            <p>${escHtml(error.message)}</p>
+                        </div>`;
+                    lucide.createIcons();
+                }
+
+            } finally {
+                if (btn) { btn.innerHTML = '<i data-lucide="refresh-cw" style="width:14px;height:14px;"></i><span>Refresh</span>'; lucide.createIcons(); }
+            }
+        }
+
+        // ── Load Scheduled ──
+        async function loadScheduledApps() {
+            try {
+                const data = await api.request(`/device/${deviceId}/schedule`);
+                if (!data.success) return;
+
+                let uninstalls = data.commands.filter(c => c.action === 'app_uninstall');
+
+                if (uninstalls.length > 0 && allApps.length > 0) {
+                    const installed = new Set(allApps.map(a => a.package));
+                    const stale = uninstalls.filter(cmd => !installed.has(cmd.payload?.package));
+                    for (const cmd of stale) {
+                        try { await api.request(`/device/${deviceId}/schedule/${cmd.id}`, { method: 'DELETE' }); } catch (_) { }
+                    }
+                    if (stale.length > 0) uninstalls = uninstalls.filter(cmd => installed.has(cmd.payload?.package));
+                }
+
+                const panel = document.getElementById('scheduled-panel');
+                const list = document.getElementById('scheduled-list');
+
+                if (uninstalls.length > 0) {
+                    panel.style.display = 'block';
+                    document.getElementById('scheduled-count').textContent = uninstalls.length;
+                    list.innerHTML = uninstalls.map(cmd => `
+                        <div class="sched-item">
+                            <div style="min-width:0;flex:1;">
+                                <p class="pkg">${escHtml(cmd.payload.package)}</p>
+                                <p class="slbl"><i data-lucide="clock" style="width:11px;height:11px;"></i> Waiting for unlock</p>
+                            </div>
+                            <button class="btn-cancel-sched" onclick="cancelScheduled('${escJs(cmd.id)}')">
+                                <i data-lucide="x" style="width:11px;height:11px;"></i> Cancel
+                            </button>
+                        </div>
+                    `).join('');
+                    lucide.createIcons();
+                } else {
+                    panel.style.display = 'none';
+                    list.innerHTML = '';
+                }
+
+                if (_lastScheduledCount > 0 && uninstalls.length < _lastScheduledCount) loadApps();
+                _lastScheduledCount = uninstalls.length;
+            } catch (e) { console.error('Failed to load scheduled:', e); }
+        }
+
+        async function cancelScheduled(commandId) {
+            try {
+                const data = await api.request(`/device/${deviceId}/schedule/${commandId}`, { method: 'DELETE' });
+                if (data.success) { api.showToast('Scheduled uninstall cancelled', 'success'); loadScheduledApps(); }
+            } catch (e) { api.showToast('Failed to cancel: ' + e.message, 'error'); }
+        }
+
+        // ── Filter/Render ──
+        function filterApps() {
+            const q = document.getElementById('app-search').value.toLowerCase().trim();
+            renderApps(q ? allApps.filter(a => a.name.toLowerCase().includes(q) || a.package.toLowerCase().includes(q)) : allApps);
+        }
+
+        function renderApps(apps) {
+            const container = document.getElementById('app-list');
+            container.className = 'app-list';
+
+            if (apps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="e-icon"><i data-lucide="package-search" style="width:48px;height:48px;"></i></div>
+                        <h2>No Apps Found</h2>
+                        <p>${allApps.length > 0 ? 'No apps match your search.' : 'No user apps on device.'}</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = apps.map(app => `
+                <div class="app-item">
+                    <div class="app-ava"><i data-lucide="grid-2x2" style="width:18px;height:18px;"></i></div>
+                    <div class="app-info">
+                        <h3>${escHtml(app.name)}</h3>
+                        <p>${escHtml(app.package)} &middot; v${escHtml(app.version || '?')}</p>
+                    </div>
+                    <div class="app-acts">
+                        <button class="act-btn launch" onclick="launchApp('${escHtml(app.package)}')">
+                            <i data-lucide="play" style="width:12px;height:12px;"></i><span>Launch</span>
+                        </button>
+                        <button class="act-btn uninstall" onclick="uninstallApp('${escHtml(app.package)}')">
+                            <i data-lucide="trash-2" style="width:12px;height:12px;"></i><span>Uninstall</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // ── Launch ──
+        async function launchApp(packageName) {
+            try {
+                await api.sendCommand(deviceId, 'app_launch', { package: packageName });
+                api.showToast('App launched!', 'success');
+            } catch (e) { api.showToast(e.message, 'error'); }
+        }
+        window.launchApp = launchApp; // APP-BUG-2: expose globally for inline onclick
+
+        // ── Uninstall ──
+        async function uninstallApp(packageName) {
+            if (!confirm(`Uninstall ${packageName}?`)) return;
+            try {
+                await api.confirmedAction(deviceId, 'app_uninstall', { package: packageName }, 'Confirm Uninstall', {
+                    onDone: () => {
+                        api.showToast('Uninstall confirmed', 'success');
+                        allApps = allApps.filter(a => a.package !== packageName);
+                        document.getElementById('app-count').textContent = allApps.length;
+                        filterApps();
+                        setTimeout(loadApps, 3000);
+                    }
+                });
+                api.showToast('Uninstall dialog sent to device', 'success');
+            } catch (error) {
+                const isOffline = error.message?.includes('offline');
+                const isLocked = error.message?.includes('device_locked');
+                if (isOffline || isLocked) {
+                    showScheduleWarning(isLocked ? 'Device screen is locked' : 'Device is offline', packageName);
+                } else {
+                    api.showToast(error.message, 'error');
+                }
+            }
+        }
+        window.uninstallApp = uninstallApp; // APP-BUG-2: expose globally for inline onclick
+        window.cancelScheduled = cancelScheduled; // expose globally too
+
+        // ── Schedule Modal ──
+        let pendingSchedulePkg = null;
+
+        function showScheduleWarning(reason, packageName) {
+            pendingSchedulePkg = packageName;
+            document.getElementById('sched-reason').textContent = reason;
+            document.getElementById('sched-modal').classList.add('show');
+
+            document.getElementById('sched-btn-schedule').onclick = async () => {
+                closeScheduleModal();
+                try {
+                    const data = await api.request(`/device/${deviceId}/schedule`, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'app_uninstall', payload: { package: packageName, heuristic: true } })
+                    });
+                    if (data.success) { api.showToast('Uninstall scheduled!', 'success'); loadScheduledApps(); }
+                    else { api.showToast('Failed: ' + (data.error || 'Unknown'), 'error'); }
+                } catch (e) { api.showToast('Failed: ' + e.message, 'error'); }
+            };
+
+            document.getElementById('sched-btn-live').onclick = async () => {
+                closeScheduleModal();
+                api.showToast('Waking device...', 'info');
+                try {
+                    await api.sendCommand(deviceId, 'power_wakeup');
+                    await new Promise(r => setTimeout(r, 2000));
+                    await api.confirmedAction(deviceId, 'app_uninstall', { package: packageName }, 'Confirm Uninstall', {
+                        onDone: () => {
+                            api.showToast('Uninstall confirmed', 'success');
+                            allApps = allApps.filter(a => a.package !== packageName);
+                            document.getElementById('app-count').textContent = allApps.length;
+                            filterApps();
+                            setTimeout(loadApps, 3000);
+                        }
+                    });
+                    api.showToast('Uninstall dialog sent', 'success');
+                } catch (e) { api.showToast('Failed: ' + e.message, 'error'); }
+            };
+
+            lucide.createIcons();
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('sched-modal').classList.remove('show');
+            pendingSchedulePkg = null;
+        }
+
+        let _lastScheduledCount = -1;
+        const schedInterval = setInterval(loadScheduledApps, 5000); // APP-BUG-4: store ref
+        window.addEventListener('beforeunload', () => clearInterval(schedInterval)); // clear on nav
+        loadApps();
+        loadScheduledApps();
+    </script>
+</body>
+
+</html>

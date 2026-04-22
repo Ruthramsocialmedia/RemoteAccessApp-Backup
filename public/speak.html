@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remote Speak - Remote Access</title>
+    <link rel="stylesheet" href="/css/hacker-theme.css">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --font-display: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-display) !important;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px;
+            width: 100%;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        /* ── HEADER ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pg-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 10%, var(--accent) 50%, transparent 90%);
+            opacity: 0.4;
+        }
+
+        .pg-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pg-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 255, 65, 0.04));
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08);
+        }
+
+        .pg-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+
+        .pg-title span {
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+        }
+
+        .pg-sub {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-top: 1px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 65, 0.25);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── CONTENT ── */
+        .speak-content {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+        }
+
+        .card-label .cl-icon {
+            opacity: 0.5;
+        }
+
+        /* ── WALKIE-TALKIE ── */
+        .walkie-card {
+            text-align: center;
+            padding: 28px 20px;
+        }
+
+        .walkie-status {
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            min-height: 20px;
+            transition: color 0.3s;
+            letter-spacing: 0.3px;
+        }
+
+        .walkie-status.active {
+            color: #ff3c78;
+        }
+
+        .walkie-status.connecting {
+            color: var(--warning);
+        }
+
+        .talk-btn {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(255, 60, 120, 0.06);
+            border: 2px solid rgba(255, 60, 120, 0.2);
+            color: #ff3c78;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            position: relative;
+        }
+
+        .talk-btn:hover {
+            background: rgba(255, 60, 120, 0.12);
+            border-color: rgba(255, 60, 120, 0.4);
+            transform: scale(1.04);
+        }
+
+        .talk-btn:active,
+        .talk-btn.active {
+            background: rgba(255, 60, 120, 0.2);
+            border-color: #ff3c78;
+            transform: scale(0.95);
+            box-shadow: 0 0 30px rgba(255, 60, 120, 0.2);
+            animation: talkPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes talkPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(255, 60, 120, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 60, 120, 0.3);
+            }
+        }
+
+        .talk-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ── VISUALIZER ── */
+        .visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 40px;
+            margin: 16px 0;
+        }
+
+        .vis-bar {
+            width: 4px;
+            border-radius: 2px;
+            background: #ff3c78;
+            transition: height 0.05s ease;
+        }
+
+        .walkie-timer {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: #ff3c78;
+            min-height: 18px;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── AUDIO FILE PLAYER ── */
+        .audio-file-card {
+            border-color: rgba(255, 170, 0, 0.12);
+        }
+
+        .audio-file-card .card-label {
+            color: var(--warning);
+        }
+
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 170, 0, 0.15);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: rgba(255, 170, 0, 0.4);
+            background: rgba(255, 170, 0, 0.03);
+        }
+
+        .file-drop-zone .drop-icon {
+            margin-bottom: 8px;
+            color: var(--warning);
+            opacity: 0.5;
+        }
+
+        .file-drop-zone .hint {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .file-info {
+            display: none;
+            padding: 10px 14px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.65rem;
+        }
+
+        .file-info .name {
+            color: var(--warning);
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-info .meta {
+            color: var(--text-muted);
+        }
+
+        .audio-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px;
+            margin: 12px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .audio-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffaa00, #ff6600);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .audio-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 170, 0, 0.05);
+            color: var(--warning);
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .audio-btn:hover {
+            background: rgba(255, 170, 0, 0.1);
+        }
+
+        .audio-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .audio-btn.playing {
+            animation: audioPulse 1s ease-in-out infinite;
+            border-color: var(--warning);
+        }
+
+        @keyframes audioPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(255, 170, 0, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(255, 170, 0, 0.2);
+            }
+        }
+
+        .audio-btn.stop-btn {
+            border-color: rgba(255, 60, 60, 0.2);
+            background: rgba(255, 60, 60, 0.05);
+            color: var(--danger);
+        }
+
+        .audio-status {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+            min-height: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── TTS ── */
+        .text-area {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .text-area::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            text-align: right;
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* ── SLIDERS ── */
+        .slider-group {
+            margin-bottom: 12px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .slider-val {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+
+        /* ── SPEAK BTN ── */
+        .speak-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 200, 255, 0.05);
+            color: #00c8ff;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .speak-btn:hover {
+            background: rgba(0, 200, 255, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.06);
+        }
+
+        .speak-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speak-btn.speaking {
+            animation: speakPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes speakPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 8px rgba(0, 200, 255, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 22px rgba(0, 200, 255, 0.2);
+            }
+        }
+
+        /* ── QUICK PHRASES ── */
+        .phrases-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .phrase-chip {
+            padding: 6px 14px;
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .phrase-chip:hover {
+            border-color: rgba(0, 255, 65, 0.25);
+            color: var(--accent);
+            background: rgba(0, 255, 65, 0.04);
+        }
+
+        /* ── HISTORY ── */
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            transition: background 0.15s;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 255, 65, 0.03);
+        }
+
+        .history-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 80%;
+            color: var(--text-secondary);
+        }
+
+        .history-time {
+            font-family: var(--font-mono);
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .empty-history {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disc {
+            margin-top: 12px;
+            padding: 16px 20px;
+            background: rgba(255, 170, 0, 0.03);
+            border: 1px solid rgba(255, 170, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .disc h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-display);
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--warning);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .disc p {
+            font-family: var(--font-display);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .ft {
+            text-align: center;
+            padding: 32px 16px;
+            margin-top: 28px;
+            border-top: 1px solid var(--border);
+        }
+
+        .ft .ft-label {
+            font-family: var(--font-display);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .ft .ft-brand {
+            display: inline-block;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: lowercase;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent), #00e5ff, var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.2));
+            transition: all 0.4s ease;
+        }
+
+        .ft .ft-brand:hover {
+            filter: drop-shadow(0 0 16px rgba(0, 255, 65, 0.4));
+            animation: brandShine 1.5s ease infinite;
+        }
+
+        @keyframes brandShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .ft .ft-copy {
+            font-family: var(--font-display);
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 12px;
+            }
+
+            .pg-header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .pg-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .pg-title {
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .pg-header {
+                padding: 12px 14px;
+            }
+
+            .pg-title {
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .disc {
+                margin-top: 8px;
+                padding: 12px 14px;
+            }
+
+            .ft {
+                padding: 24px 12px;
+                margin-top: 20px;
+            }
+
+            .ft .ft-brand {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pg-sub {
+                display: none;
+            }
+
+            .btn-back span {
+                display: none;
+            }
+
+            .talk-btn {
+                width: 90px;
+                height: 90px;
+            }
+
+            .card {
+                padding: 14px;
+            }
+
+            .phrase-chip {
+                font-size: 0.55rem;
+                padding: 5px 10px;
+            }
+
+            .ft {
+                padding: 20px 10px;
+                margin-top: 16px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.9rem;
+            }
+
+            .ft .ft-copy {
+                font-size: 0.42rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .wrap {
+                padding: 8px;
+            }
+
+            .pg-header {
+                padding: 10px 12px;
+            }
+
+            .pg-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .pg-title {
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .talk-btn {
+                width: 80px;
+                height: 80px;
+            }
+
+            .disc {
+                padding: 10px 12px;
+                border-radius: 8px;
+            }
+
+            .ft .ft-brand {
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <!-- HEADER -->
+        <div class="pg-header">
+            <div class="pg-header-left">
+                <div class="pg-icon"><i data-lucide="volume-2" style="width:20px;height:20px;"></i></div>
+                <div>
+                    <div class="pg-title"><span>Remote</span> Speak</div>
+                    <div class="pg-sub">// audio & voice to device</div>
+                </div>
+            </div>
+            <a href="javascript:window.history.back()" class="btn-back">
+                <i data-lucide="arrow-left" style="width:14px;height:14px;"></i>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <div class="speak-content">
+
+            <!-- Walkie-Talkie Live Mic -->
+            <div class="card walkie-card">
+                <div class="card-label">
+                    <i data-lucide="radio" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Live Talk (Walkie-Talkie)
+                </div>
+                <div class="walkie-status" id="walkie-status">Press and hold to talk</div>
+                <button class="talk-btn" id="talk-btn">
+                    <i data-lucide="mic" style="width:32px;height:32px;"></i>
+                </button>
+                <div class="talk-label">Hold to Talk</div>
+                <div class="visualizer" id="visualizer"></div>
+                <div class="walkie-timer" id="walkie-timer"></div>
+            </div>
+
+            <!-- Audio File Player -->
+            <div class="card audio-file-card">
+                <div class="card-label">
+                    <i data-lucide="music" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Play Audio File on Device
+                </div>
+                <div class="file-drop-zone" id="file-drop-zone"
+                    onclick="document.getElementById('audio-file-input').click()">
+                    <div class="drop-icon"><i data-lucide="upload" style="width:24px;height:24px;"></i></div>
+                    <div>Click to select audio file</div>
+                    <div class="hint">MP3, WAV, OGG, M4A, FLAC — any format</div>
+                </div>
+                <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
+                <div class="file-info" id="file-info">
+                    <div class="name" id="file-name"></div>
+                    <div class="meta" id="file-meta"></div>
+                </div>
+                <div class="audio-progress" id="audio-progress">
+                    <div class="audio-progress-bar" id="audio-progress-bar"></div>
+                </div>
+                <div class="audio-controls">
+                    <button class="audio-btn" id="btn-play-audio" disabled onclick="playAudioFile()">
+                        <i data-lucide="play" style="width:13px;height:13px;"></i> Play on Device
+                    </button>
+                    <button class="audio-btn stop-btn" id="btn-stop-audio" disabled onclick="stopAudioFile()">
+                        <i data-lucide="square" style="width:13px;height:13px;"></i> Stop
+                    </button>
+                </div>
+                <div class="audio-status" id="audio-status"></div>
+            </div>
+
+            <!-- Text-to-Speech -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="message-square" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Text to Speech
+                </div>
+                <textarea class="text-area" id="speak-text" placeholder="Type something to speak on the device..."
+                    maxlength="1000"></textarea>
+                <div class="char-count"><span id="char-count">0</span> / 1000</div>
+            </div>
+
+            <!-- Controls -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="settings-2" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Voice Settings
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Volume</span>
+                        <span class="slider-val" id="vol-val">100%</span>
+                    </div>
+                    <input type="range" id="volume" min="0" max="100" value="100"
+                        oninput="document.getElementById('vol-val').textContent = this.value + '%'">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Speed</span>
+                        <span class="slider-val" id="spd-val">1.0x</span>
+                    </div>
+                    <input type="range" id="speed" min="25" max="300" value="100"
+                        oninput="document.getElementById('spd-val').textContent = (this.value / 100).toFixed(1) + 'x'">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Pitch</span>
+                        <span class="slider-val" id="pit-val">1.0</span>
+                    </div>
+                    <input type="range" id="pitch" min="25" max="200" value="100"
+                        oninput="document.getElementById('pit-val').textContent = (this.value / 100).toFixed(1)">
+                </div>
+            </div>
+
+            <!-- Speak Button -->
+            <button class="speak-btn" id="speak-btn" onclick="speak()">
+                <i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speak on Device
+            </button>
+
+            <!-- Quick Phrases -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="zap" class="cl-icon" style="width:13px;height:13px;"></i>
+                    Quick Phrases
+                </div>
+                <div class="phrases-grid">
+                    <div class="phrase-chip" onclick="quickSpeak('Hello, can you hear me?')">Hello!</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Where are you right now?')">Where are you?</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Please call me back')">Call me back</div>
+                    <div class="phrase-chip" onclick="quickSpeak('I am on my way')">On my way</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Dinner is ready')">Dinner ready</div>
+                    <div class="phrase-chip" onclick="quickSpeak('Come home now')">Come home</div>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card">
+                <div class="card-label">
+                    <i data-lucide="clock" class="cl-icon" style="width:13px;height:13px;"></i>
+                    History
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="empty-history">No messages yet</div>
+                </div>
+            </div>
+
+        </div> <!-- /speak-content -->
+
+        <!-- DISCLAIMER -->
+        <div class="disc">
+            <h4><i data-lucide="alert-triangle" style="width:13px;height:13px;"></i> Disclaimer</h4>
+            <p>This application is intended for EDUCATIONAL AND PERSONAL USE ONLY. Installing or using this on a device
+                without the owner's explicit consent is illegal and unethical.</p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="ft">
+        <div class="ft-label">crafted by</div>
+        <a href="https://thiyoplus-f.netlify.app/" target="_blank" class="ft-brand">thiyo-de</a>
+        <div class="ft-copy">&copy; 2025 &middot; all rights reserved</div>
+    </footer>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/call-notification.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const deviceId = new URLSearchParams(window.location.search).get('deviceId');
+        if (!deviceId) window.location.href = 'index.html';
+
+        // ========== TEXT-TO-SPEECH ==========
+
+        let history = [];
+
+        document.getElementById('speak-text').addEventListener('input', function () {
+            document.getElementById('char-count').textContent = this.value.length;
+        });
+
+        async function speak() {
+            const text = document.getElementById('speak-text').value.trim();
+            if (!text) { api.showToast('Type something first', 'error'); return; }
+
+            const btn = document.getElementById('speak-btn');
+            btn.disabled = true;
+            btn.classList.add('speaking');
+            btn.innerHTML = '<i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speaking...';
+            lucide.createIcons();
+
+            try {
+                await api.sendCommand(deviceId, 'speak', {
+                    text,
+                    volume: parseInt(document.getElementById('volume').value) / 100,
+                    speed: parseInt(document.getElementById('speed').value) / 100,
+                    pitch: parseInt(document.getElementById('pitch').value) / 100
+                });
+                api.showToast('Speaking on device', 'success');
+                addHistory(text);
+            } catch (error) {
+                api.showToast('Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('speaking');
+                btn.innerHTML = '<i data-lucide="volume-2" style="width:16px;height:16px;"></i> Speak on Device';
+                lucide.createIcons();
+            }
+        }
+
+        function quickSpeak(text) {
+            document.getElementById('speak-text').value = text;
+            document.getElementById('char-count').textContent = text.length;
+            speak();
+        }
+
+        function addHistory(text) {
+            history.unshift({ text, time: new Date().toLocaleTimeString() });
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.map((h, idx) => `
+                <div class="history-item" data-idx="${idx}">
+                    <span class="history-text">${escHtml(h.text)}</span>
+                    <span class="history-time">${escHtml(h.time)}</span>
+                </div>
+            `).join('');
+            list.querySelectorAll('.history-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const i = parseInt(el.dataset.idx);
+                    if (history[i]) replayText(history[i].text);
+                });
+            });
+        }
+
+        function replayText(text) {
+            document.getElementById('speak-text').value = text;
+            document.getElementById('char-count').textContent = text.length;
+        }
+
+        document.getElementById('speak-text').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); speak(); }
+        });
+
+        // ========== WALKIE-TALKIE (LIVE MIC → PHONE SPEAKER) ==========
+
+        const SAMPLE_RATE = 16000; // target rate for phone
+        const CHUNK_SIZE = 2048;
+        const MIC_GAIN = 3.0; // 3x gain boost for louder audio
+        let isTalking = false;
+        let ws = null;
+        let audioContext = null;
+        let micStream = null;
+        let scriptNode = null;
+        let talkTimer = null;
+        let talkStart = 0;
+        let actualSampleRate = 48000; // will be detected
+
+        const talkBtn = document.getElementById('talk-btn');
+        const walkieStatus = document.getElementById('walkie-status');
+        const visualizer = document.getElementById('visualizer');
+        const walkieTimer = document.getElementById('walkie-timer');
+
+        // Create visualizer bars
+        function initVisualizer() {
+            let bars = '';
+            for (let i = 0; i < 20; i++) {
+                bars += `<div class="vis-bar" style="height:4px" data-i="${i}"></div>`;
+            }
+            visualizer.innerHTML = bars;
+        }
+        initVisualizer();
+
+        // Downsample from browser's native rate to 16kHz using linear interpolation
+        function downsample(inputBuffer, inputRate, outputRate) {
+            if (inputRate === outputRate) return inputBuffer;
+            const ratio = inputRate / outputRate;
+            const outputLength = Math.round(inputBuffer.length / ratio);
+            const output = new Float32Array(outputLength);
+            for (let i = 0; i < outputLength; i++) {
+                const srcIndex = i * ratio;
+                const low = Math.floor(srcIndex);
+                const high = Math.min(low + 1, inputBuffer.length - 1);
+                const frac = srcIndex - low;
+                output[i] = inputBuffer[low] * (1 - frac) + inputBuffer[high] * frac;
+            }
+            return output;
+        }
+
+        // Convert Float32 PCM to Int16 base64
+        function float32ToBase64PCM16(float32Array) {
+            const pcm16 = new Int16Array(float32Array.length);
+            for (let i = 0; i < float32Array.length; i++) {
+                const s = Math.max(-1, Math.min(1, float32Array[i]));
+                pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            const bytes = new Uint8Array(pcm16.buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // Connect WebSocket for audio streaming
+        function connectWS() {
+            return new Promise((resolve, reject) => {
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${wsProtocol}//${location.host}`);
+                ws.onopen = () => resolve();
+                ws.onerror = (e) => reject(e);
+                ws.onclose = () => { ws = null; };
+            });
+        }
+
+        // Start talking
+        async function startTalk() {
+            if (isTalking) return;
+
+            try {
+                walkieStatus.textContent = 'Connecting...';
+                walkieStatus.className = 'walkie-status connecting';
+
+                // Get browser mic
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Connect WebSocket
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    await connectWS();
+                }
+
+                // Tell device to start audio playback
+                await api.sendCommand(deviceId, 'audio_play_start');
+
+                // Create audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                actualSampleRate = audioContext.sampleRate;
+                console.log(`[Walkie] AudioContext rate: ${actualSampleRate}Hz, target: ${SAMPLE_RATE}Hz`);
+
+                const source = audioContext.createMediaStreamSource(micStream);
+
+                // Gain node — boost mic volume
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = MIC_GAIN;
+
+                // ScriptProcessorNode to capture and downsample PCM chunks
+                scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+                scriptNode.onaudioprocess = (e) => {
+                    if (!isTalking || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // Downsample from native rate (e.g. 48kHz) to 16kHz
+                    const downsampled = downsample(inputData, actualSampleRate, SAMPLE_RATE);
+                    const base64 = float32ToBase64PCM16(downsampled);
+
+                    // Send audio chunk to server
+                    ws.send(JSON.stringify({
+                        type: 'browser_audio_chunk',
+                        deviceId: deviceId,
+                        data: base64
+                    }));
+
+                    // Update visualizer with original data (for responsiveness)
+                    updateVisualizer(inputData);
+                };
+
+                // Pipeline: mic → gain → scriptNode → silent output
+                const silentGain = audioContext.createGain();
+                silentGain.gain.value = 0; // mute — prevents echo
+                source.connect(gainNode);
+                gainNode.connect(scriptNode);
+                scriptNode.connect(silentGain);
+                silentGain.connect(audioContext.destination);
+
+                isTalking = true;
+                talkBtn.classList.add('active');
+                walkieStatus.textContent = 'LIVE — Speaking to device...';
+                walkieStatus.className = 'walkie-status active';
+
+                // Start timer
+                talkStart = Date.now();
+                talkTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - talkStart) / 1000);
+                    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                    const s = String(elapsed % 60).padStart(2, '0');
+                    walkieTimer.textContent = `${m}:${s}`;
+                }, 1000);
+
+            } catch (e) {
+                api.showToast('Mic error: ' + e.message, 'error');
+                walkieStatus.textContent = 'Press and hold to talk';
+                walkieStatus.className = 'walkie-status';
+                stopTalk();
+            }
+        }
+
+        // Stop talking
+        async function stopTalk() {
+            if (!isTalking && !micStream) return;
+            isTalking = false;
+
+            // Stop timer
+            clearInterval(talkTimer);
+
+            // Disconnect audio pipeline
+            if (scriptNode) {
+                scriptNode.disconnect();
+                scriptNode = null;
+            }
+            if (audioContext) {
+                audioContext.close().catch(() => { });
+                audioContext = null;
+            }
+
+            // Stop mic
+            if (micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+
+            // Tell device to stop audio playback
+            try {
+                await api.sendCommand(deviceId, 'audio_play_stop');
+            } catch (e) { /* ignore */ }
+
+            // Close WebSocket
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+
+            talkBtn.classList.remove('active');
+            walkieStatus.textContent = 'Press and hold to talk';
+            walkieStatus.className = 'walkie-status';
+            walkieTimer.textContent = '';
+            resetVisualizer();
+        }
+
+        // Update visualizer bars based on audio levels
+        function updateVisualizer(pcmData) {
+            const bars = visualizer.querySelectorAll('.vis-bar');
+            const step = Math.floor(pcmData.length / bars.length);
+            for (let i = 0; i < bars.length; i++) {
+                let sum = 0;
+                for (let j = 0; j < step; j++) {
+                    sum += Math.abs(pcmData[i * step + j] || 0);
+                }
+                const avg = sum / step;
+                const height = Math.max(4, Math.min(36, avg * 300));
+                bars[i].style.height = height + 'px';
+            }
+        }
+
+        function resetVisualizer() {
+            visualizer.querySelectorAll('.vis-bar').forEach(b => b.style.height = '4px');
+        }
+
+        // ===== HOLD-TO-TALK EVENT HANDLERS =====
+
+        // Mouse events
+        talkBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startTalk();
+        });
+        talkBtn.addEventListener('mouseup', () => stopTalk());
+        talkBtn.addEventListener('mouseleave', () => { if (isTalking) stopTalk(); });
+
+        // Touch events (mobile)
+        talkBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startTalk();
+        });
+        talkBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopTalk();
+        });
+        talkBtn.addEventListener('touchcancel', () => stopTalk());
+
+        // ========== AUDIO FILE PLAYER ==========
+
+        let audioFileBuffer = null; // decoded AudioBuffer
+        let audioFileName = '';
+        let isPlayingFile = false;
+        let audioFileWs = null;
+        let playbackAbort = null; // AbortController for cancellation
+
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('audio-file-input');
+        const fileInfo = document.getElementById('file-info');
+        const audioProgress = document.getElementById('audio-progress');
+        const audioProgressBar = document.getElementById('audio-progress-bar');
+        const audioStatusEl = document.getElementById('audio-status');
+        const btnPlayAudio = document.getElementById('btn-play-audio');
+        const btnStopAudio = document.getElementById('btn-stop-audio');
+
+        // Drag & drop
+        fileDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.add('dragover');
+        });
+        fileDropZone.addEventListener('dragleave', () => fileDropZone.classList.remove('dragover'));
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file && file.type.startsWith('audio/')) loadAudioFile(file);
+            else api.showToast('Please drop an audio file', 'error');
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) loadAudioFile(file);
+        });
+
+        async function loadAudioFile(file) {
+            audioFileName = file.name;
+            audioStatusEl.textContent = 'Decoding audio...';
+            btnPlayAudio.disabled = true;
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                audioFileBuffer = await ctx.decodeAudioData(arrayBuffer);
+                ctx.close();
+
+                const duration = audioFileBuffer.duration.toFixed(1);
+                const sizeKB = (file.size / 1024).toFixed(0);
+                const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+                const sizeStr = file.size > 1048576 ? `${sizeMB} MB` : `${sizeKB} KB`;
+
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-meta').textContent = `${duration}s • ${sizeStr} • ${audioFileBuffer.sampleRate}Hz`;
+                fileInfo.style.display = 'block';
+                fileDropZone.innerHTML = '<div class="drop-icon"><i data-lucide="check-circle" style="width:24px;height:24px;color:var(--accent);"></i></div><div>File loaded — click to change</div>';
+                lucide.createIcons();
+
+                btnPlayAudio.disabled = false;
+                audioStatusEl.textContent = 'Ready to play';
+            } catch (e) {
+                api.showToast('Failed to decode audio: ' + e.message, 'error');
+                audioStatusEl.textContent = 'Decode failed';
+            }
+        }
+
+        async function playAudioFile() {
+            if (!audioFileBuffer || isPlayingFile) return;
+
+            isPlayingFile = true;
+            playbackAbort = new AbortController();
+            btnPlayAudio.disabled = true;
+            btnPlayAudio.classList.add('playing');
+            btnStopAudio.disabled = false;
+            audioProgress.style.display = 'block';
+            audioProgressBar.style.width = '0%';
+
+            try {
+                // Connect WebSocket
+                const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                audioFileWs = new WebSocket(`${wsProtocol}//${location.host}`);
+                await new Promise((res, rej) => {
+                    audioFileWs.onopen = res;
+                    audioFileWs.onerror = rej;
+                });
+
+                // Tell device to start audio playback
+                await api.sendCommand(deviceId, 'audio_play_start');
+                audioStatusEl.textContent = 'Playing: ' + audioFileName;
+
+                // Get PCM data and downsample to 16kHz
+                const channelData = audioFileBuffer.getChannelData(0); // mono
+                const srcRate = audioFileBuffer.sampleRate;
+                const targetRate = 16000;
+                const ratio = srcRate / targetRate;
+                const totalSamples = Math.floor(channelData.length / ratio);
+
+                // Stream in chunks matching walkie-talkie format
+                const chunkSamples = 2048; // ~128ms at 16kHz
+                const totalChunks = Math.ceil(totalSamples / chunkSamples);
+                const signal = playbackAbort.signal;
+
+                for (let c = 0; c < totalChunks; c++) {
+                    if (signal.aborted) break;
+
+                    const start = c * chunkSamples;
+                    const end = Math.min(start + chunkSamples, totalSamples);
+                    const chunk = new Float32Array(end - start);
+
+                    // Downsample
+                    for (let i = 0; i < chunk.length; i++) {
+                        const srcIdx = (start + i) * ratio;
+                        const low = Math.floor(srcIdx);
+                        const high = Math.min(low + 1, channelData.length - 1);
+                        const frac = srcIdx - low;
+                        chunk[i] = channelData[low] * (1 - frac) + channelData[high] * frac;
+                    }
+
+                    // Apply volume from slider
+                    const vol = parseInt(document.getElementById('volume').value) / 100;
+                    for (let i = 0; i < chunk.length; i++) {
+                        chunk[i] = chunk[i] * vol;
+                    }
+
+                    // Convert to PCM16 base64
+                    const pcm16 = new Int16Array(chunk.length);
+                    for (let i = 0; i < chunk.length; i++) {
+                        const s = Math.max(-1, Math.min(1, chunk[i]));
+                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    const bytes = new Uint8Array(pcm16.buffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    const base64 = btoa(binary);
+
+                    // Send via WebSocket
+                    if (audioFileWs.readyState === WebSocket.OPEN) {
+                        audioFileWs.send(JSON.stringify({
+                            type: 'browser_audio_chunk',
+                            deviceId: deviceId,
+                            data: base64
+                        }));
+                    }
+
+                    // Update progress
+                    const pct = ((c + 1) / totalChunks * 100).toFixed(1);
+                    audioProgressBar.style.width = pct + '%';
+
+                    // Pace to real-time (~128ms per chunk)
+                    const chunkDurationMs = (chunk.length / targetRate) * 1000;
+                    await new Promise(r => setTimeout(r, chunkDurationMs * 0.85));
+                }
+
+                // Wait for last chunk to finish playing
+                if (!signal.aborted) {
+                    audioStatusEl.textContent = 'Finishing playback...';
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+            } catch (e) {
+                if (!playbackAbort?.signal.aborted) {
+                    api.showToast('Playback error: ' + e.message, 'error');
+                }
+            } finally {
+                // Stop device playback
+                try { await api.sendCommand(deviceId, 'audio_play_stop'); } catch (e) { }
+                if (audioFileWs) { audioFileWs.close(); audioFileWs = null; }
+
+                isPlayingFile = false;
+                btnPlayAudio.disabled = false;
+                btnPlayAudio.classList.remove('playing');
+                btnStopAudio.disabled = true;
+                audioProgressBar.style.width = '100%';
+                audioStatusEl.textContent = playbackAbort?.signal.aborted ? 'Stopped' : 'Done ✓';
+            }
+        }
+
+        function stopAudioFile() {
+            if (playbackAbort) playbackAbort.abort();
+        }
+
+        // Volume slider — controls actual device media stream volume
+        let volDebounce = null;
+        document.getElementById('volume').addEventListener('input', function () {
+            const level = parseInt(this.value);
+            clearTimeout(volDebounce);
+            volDebounce = setTimeout(async () => {
+                try {
+                    await api.sendCommand(deviceId, 'set_device_volume', { level, stream: 'music' });
+                } catch (e) { }
+            }, 150);
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (isTalking) stopTalk();
+            if (isPlayingFile) stopAudioFile();
+        });
+    </script>
+</body>
+
+</html>
